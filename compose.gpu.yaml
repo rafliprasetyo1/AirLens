@@ -1,0 +1,17 @@
+# Tambahan untuk lab (GPU NVIDIA). Dipakai otomatis oleh Makefile saat PROFILE=lab:
+#   docker compose -f compose.yaml -f compose.gpu.yaml ...
+services:
+  trainer:
+    build:
+      args:
+        TORCH_VARIANT: cu126  # PyTorch CUDA 12.6 (image ~3 GB; unduh di lab)
+    image: airlens/trainer:0.1.0-cu126
+    mem_limit: 12g
+    shm_size: 2g  # DataLoader PyTorch dengan banyak worker butuh /dev/shm lebih besar
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]

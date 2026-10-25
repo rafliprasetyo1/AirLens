@@ -1,0 +1,7 @@
+# Superset untuk test: semua dependency layanan Python + alat test.
+# Dikunci lebih dulu dan dipakai sebagai constraint bagi file lain agar versinya sama.
+-r api.in
+-r scheduler.in
+-r trainer.in
+pytest
+httpx

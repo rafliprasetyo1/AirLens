@@ -1,0 +1,7 @@
+-r base.in
+apscheduler>=3.10,<4
+# Fase 5: job monitoring (drift PSI/KS, fitur gambar, webhook).
+numpy
+scipy
+pillow
+requests

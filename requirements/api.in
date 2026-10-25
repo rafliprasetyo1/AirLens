@@ -1,0 +1,11 @@
+-r base.in
+fastapi
+uvicorn
+python-multipart  # unggah file (multipart/form-data)
+# Fase 4: inferensi ONNX di CPU (tanpa PyTorch), fitur kabut, model dari MLflow registry, IQAir.
+onnxruntime
+numpy
+scipy
+pillow
+requests
+mlflow-skinny>=3,<4

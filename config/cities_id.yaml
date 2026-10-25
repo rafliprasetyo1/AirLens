@@ -1,0 +1,63 @@
+# Kota Indonesia untuk pembanding IQAir. Nama city/state DIVERIFIKASI ke API IQAir (endpoint /v2/city) pada
+# 2026-10-25; hanya yang membalas "success" dimasukkan. Tidak dikenali IQAir: Malang, Makassar.
+cities:
+  - id: jakarta
+    city: Jakarta
+    state: Jakarta
+    country: Indonesia
+  - id: bandung
+    city: Bandung
+    state: West Java
+    country: Indonesia
+  - id: bekasi
+    city: Bekasi
+    state: West Java
+    country: Indonesia
+  - id: bogor
+    city: Bogor
+    state: West Java
+    country: Indonesia
+  - id: depok
+    city: Depok
+    state: West Java
+    country: Indonesia
+  - id: surabaya
+    city: Surabaya
+    state: East Java
+    country: Indonesia
+  - id: semarang
+    city: Semarang
+    state: Central Java
+    country: Indonesia
+  - id: yogyakarta
+    city: Yogyakarta
+    state: Yogyakarta
+    country: Indonesia
+  - id: tangerang
+    city: Tangerang
+    state: Banten
+    country: Indonesia
+  - id: denpasar
+    city: Denpasar
+    state: Bali
+    country: Indonesia
+  - id: medan
+    city: Medan
+    state: North Sumatra
+    country: Indonesia
+  - id: palembang
+    city: Palembang
+    state: South Sumatra
+    country: Indonesia
+  - id: pekanbaru
+    city: Pekanbaru
+    state: Riau
+    country: Indonesia
+  - id: balikpapan
+    city: Balikpapan
+    state: East Kalimantan
+    country: Indonesia
+  - id: pontianak
+    city: Pontianak
+    state: West Kalimantan
+    country: Indonesia

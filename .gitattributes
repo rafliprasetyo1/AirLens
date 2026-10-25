@@ -1,0 +1,16 @@
+* text=auto eol=lf
+
+# Biner: jangan diubah line ending-nya
+*.jpg  binary
+*.jpeg binary
+*.png  binary
+*.webp binary
+*.gif  binary
+*.pdf  binary
+*.zip  binary
+*.gz   binary
+*.pt   binary
+*.pth  binary
+*.onnx binary
+*.pkl  binary
+*.parquet binary

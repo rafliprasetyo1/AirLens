@@ -1,0 +1,65 @@
+# Profil lab: GPU NVIDIA (compose.gpu.yaml). Dipilih lewat APP_PROFILE=lab.
+profile: lab
+
+api:
+  max_upload_mb: 10
+
+iqair:
+  cache_ttl_seconds: 900
+
+scheduler:
+  heartbeat_seconds: 30
+
+# Fase 3. Hyperparameter dipilih/diawasi HANYA dengan data validasi.
+training:
+  device: cuda
+  data_fraction: 1.0
+  models: [mobilenet_v3_large, efficientnet_b0]
+  batch_size: 64
+  num_workers: 8
+  threads: 8        # torch.set_num_threads (CPU)
+  epochs_head: 3    # tahap 1: hanya kepala klasifikasi
+  epochs_full: 30    # tahap 2: seluruh jaringan
+  lr_head: 0.001
+  lr_full: 0.0001
+  weight_decay: 0.0001
+  patience: 6       # early stopping (epoch tanpa kenaikan macro-F1 validasi)
+
+# Ambang "belum pasti": keyakinan terkecil yang membuat akurasi prediksi yang lolos >= target DI VALIDASI.
+calibration:
+  target_accuracy: 0.70
+  min_accepted: 30
+
+# Pembanding Qwen2.5-VL (opsional). max_images 0 = seluruh test.
+vlm:
+  max_images: 0
+
+# Fase 2: data. Dhaka (4,5 GB, Zenodo ~0,15 MB/s dari laptop) hanya diunduh di lab.
+data:
+  sources: [pm25vision, india_nepal, dhaka]
+  seed: 20261024
+  val_frac: 0.15
+  test_frac: 0.15
+  test_groups: [dhaka]   # kota yang disisihkan penuh untuk test (group_hint)
+  # Disetujui 2026-10-25: hazardous terlalu sedikit lokasi (36 stasiun) untuk val/test bermakna. Lihat DECISIONS.md.
+  class_merge: {hazardous: very_unhealthy}
+
+# Fase 5: monitoring tanpa label + promosi model. Jadwal dalam UTC.
+monitoring:
+  window_days: 7
+  schedule: {day_of_week: mon, hour: 2, minute: 0}
+  thresholds:
+    min_samples: 50            # di bawah ini drift tidak dinilai
+    psi_min: 0.1               # drift = PSI terkoreksi bias >= psi_min DAN KS p < ks_p (alarm palsu ~4% pada n=60)
+    ks_p: 0.01
+    emb_min_fraction: 0.5      # embedding: peringatan bila >= 50% komponen PCA bergeser (bukan per komponen)
+    uncertain_rate: 0.5
+    rejected_rate: 0.4
+    iqair_mean_abs_diff: 1.5   # rata-rata selisih kategori vs IQAir (proksi berisik; butuh >= min_samples)
+
+# make promote: challenger dipromosikan HANYA bila semua kriteria terpenuhi.
+promotion:
+  min_macro_f1_gain: 0.01      # lab: wajib naik nyata (seri tidak dipromosikan); laptop 0.0 untuk uji alur
+  max_ece_increase: 0.02
+  min_shadow_samples: 30
+  max_uncertain_rate_increase: 0.10   # pada data shadow

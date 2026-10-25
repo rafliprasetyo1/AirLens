@@ -1,0 +1,204 @@
+# AirLens — layanan utama. Jalankan lewat Makefile (`make up PROFILE=laptop|lab`).
+# Port host: api 8000, web 8080, mlflow 5000. db tidak dibuka ke host.
+# Batas memori disetel untuk laptop (WSL ~4 GB); total layanan default ~2 GB.
+name: airlens
+
+x-db-env: &db-env
+  POSTGRES_HOST: db
+  POSTGRES_PORT: "5432"
+  POSTGRES_DB: ${POSTGRES_DB:-airlens}
+  POSTGRES_USER: ${POSTGRES_USER:-airlens}
+  POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?isi POSTGRES_PASSWORD di .env}
+
+x-app-env: &app-env
+  <<: *db-env
+  APP_PROFILE: ${APP_PROFILE:-laptop}
+
+services:
+  db:
+    image: postgres:16.14-alpine3.23
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-airlens}
+      POSTGRES_USER: ${POSTGRES_USER:-airlens}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?isi POSTGRES_PASSWORD di .env}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./db/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    restart: unless-stopped
+    mem_limit: 384m
+
+  mlflow:
+    build:
+      context: .
+      dockerfile: mlflow/Dockerfile
+    image: airlens/mlflow:0.1.0
+    environment:
+      <<: *db-env
+      # Job executor MLflow 3 (online scoring/trace archival untuk GenAI) tidak dipakai dan memunculkan
+      # puluhan proses sampai OOM di batas 768M. Lihat DECISIONS.md.
+      MLFLOW_SERVER_ENABLE_JOB_EXECUTION: "false"
+    command:
+      - sh
+      - -c
+      - >-
+        exec mlflow server --host 0.0.0.0 --port 5000 --workers 1
+        --backend-store-uri "postgresql+psycopg2://$${POSTGRES_USER}:$${POSTGRES_PASSWORD}@db:5432/mlflow"
+        --artifacts-destination /mlartifacts --serve-artifacts
+        --allowed-hosts "localhost,localhost:5000,127.0.0.1,127.0.0.1:5000,mlflow,mlflow:5000"
+    ports:
+      - "5000:5000"
+    volumes:
+      - mlartifacts:/mlartifacts
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:5000/health', timeout=4)"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+    restart: unless-stopped
+    mem_limit: 768m
+
+  api:
+    build:
+      context: .
+      target: api
+    image: airlens/api:0.1.0
+    environment:
+      <<: *app-env
+      IQAIR_API_KEY: ${IQAIR_API_KEY:-}
+      VLM_BASE_URL: ${VLM_BASE_URL:-}
+      VLM_MODEL: ${VLM_MODEL:-}
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+      GIT_PYTHON_REFRESH: quiet
+    ports:
+      - "8000:8000"
+    volumes:
+      - modelcache:/app/modelcache  # model production dari registry; tetap terpakai bila MLflow mati
+      - uploads:/app/uploads  # HANYA foto dengan persetujuan eksplisit pengguna
+    depends_on:
+      db:
+        condition: service_healthy  # MLflow tidak wajib: API tetap hidup dan memuat model saat MLflow siap
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=4)"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+    mem_limit: 768m  # onnxruntime + model + gambar unggahan hingga 40 MP
+
+  web:
+    build:
+      context: .
+      dockerfile: web/Dockerfile
+    image: airlens/web:0.1.0
+    ports:
+      - "8080:80"
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1/"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    mem_limit: 64m
+
+  scheduler:
+    build:
+      context: .
+      target: scheduler
+    image: airlens/scheduler:0.1.0
+    environment:
+      <<: *app-env
+      MODEL_CACHE_DIR: /app/modelcache
+      MONITOR_WEBHOOK_URL: ${MONITOR_WEBHOOK_URL:-}
+      MONITOR_EVERY_MINUTES: ${MONITOR_EVERY_MINUTES:-}
+    volumes:
+      - modelcache:/app/modelcache:ro  # metadata model production (referensi drift), diisi oleh api
+      - ./results:/app/results         # laporan monitoring Markdown
+    depends_on:
+      api:
+        condition: service_healthy  # api menjalankan migrasi database saat start
+    healthcheck:
+      test: ["CMD", "python", "-m", "airlens_scheduler.healthcheck"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    restart: unless-stopped
+    mem_limit: 256m
+
+  trainer:
+    profiles: ["train"]
+    build:
+      context: .
+      target: trainer
+      args:
+        TORCH_VARIANT: cpu
+    image: airlens/trainer:0.1.0
+    environment:
+      <<: *app-env
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+      VLM_BASE_URL: ${VLM_BASE_URL:-}
+      VLM_MODEL: ${VLM_MODEL:-}
+      GIT_COMMIT: ${GIT_COMMIT:-belum-ada-commit}
+      REGISTER_ALIAS: ${REGISTER_ALIAS:-production}
+      AIRLENS_SMOKE: ${AIRLENS_SMOKE:-0}
+      GIT_PYTHON_REFRESH: quiet  # git tidak ada di image; commit dicatat lewat GIT_COMMIT
+      VLM_DEVICE: ${VLM_DEVICE:-}
+      KAGGLE_USERNAME: ${KAGGLE_USERNAME:-}
+      KAGGLE_KEY: ${KAGGLE_KEY:-}
+      OPENAQ_API_KEY: ${OPENAQ_API_KEY:-}
+      MAPILLARY_ACCESS_TOKEN: ${MAPILLARY_ACCESS_TOKEN:-}
+    volumes:
+      - ./data:/app/data
+      - ./artifacts:/app/artifacts
+      - ./results:/app/results
+    depends_on:
+      db:
+        condition: service_healthy
+      mlflow:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import airlens"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    restart: "no"
+    mem_limit: 1536m
+
+  # Penjalan pytest (`make test`), memakai database terpisah airlens_test.
+  tests:
+    profiles: ["test"]
+    build:
+      context: .
+      target: dev
+    image: airlens/dev:0.1.0
+    environment:
+      <<: *app-env
+      POSTGRES_DB: airlens_test
+    volumes:
+      - ./tests:/app/tests:ro
+      - ./data/processed:/app/data/processed:ro  # test kebocoran memeriksa split yang sebenarnya
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"
+    mem_limit: 512m
+
+volumes:
+  pgdata:
+  mlartifacts:
+  modelcache:
+  uploads:

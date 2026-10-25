@@ -1,0 +1,17 @@
+-r base.in
+# Fase 2: data
+numpy
+pandas
+pyarrow
+pillow
+imagehash
+openpyxl
+requests
+huggingface_hub
+kaggle
+mlflow-skinny>=3,<4
+# Fase 3: model dan evaluasi. torch/torchvision dikunci terpisah (torch-cpu.in / torch-cu126.in).
+scikit-learn
+matplotlib
+onnx
+onnxruntime

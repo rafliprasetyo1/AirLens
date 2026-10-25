@@ -1,0 +1,49 @@
+# Rahasia
+.env
+.env.*
+!.env.example
+
+# Data, model, dan artefak (diunduh/dibuat ulang oleh skrip, dipindah lewat MLflow/artifacts)
+data/*
+!data/.gitkeep
+artifacts/*
+!artifacts/.gitkeep
+mlruns/
+mlartifacts/
+*.pt
+*.pth
+*.onnx
+*.ckpt
+
+# Isi volume database
+pgdata/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+*.egg-info/
+
+# Editor / OS
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+desktop.ini
+*:Zone.Identifier
+
+# Grid sampel berisi thumbnail foto pihak ketiga; dibuat ulang oleh `make data`
+results/data/
+results/ui/
+# Hasil uji asap (make train/eval SMOKE=1) bukan hasil evaluasi; jangan di-commit
+results/*_smoke*
+# Laporan monitoring & promosi dibuat ulang tiap run (simulasi/uji asap di laptop); dikemas oleh make export-results
+results/monitoring/
+results/promotion_*

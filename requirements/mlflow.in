@@ -1,0 +1,2 @@
+mlflow>=3,<4
+psycopg2-binary
