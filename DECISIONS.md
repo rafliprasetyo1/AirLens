@@ -218,3 +218,26 @@ Rincian dan angka ada di DATA_CARD.md. Ringkasan keputusan:
 - **Embedding dinilai sebagai satu kesatuan** (peringatan bila ≥ 50% komponen PCA bergeser). Per komponen, lokasi
   PM25Vision yang belum pernah dilihat sudah menyalakan 2–3 dari 8 komponen. Di produksi, setiap foto pengguna
   Indonesia adalah lokasi baru, jadi aturan per komponen akan menyalakan alarm setiap minggu.
+
+## Fase 6 — persiapan lab (2026-11-13)
+
+- **Sesi lab tanpa Claude Code dan VS Code**: pengguna hanya memakai terminal Ubuntu dan menyalin perintah dari
+  `AirLens_perintah_lab.txt`, sampai `git push` hasil. File itu ditulis ulang agar setiap perintahnya cocok dengan kode.
+- **`make lab-all`** (`scripts/lab_all.sh`): setup-check → db+mlflow → data → train → eval → export. Durasi, status,
+  dan pemakaian disk tiap tahap dicatat ke `logs/lab_<waktu>_<profil>/timings.tsv` dan `RINGKASAN.txt`. Bila satu
+  tahap gagal, tahap berikutnya dilewati, tetapi **export tetap dijalankan** agar hasil parsial tidak hilang.
+  `SKIP_CHECK=1` melewati setup-check (mis. GPU tidak terdeteksi tetapi tetap ingin berjalan di CPU).
+- **`make export-results`** (`scripts/export_results.sh`): satu arsip `results/airlens_results_<profil>_<waktu>.tar.gz`
+  berisi results/, bundle model, log, ringkasan data (report, manifest, data_version), **volume `mlartifacts`**,
+  **dump database `mlflow` dan `airlens`**, info lingkungan tanpa rahasia, dan `MANIFEST.sha256`. Sebelum dikemas,
+  arsip diperiksa agar tidak memuat nilai rahasia dari `.env`. Arsip dibawa lewat Google Drive/flash disk, bukan git.
+- **setup-check memakai image CUDA 12.6** (sama dengan trainer `cu126`). Sebelumnya CUDA 12.8 bisa memberi "GPU
+  GAGAL" palsu pada driver yang hanya mendukung 12.6. Ditambah cek alat (`make`, `git`, `curl`, `openssl`), disk
+  (lab ≥ 40 GB), dan RAM.
+- **VLM di lab dibatasi 300 foto test** (sampel tetap dengan seed; model production dinilai pada sampel yang sama).
+  Seluruh test lab (~3.000 foto × 1–5 detik) bisa memakan berjam-jam, melebihi satu sesi lab.
+- **Jalur darurat `AIRLENS_DATA_SOURCES`** (mis. `pm25vision,india_nepal`) bila unduhan Dhaka dari Zenodo terlalu
+  lambat. Dari laptop terukur ~0,15 MB/s, sekitar 8 jam untuk 4,5 GB. Sumber yang dipakai tercatat di `report.json`
+  dan MLflow, jadi set test tanpa Dhaka tidak tersembunyi. File perintah lab mengukur kecepatan Zenodo dulu.
+- **Yang di-push dari lab hanya ringkasan kecil**: `results/eval_<tanggal>.csv`, grafik, `data_report_lab.json`, serta
+  `timings.tsv` dan `RINGKASAN.txt`. Log tahap lengkap dan arsip `.tar.gz` diabaikan git.

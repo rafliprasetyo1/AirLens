@@ -76,7 +76,15 @@ def run(profile_name: str | None, skip_download: bool) -> dict:
     cfg = load_profile(profile_name)
     profile, dcfg = cfg["profile"], cfg["data"]
     seed, fraction = dcfg["seed"], cfg["training"]["data_fraction"]
-    names = dcfg["sources"]
+    # Darurat: AIRLENS_DATA_SOURCES=pm25vision,india_nepal (mis. unduhan Dhaka terlalu lambat di lab). Sumber yang
+    # benar-benar dipakai tercatat di report.json dan MLflow, jadi tidak tersembunyi.
+    override = [n.strip() for n in os.environ.get("AIRLENS_DATA_SOURCES", "").split(",") if n.strip()]
+    unknown = set(override) - set(DOWNLOADERS)
+    if unknown:
+        raise ValueError(f"AIRLENS_DATA_SOURCES berisi sumber tak dikenal: {sorted(unknown)}")
+    names = override or dcfg["sources"]
+    if override:
+        logger.warning("sumber data diganti lewat AIRLENS_DATA_SOURCES: %s (config: %s)", names, dcfg["sources"])
     out_dir = processed_dir(profile)
     grid_dir = RESULTS_DIR / "data" / profile
     report: dict = {"profile": profile, "sources": names, "data_fraction": fraction, "aqi_table": AQI_TABLE_VERSION}

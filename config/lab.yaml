@@ -30,9 +30,10 @@ calibration:
   target_accuracy: 0.70
   min_accepted: 30
 
-# Pembanding Qwen2.5-VL (opsional). max_images 0 = seluruh test.
+# Pembanding Qwen2.5-VL (opsional). Sampel acak tetap (seed data) dari test; model production dinilai pada sampel
+# yang SAMA. Seluruh test lab (~3.000 foto x 1-5 detik) bisa memakan berjam-jam dan melebihi satu sesi lab.
 vlm:
-  max_images: 0
+  max_images: 300
 
 # Fase 2: data. Dhaka (4,5 GB, Zenodo ~0,15 MB/s dari laptop) hanya diunduh di lab.
 data:

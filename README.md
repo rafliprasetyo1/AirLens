@@ -213,111 +213,77 @@ git add -A && git commit -m "<apa yang dikerjakan>" && git push
 
 ## C. Menjalankan di lab komputer kampus
 
-Lab sudah punya WSL Ubuntu 24.04, Docker, dan LM Studio. Kamu tidak perlu membuat distro AirLens di lab; cukup
-folder `~/AirLens` di distro Ubuntu yang ada.
+Di lab cukup **terminal Ubuntu** (tanpa VS Code/Claude Code). Perintah lengkap yang tinggal disalin satu blok demi
+satu blok ada di **`AirLens_perintah_lab.txt`**: buka Ubuntu → clone → `.env` → `make lab-all PROFILE=lab` → bawa
+pulang arsip → push hasil ringkas → bersihkan. Bagian ini menjelaskan apa yang terjadi di balik perintah tersebut.
 
 ### C1. Sebelum berangkat (di laptop)
 
-- [ ] Fase 0–6 selesai dan `make lab-all PROFILE=laptop` berhasil dari klon bersih.
-- [ ] Semua perubahan sudah di-push ke GitHub.
-- [ ] Nilai `.env` tersimpan aman (password manager), bukan di flash disk tanpa enkripsi.
-- [ ] Personal Access Token GitHub siap, sebaiknya token sementara yang kedaluwarsa dalam beberapa hari.
-- [ ] Siapkan tempat menyimpan hasil (Google Drive atau flash disk).
+- [ ] Semua perubahan sudah di-commit dan di-push (lab memakai `git clone` dari GitHub).
+- [ ] Kunci di password manager: `IQAIR_API_KEY`, `KAGGLE_USERNAME`, `KAGGLE_KEY`, dan **token GitHub** (scope `repo`).
+      Push tetap butuh token walaupun repo publik.
+- [ ] Cadangan zip India–Nepal di Google Drive, untuk berjaga-jaga bila Kaggle bermasalah (sha256 di `DATA_CARD.md`).
+- [ ] Tempat menyimpan arsip hasil (Google Drive atau flash disk).
 
-### C2. Buka Ubuntu dan cek Docker
+### C2. Satu perintah: `make lab-all PROFILE=lab`
 
-PowerShell di komputer lab:
+Tahapan (`scripts/lab_all.sh`):
 
-```powershell
-wsl -l -v
-wsl -d Ubuntu-24.04
-```
+| Tahap | Isi |
+|---|---|
+| setup-check | alat (`make`, `git`, `curl`, `openssl`), Docker, disk ≥ 40 GB, RAM, `.env`, GPU di container (CUDA 12.6), LM Studio |
+| layanan | menyalakan `db` dan `mlflow` |
+| migrasi | membuat/memperbarui skema database (`make migrate`) |
+| data | unduh (checksum, bisa dilanjutkan) → bersihkan → dedup → split → manifest |
+| train | baseline + CNN di GPU, kalibrasi dan ambang di validasi, daftarkan `production` |
+| eval | evaluasi test lewat ONNX (+ Qwen2.5-VL pada 300 foto bila `VLM_BASE_URL` terjangkau) |
+| export | arsip `results/airlens_results_lab_<waktu>.tar.gz` |
 
-(Pakai nama distro yang muncul di daftar.) Lalu:
+Durasi, status, dan pemakaian disk tiap tahap tercatat di `logs/lab_<waktu>_lab/timings.tsv` dan `RINGKASAN.txt`.
+Bila satu tahap gagal, tahap berikutnya dilewati, tetapi **export tetap dijalankan** agar hasil parsial tidak hilang.
 
-```bash
-docker compose version
-docker run --rm hello-world
-```
+Jalur darurat (tercatat, tidak tersembunyi):
+- `AIRLENS_DATA_SOURCES=pm25vision,india_nepal make lab-all PROFILE=lab`: tanpa Dhaka, bila unduhan Zenodo terlalu
+  lambat. File perintah lab mengukur kecepatannya dulu.
+- `SKIP_CHECK=1 make lab-all PROFILE=lab`: tetap jalan walau setup-check gagal (mis. GPU tidak terdeteksi; CPU sangat lambat).
+- `make lab-all PROFILE=lab SMOKE=1`: hanya membuktikan alur (1 epoch).
 
-### C3. Ambil proyek
+### C3. Perkiraan waktu dan disk (diukur)
 
-```bash
-cd ~
-git clone https://github.com/<username-github>/AirLens.git
-cd AirLens
-cp .env.example .env
-nano .env               # isi kunci API, set APP_PROFILE=lab
-```
+Diukur dengan **simulasi klon bersih** di laptop: salinan bersih repo, volume baru,
+`make lab-all PROFILE=laptop SMOKE=1` (subset 10% lokasi, CPU 4 inti). Dua kali dijalankan pada 2026-11-13:
 
-### C4. Siapkan LM Studio (opsional, untuk pembanding Qwen-VL)
+| Tahap | Laptop, run 1 | Laptop, run 2 | Catatan untuk lab |
+|---|---:|---:|---|
+| setup-check | 45 dtk | 10 dtk | + uji GPU (unduh image CUDA 12.6 ~90 MB) |
+| layanan | 43 dtk | 31 dtk | |
+| migrasi | — | 15 dtk | (belum ada di run 1; run 1 gagal karena itu) |
+| data | 5 mnt 50 dtk | **30 mnt 25 dtk** | Unduhan PM25Vision ~1 GB sangat bergantung jaringan (0,5–4 MB/s). Lab menambah **Dhaka 4,5 GB** (Zenodo, dari laptop ~0,15 MB/s) dan memproses data penuh, sekitar 10× gambar laptop |
+| train (SMOKE) | 10 mnt 29 dtk* | 4 mnt 17 dtk | Lab: pelatihan penuh 2 CNN, maks 33 epoch di GPU. **Belum diukur**; ukur dulu dengan SMOKE |
+| eval | — | 26 dtk | Lab: test ~3.000 foto + VLM 300 foto |
+| export | 45 dtk | 10 dtk | |
+| **total** | gagal di train | **36 mnt 21 dtk** | |
 
-1. Buka LM Studio di Windows, unduh **Qwen2.5-VL** dengan ukuran terbesar yang ditandai muat di GPU lab.
-2. Muat modelnya, buka tab **Developer**, nyalakan server, dan aktifkan opsi melayani di jaringan lokal.
-3. Kalau diminta, izinkan LM Studio di Windows Firewall untuk jaringan privat (port 1234).
-4. Catat nama model persisnya:
+\* Run 1 gagal di train (skema database belum ada → ditambahkan tahap migrasi).
 
-```bash
-curl http://<alamat-windows>:1234/v1/models
-```
+Disk (laptop): data subset 1,7 GB; image Docker proyek ~10 GB (trainer CPU 2,7 GB, mlflow 1,3 GB, api 0,8 GB, ...);
+arsip hasil 49 MB. Di lab, image trainer **CUDA** (unduhan ~3 GB terkompresi) jauh lebih besar setelah terpasang, dan
+arsip Dhaka diekstrak (~4,5 GB tambahan). Karena itu setup-check mensyaratkan disk kosong ≥ 40 GB. Angka lab yang
+sebenarnya akan tercatat di `timings.tsv` setelah sesi lab pertama.
 
-Alamat Windows ditentukan oleh Fase 0 (lihat `ENVIRONMENT.md`). Isi `VLM_BASE_URL` dan `VLM_MODEL` di `.env`.
+### C4. Isi arsip hasil (`make export-results PROFILE=lab`)
 
-### C5. Cek lingkungan lab
+`results/`, bundle model (ONNX + metadata), `logs/`, ringkasan data (report, manifest, data_version), **volume
+artefak MLflow**, **dump database `mlflow` dan `airlens`**, `ENVIRONMENT.txt` (tanpa rahasia), dan
+`MANIFEST.sha256`. Arsip diperiksa agar tidak memuat nilai rahasia dari `.env`. Arsip dibawa lewat Google Drive/flash
+disk (tidak masuk git); yang di-push dari lab hanya ringkasan kecil: tabel evaluasi, grafik, `timings.tsv`,
+`RINGKASAN.txt`, dan `data_report_lab.json`.
 
-```bash
-make setup-check PROFILE=lab
-```
+### C5. Kembali ke laptop
 
-Atau, kalau Claude Code dipasang di lab, kirim prompt **Fase 0**. Pastikan GPU terlihat di container. Kalau tidak,
-pelatihan tetap berjalan di CPU tetapi jauh lebih lama; laporkan di catatan.
-
-### C5b. Data India–Nepal di lab
-
-Isi `KAGGLE_USERNAME` dan `KAGGLE_KEY` di `.env`, **atau** salin zip yang sama dari laptop ke
-`data/raw/india_nepal/air-pollution-image-dataset-from-india-and-nepal.zip`. Cocokkan sha256-nya dengan `DATA_CARD.md`:
-
-```bash
-sha256sum data/raw/india_nepal/*.zip
-```
-
-### C6. Jalankan semuanya
-
-```bash
-make lab-all PROFILE=lab
-```
-
-Ini mengunduh data, melatih, mengevaluasi semua model (termasuk Qwen-VL bila terjangkau), dan mengemas hasil.
-Perkiraan waktu dan ruang disk ada di bagian akhir README setelah Fase 6.
-
-Untuk melihat progres: `make logs` di terminal lain, atau MLflow di http://localhost:5000.
-
-### C7. Bawa pulang hasil
-
-```bash
-make export-results
-cp results/airlens_results_*.tar.gz /mnt/c/Users/<user-lab>/Desktop/
-```
-
-Lalu unggah arsip itu ke Google Drive atau salin ke flash disk. **Lakukan sebelum logout**, karena data di
-komputer lab bisa terhapus.
-
-### C8. Bersihkan sebelum pergi
-
-```bash
-make down
-rm .env
-rm -f ~/.git-credentials
-git config --global --unset credential.helper
-```
-
-Kalau memakai Claude Code di lab, jalankan `/logout` di dalam Claude Code. Matikan server LM Studio.
-Hapus atau cabut Personal Access Token di GitHub setelah selesai. Opsional: hapus folder `~/AirLens` dan
-jalankan `docker system prune` bila ruang disk lab perlu dibebaskan.
-
-### C9. Kembali ke laptop
-
-Ekstrak arsip hasil ke `~/AirLens/results/` di laptop, lalu kerjakan **Fase 7** (laporan).
+Ekstrak arsip hasil (`tar -xzf airlens_results_lab_*.tar.gz`), lalu kerjakan **Fase 7** (laporan). Memulihkan
+riwayat MLflow lab ke laptop butuh volume `mlflow` yang kosong (dump lab akan bentrok dengan riwayat laptop); langkahnya
+dibahas di Fase 7 bila diperlukan.
 
 ---
 
@@ -395,5 +361,6 @@ AirLens/
 | `make promote` | Bandingkan challenger vs production (test tetap + shadow); promosi hanya bila kriteria config terpenuhi | Fase 5 |
 | `make rollback [VERSION=n]` | Kembalikan alias production ke versi sebelumnya tanpa build ulang | Fase 5 |
 | `make drift-sim` | Simulasi drift lewat API: membuktikan peringatan menyala (data bergeser) dan tidak (data normal) | Fase 5 |
-| `make lab-all PROFILE=lab` | Seluruh alur di lab | Fase 6 |
-| `make export-results` | Kemas hasil untuk dibawa pulang | Fase 6 |
+| `make lab-all PROFILE=lab` | Seluruh alur di lab: cek → migrasi → data → latih → evaluasi → kemas; durasi tiap tahap di `logs/` | Fase 6 |
+| `make export-results PROFILE=…` | Arsip bertanggal: results, model, log, volume MLflow, dump database mlflow + airlens | Fase 6 |
+| `make migrate` | Buat/perbarui skema database (otomatis sebelum train/retrain/promote/rollback) | Fase 6 |

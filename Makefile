@@ -21,11 +21,11 @@ UV_COMPILE := uv pip compile --quiet --generate-hashes --python-version 3.12 \
 	--exclude-newer $(LOCK_DATE) --custom-compile-command "make lock"
 
 .DEFAULT_GOAL := help
-.PHONY: help setup-check env-check up down ps logs test ui-test docs-check lock drift-sim \
+.PHONY: help setup-check env-check up down ps logs test ui-test docs-check lock drift-sim migrate \
 	data train eval retrain promote rollback monitor lab-all export-results
 
 help:
-	@echo "Target: setup-check up down ps logs test lock data train eval retrain promote rollback monitor lab-all export-results"
+	@echo "Target: setup-check up down ps logs test ui-test docs-check lock data train eval retrain promote rollback monitor drift-sim lab-all export-results"
 	@echo "Contoh: make up PROFILE=laptop"
 
 setup-check:
@@ -79,7 +79,12 @@ lock:
 data: env-check
 	@mkdir -p data results
 	$(COMPOSE) --profile train run --rm --build trainer python -m airlens.data.pipeline
-train: env-check
+# Skema database aplikasi (Alembic, idempoten). Dulu hanya dijalankan api saat start; di lab yang baru (tanpa
+# `make up`) tabel model_versions belum ada sehingga train gagal. Ditemukan lewat simulasi klon bersih.
+migrate: env-check
+	$(COMPOSE) --profile train run --rm --build trainer alembic -c /app/src/airlens/db/alembic.ini upgrade head
+
+train: env-check migrate
 	@mkdir -p artifacts results
 	$(COMPOSE) --profile train run --rm --build trainer python -m airlens_trainer.train
 
@@ -90,17 +95,23 @@ eval: env-check
 monitor:
 	$(COMPOSE) exec -T scheduler python -m airlens_scheduler.monitor $(if $(SINCE),--since $(SINCE)) $(if $(UNTIL),--until $(UNTIL))
 
-retrain: env-check
+retrain: env-check migrate
 	@mkdir -p artifacts results
 	$(COMPOSE) --profile train run --rm --build -e REGISTER_ALIAS=challenger trainer python -m airlens_trainer.train
 
-promote: env-check
+promote: env-check migrate
 	$(COMPOSE) --profile train run --rm --build trainer python -m airlens_trainer.promote
 
-rollback: env-check
+rollback: env-check migrate
 	$(COMPOSE) --profile train run --rm --build $(if $(VERSION),-e VERSION=$(VERSION)) trainer python -m airlens_trainer.rollback
 
-drift-sim: env-check
+drift-sim: env-check migrate
 	$(COMPOSE) --profile train run --rm --build trainer python -m airlens_trainer.drift_sim
-lab-all export-results:
-	@echo "belum tersedia, lihat Fase 6"
+# Fase 6. Satu perintah untuk lab: cek -> data -> latih -> evaluasi -> kemas hasil (durasi tiap tahap dicatat di logs/).
+lab-all: env-check
+	@mkdir -p data artifacts results logs
+	SMOKE=$(if $(filter 1,$(SMOKE)),1,0) scripts/lab_all.sh $(PROFILE)
+
+# Arsip bertanggal: results/, model, log, volume artefak MLflow, dump database mlflow + airlens. Tanpa .env.
+export-results: env-check
+	scripts/export_results.sh $(PROFILE)

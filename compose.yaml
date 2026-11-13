@@ -154,6 +154,7 @@ services:
       VLM_MODEL: ${VLM_MODEL:-}
       GIT_COMMIT: ${GIT_COMMIT:-belum-ada-commit}
       REGISTER_ALIAS: ${REGISTER_ALIAS:-production}
+      AIRLENS_DATA_SOURCES: ${AIRLENS_DATA_SOURCES:-}  # darurat: ganti daftar sumber data (lihat README C)
       AIRLENS_SMOKE: ${AIRLENS_SMOKE:-0}
       GIT_PYTHON_REFRESH: quiet  # git tidak ada di image; commit dicatat lewat GIT_COMMIT
       VLM_DEVICE: ${VLM_DEVICE:-}

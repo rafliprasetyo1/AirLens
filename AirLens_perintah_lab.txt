@@ -1,0 +1,220 @@
+=====================================================================
+ AIRLENS - PERINTAH DI LAB KOMPUTER (TERMINAL UBUNTU SAJA)
+ Repo : https://github.com/rafliprasetyo1/AirLens  (publik)
+ Alur : buka Ubuntu -> ambil proyek -> .env -> make lab-all -> bawa pulang
+        hasil -> push hasil ke GitHub -> bersihkan
+=====================================================================
+
+CARA PAKAI
+- Salin SATU BLOK sekali jalan, tunggu selesai, baru lanjut ke blok berikutnya.
+- Baris yang diawali # adalah penjelasan; kalau ikut tersalin, terminal mengabaikannya.
+- Ganti semua <...> dengan nilai milikmu sendiri.
+- Menempel di terminal Ubuntu: klik kanan, atau Ctrl+Shift+V.
+- SETIAP perintah make di lab WAJIB memakai PROFILE=lab
+  (tanpa itu, proyek berjalan sebagai profil laptop).
+- Jangan tutup terminal saat perintah masih berjalan.
+
+PERKIRAAN WAKTU (diukur di laptop, simulasi klon bersih, 13 Nov 2026)
+- Seluruh alur versi laptop (SMOKE=1, subset data, CPU): 36 menit.
+  Dari situ, unduhan data sekitar 1 GB saja sudah memakan 6-30 menit, tergantung jaringan.
+- Di lab ada tambahan: image CUDA (~3 GB unduhan), dataset Dhaka 4,5 GB, data penuh
+  (sekitar 10x lebih banyak), dan pelatihan penuh di GPU. Totalnya BELUM pernah diukur,
+  jadi mulai LANGKAH 7 sedini mungkin. Durasi sebenarnya tercatat di
+  logs/lab_*/timings.tsv.
+
+BAWA DARI RUMAH (simpan di password manager, JANGAN di file teks biasa)
+- IQAIR_API_KEY, KAGGLE_USERNAME, KAGGLE_KEY
+- Personal Access Token GitHub (scope: repo), untuk git push di LANGKAH 9.
+  Meskipun repo publik, push tetap butuh token.
+- Cadangan: zip India-Nepal di Google Drive (LANGKAH 4b), kalau Kaggle bermasalah.
+- Tempat menyimpan hasil: Google Drive atau flash disk.
+
+
+---------------------------------------------------------------------
+LANGKAH 1 - Buka Ubuntu (di PowerShell Windows)
+---------------------------------------------------------------------
+wsl -l -v
+# Masuk ke distro Ubuntu yang ada (ganti dengan nama yang muncul di daftar):
+wsl -d Ubuntu-24.04
+
+
+---------------------------------------------------------------------
+LANGKAH 2 - Cek alat, Docker, RAM, dan disk (di terminal Ubuntu)
+---------------------------------------------------------------------
+# Alat dasar. Kalau ada yang "TIDAK ADA", pasang dengan baris sudo di bawahnya.
+for t in make git curl openssl; do command -v $t >/dev/null && echo "ada: $t" || echo "TIDAK ADA: $t"; done
+# sudo apt-get update && sudo apt-get install -y make git curl openssl
+
+docker compose version
+docker run --rm hello-world
+
+# RAM dan disk. Butuh disk kosong minimal 40 GB.
+free -h
+df -h ~
+
+
+---------------------------------------------------------------------
+LANGKAH 3 - Identitas git dan ambil proyek
+---------------------------------------------------------------------
+git config --global user.name "rafliprasetyo1"
+git config --global user.email "rafliprstyo5@gmail.com"
+git config --global credential.helper "cache --timeout=14400"
+# (token diingat 4 jam di memori, tidak ditulis ke disk)
+
+cd ~
+git clone https://github.com/rafliprasetyo1/AirLens.git
+cd ~/AirLens
+git log --oneline -3
+
+
+---------------------------------------------------------------------
+LANGKAH 4 - Buat file .env (rahasia; tidak pernah di-commit)
+---------------------------------------------------------------------
+cp .env.example .env
+sed -i "s|^POSTGRES_PASSWORD=.*|POSTGRES_PASSWORD=$(openssl rand -hex 24)|" .env
+sed -i "s|^APP_PROFILE=.*|APP_PROFILE=lab|" .env
+nano .env
+#   Isi:  IQAIR_API_KEY=<kunci IQAir>
+#         KAGGLE_USERNAME=<username Kaggle>
+#         KAGGLE_KEY=<kunci Kaggle>
+#   Simpan: Ctrl+O lalu Enter. Keluar: Ctrl+X.
+
+# Cek nama variabel yang sudah terisi (nilai rahasia tidak ditampilkan):
+grep -E '^[A-Z_]+=.+' .env | cut -d= -f1
+
+
+---------------------------------------------------------------------
+LANGKAH 4b - (Cadangan bila Kaggle bermasalah) salin zip India-Nepal
+---------------------------------------------------------------------
+# Unduh zip dari Google Drive ke Downloads Windows (TUNGGU sampai selesai), lalu:
+mkdir -p data/raw/india_nepal
+cp "/mnt/c/Users/<user-lab>/Downloads/air-pollution-image-dataset-from-india-and-nepal.zip" data/raw/india_nepal/
+sha256sum data/raw/india_nepal/*.zip
+# Harus persis: 44ab21a56ef30600015e8f261cefa0eeb8619ff3bdbd62234759588e510e8668
+
+
+---------------------------------------------------------------------
+LANGKAH 5 - (OPSIONAL) LM Studio untuk pembanding Qwen2.5-VL
+---------------------------------------------------------------------
+# Lewati kalau waktu sempit; evaluasi VLM akan berstatus "dilewati".
+# Di Windows: LM Studio -> muat model Qwen2.5-VL -> tab Developer -> nyalakan server
+# -> aktifkan "Serve on Local Network". Izinkan di Windows Firewall (port 1234).
+
+# Alamat 1 (Docker Desktop):
+docker run --rm curlimages/curl:8.11.1 -s -m 5 http://host.docker.internal:1234/v1/models
+# Alamat 2 bila alamat 1 gagal (Docker Engine; IP gateway WSL):
+GW=$(ip route show default | awk '{print $3}'); echo $GW
+docker run --rm curlimages/curl:8.11.1 -s -m 5 http://$GW:1234/v1/models
+
+# Isi alamat yang berhasil + "id" model VL persis seperti di keluaran:
+nano .env
+#   VLM_BASE_URL=http://host.docker.internal:1234/v1      (atau http://<GW>:1234/v1)
+#   VLM_MODEL=<id model>
+# VLM hanya dinilai pada 300 foto test (config/lab.yaml), jadi tidak memakan berjam-jam.
+
+
+---------------------------------------------------------------------
+LANGKAH 6 - Cek lingkungan + kecepatan unduh Dhaka
+---------------------------------------------------------------------
+make setup-check PROFILE=lab
+# Semua baris harus OK atau DILEWATI. GAGAL di baris GPU = pelatihan akan sangat lambat (CPU).
+
+# Ukur kecepatan Zenodo (unduh 20 MB pertama dataset Dhaka, maks 60 detik):
+curl -s -o /dev/null -r 0-20971519 -m 60 -w "%{speed_download}\n" "https://zenodo.org/records/7878371/files/dataset.rar?download=1" | awk '{printf "kecepatan %.2f MB/s -> Dhaka 4,5 GB kira-kira %.0f menit\n", $1/1048576, 4608/($1/1048576+1e-9)/60}'
+# Kalau perkiraannya > 120 menit, pakai jalur DARURAT di LANGKAH 7 (tanpa Dhaka).
+
+
+---------------------------------------------------------------------
+LANGKAH 7 - JALANKAN SEMUANYA (satu perintah)
+---------------------------------------------------------------------
+# Urutan otomatis: cek -> db+mlflow -> data -> latih -> evaluasi -> kemas hasil.
+# Durasi tiap tahap dicatat di logs/lab_<waktu>_lab/timings.tsv.
+# Kalau satu tahap gagal, tahap berikutnya dilewati, tetapi hasil yang sudah ada TETAP dikemas.
+make lab-all PROFILE=lab
+
+# --- JALUR DARURAT (pilih SATU, hanya bila perlu) ---
+# a) Unduhan Dhaka terlalu lambat: jalankan tanpa Dhaka (tercatat di report.json):
+#    AIRLENS_DATA_SOURCES=pm25vision,india_nepal make lab-all PROFILE=lab
+# b) GPU GAGAL di setup-check tetapi tetap ingin jalan (CPU, sangat lambat):
+#    SKIP_CHECK=1 make lab-all PROFILE=lab
+# c) Hanya membuktikan alur dulu (cepat, 1 epoch; hasilnya BUKAN hasil akhir):
+#    make lab-all PROFILE=lab SMOKE=1
+#
+# Kalau terhenti di tengah, ulangi perintah yang sama: unduhan Hugging Face dan Zenodo
+# dilanjutkan dari posisi terakhir. Unduhan Kaggle dan pelatihan mulai dari awal.
+
+# Pantau dari terminal KEDUA (opsional; buka tab baru, lalu cd ~/AirLens):
+#   tail -f logs/lab_*/*.log
+
+
+---------------------------------------------------------------------
+LANGKAH 8 - Periksa hasil dan bawa pulang arsipnya
+---------------------------------------------------------------------
+cat logs/lab_*_lab/RINGKASAN.txt
+ls -lh results/airlens_results_lab_*.tar.gz
+ls results/
+
+# Isi arsip harus memuat database MLflow dan artefak model:
+tar -tzf $(ls -t results/airlens_results_lab_*.tar.gz | head -1) | grep -E 'mlflow_db.sql|airlens_db.sql|mlartifacts.tar.gz|MANIFEST'
+
+# Salin arsip ke Desktop Windows, lalu unggah ke Google Drive / flash disk LEWAT BROWSER:
+cp results/airlens_results_lab_*.tar.gz "/mnt/c/Users/<user-lab>/Desktop/"
+
+
+---------------------------------------------------------------------
+LANGKAH 9 - Push hasil ringkas ke GitHub
+---------------------------------------------------------------------
+# Yang di-commit HANYA ringkasan kecil (tabel, grafik, durasi). Arsip .tar.gz,
+# data, dan model tidak masuk git (sudah diatur .gitignore).
+cp data/processed/lab/report.json results/data_report_lab.json
+git status
+git add results/ logs/
+git status
+# Periksa daftar hijau: TIDAK boleh ada .env, .tar.gz, atau data/. Kalau ada, berhenti dan tanya tim.
+
+git commit -m "Hasil lab"
+git pull --rebase
+git push
+#   Username: rafliprasetyo1
+#   Password: TEMPEL TOKEN GitHub (layar memang tidak menampilkan apa pun, tekan Enter)
+
+
+---------------------------------------------------------------------
+LANGKAH 10 - Bersihkan sebelum pulang (SETELAH arsip aman di Google Drive)
+---------------------------------------------------------------------
+cd ~/AirLens
+docker compose -f compose.yaml -f compose.gpu.yaml down
+rm .env
+git credential-cache exit
+rm -f ~/.git-credentials
+# Matikan server LM Studio di Windows.
+# Opsional, bila ruang disk lab perlu dibebaskan:
+#   cd ~ && rm -rf ~/AirLens && docker system prune -a
+# Di rumah: cabut (revoke) token GitHub yang dipakai di lab.
+
+
+---------------------------------------------------------------------
+CADANGAN - Menjalankan tahap satu per satu (bila make lab-all bermasalah)
+---------------------------------------------------------------------
+make setup-check PROFILE=lab
+make data PROFILE=lab
+make train PROFILE=lab
+make eval PROFILE=lab
+make export-results PROFILE=lab
+
+
+---------------------------------------------------------------------
+KALAU ADA MASALAH
+---------------------------------------------------------------------
+"make: command not found"      -> sudo apt-get install -y make
+permission denied saat docker  -> wsl --shutdown (PowerShell), buka Ubuntu lagi
+GPU GAGAL di setup-check       -> jalur darurat b) atau c) di LANGKAH 7; catat di laporan
+make data gagal India-Nepal    -> isi KAGGLE_* di .env, atau LANGKAH 4b
+Unduhan Dhaka terlalu lama     -> Ctrl+C, lalu jalur darurat a) di LANGKAH 7
+Disk penuh                     -> docker system df ; docker system prune
+git push "Authentication failed" -> token salah/kedaluwarsa; pakai token, bukan password
+git push ditolak (fetch first) -> git pull --rebase ; git push
+Lihat log layanan              -> docker compose logs --tail=100 mlflow
+
+Semua log ada di logs/ dan ikut di arsip hasil, jadi error apa pun bisa dianalisis di rumah.
+=====================================================================

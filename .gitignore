@@ -47,3 +47,7 @@ results/*_smoke*
 # Laporan monitoring & promosi dibuat ulang tiap run (simulasi/uji asap di laptop); dikemas oleh make export-results
 results/monitoring/
 results/promotion_*
+# Arsip hasil (make export-results) dibawa lewat Google Drive/flash disk, bukan git
+results/airlens_results_*.tar.gz
+# Log lab-all: timings.tsv & RINGKASAN.txt boleh di-commit, log tahap lengkap tidak
+logs/**/*.log

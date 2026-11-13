@@ -1,0 +1,254 @@
+==========================================================================
+ PANDUAN TIM AIRLENS: BERGABUNG KE PROYEK DAN BEKERJA DENGAN GIT/GITHUB
+==========================================================================
+
+Repo   : https://github.com/rafliprasetyo1/AirLens (private)
+Isi    : A. Untuk pemilik repo (sekali saja)
+         B. Untuk anggota tim baru: persiapan pertama kali
+         C. Alur kerja sehari-hari (branch dan pull request)
+         D. Menyelesaikan konflik
+         E. Aturan: apa yang boleh dan tidak boleh di-commit
+         F. Pesan galat yang sering muncul
+         G. Kamus singkat perintah git
+
+Cara membaca: baris yang diawali "$" adalah perintah yang diketik di terminal
+WSL (tanpa tanda "$"). Teks dalam HURUF_BESAR diganti dengan milikmu sendiri.
+
+
+--------------------------------------------------------------------------
+A. UNTUK PEMILIK REPO (sekali saja)
+--------------------------------------------------------------------------
+
+Repo ini private, jadi anggota tim harus diundang dulu.
+
+1. Buka https://github.com/rafliprasetyo1/AirLens
+2. Settings -> Collaborators -> Add people
+3. Masukkan username atau email GitHub teman -> Add
+4. Teman menerima undangan lewat email atau https://github.com/notifications,
+   lalu klik "Accept".
+
+
+--------------------------------------------------------------------------
+B. UNTUK ANGGOTA TIM BARU: PERSIAPAN PERTAMA KALI
+--------------------------------------------------------------------------
+
+Prasyarat
+  - Windows dengan WSL Ubuntu 24.04 dan Docker (lihat README.md bagian A).
+  - Proyek disimpan di filesystem WSL (~/), BUKAN di /mnt/c (lambat dan
+    rawan masalah izin).
+
+Langkah 1. Buat token GitHub sendiri
+  GitHub TIDAK menerima password akun untuk git push; yang dipakai adalah token.
+  1. GitHub -> foto profil -> Settings -> Developer settings
+     -> Personal access tokens -> Tokens (classic) -> Generate new token (classic)
+  2. Note: "AirLens"   Expiration: misalnya 90 days   centang scope: repo
+  3. Klik Generate token, SALIN token, simpan di tempat aman.
+     Token hanya ditampilkan sekali. Jangan kirim token ke chat atau ke orang lain.
+
+Langkah 2. Atur identitas git (sekali per komputer)
+  $ git config --global user.name "USERNAME_GITHUB"
+  $ git config --global user.email "EMAIL@contoh.com"
+  $ git config --global core.autocrlf input
+  $ git config --global credential.helper "cache --timeout=3600"
+
+  Penjelasan:
+  - user.name / user.email : nama yang tercatat di setiap commit.
+  - core.autocrlf input    : simpan file dengan akhir baris LF (standar Linux).
+  - credential.helper cache: git mengingat token selama 1 jam di memori, tidak
+                             ditulis ke file.
+
+Langkah 3. Salin (clone) proyek
+  $ cd ~
+  $ git clone https://github.com/rafliprasetyo1/AirLens.git
+  $ cd AirLens
+
+  Saat diminta:
+    Username : USERNAME_GITHUB
+    Password : TEMPEL TOKEN (layar memang tidak menampilkan apa pun, tekan Enter)
+
+Langkah 4. Buat file .env sendiri (berisi rahasia, TIDAK pernah di-commit)
+  $ cp .env.example .env
+  $ sed -i "s|^POSTGRES_PASSWORD=.*|POSTGRES_PASSWORD=$(openssl rand -hex 24)|" .env
+  $ nano .env
+
+  Di nano, isi IQAIR_API_KEY dengan kunci milikmu sendiri (daftar gratis di
+  https://dashboard.iqair.com -> API -> paket Community). Simpan: Ctrl+O, Enter,
+  Ctrl+X. Setiap anggota memakai kunci IQAir masing-masing (kuota 500/hari per kunci).
+
+Langkah 5. Cek lingkungan dan nyalakan layanan
+  $ make setup-check
+  $ make up
+  $ curl localhost:8000/health
+
+  Hasil yang benar: {"status":"ok","db":"ok",...}
+  Build pertama makan waktu karena mengunduh image dan dependency.
+
+Langkah 6. Siapkan data (data tidak ada di GitHub dan harus diunduh ulang)
+  a) Dataset India-Nepal: unduh zip lewat browser (login Kaggle):
+     https://www.kaggle.com/datasets/adarshrouniyar/air-pollution-image-dataset-from-india-and-nepal
+  b) Salin ke proyek dengan nama persis seperti ini:
+     $ mkdir -p data/raw/india_nepal
+     $ cp "/mnt/c/Users/NAMA_WINDOWS/Downloads/archive.zip" \
+          data/raw/india_nepal/air-pollution-image-dataset-from-india-and-nepal.zip
+  c) Pastikan file sama dengan milik tim:
+     $ sha256sum data/raw/india_nepal/*.zip
+     Harus sama dengan sha256 di DATA_CARD.md (diawali 44ab21a5...).
+     Tunggu sampai unduhan di browser BENAR-BENAR selesai sebelum menyalin.
+  d) Jalankan pipeline data (PM25Vision ~1 GB diunduh otomatis):
+     $ make data PROFILE=laptop
+
+Langkah 7. Siapkan model uji dan jalankan test
+  $ make train SMOKE=1
+  $ make test
+
+  Proses ini butuh sekitar 10 menit. Model sungguhan dilatih di lab;
+  "SMOKE=1" hanya membuktikan alurnya berjalan.
+
+Langkah 8. Buka website
+  Di browser Windows: http://localhost:8080 (website) dan http://localhost:5000 (MLflow)
+
+
+--------------------------------------------------------------------------
+C. ALUR KERJA SEHARI-HARI (BRANCH DAN PULL REQUEST)
+--------------------------------------------------------------------------
+
+Prinsip: JANGAN langsung push ke main. Setiap pekerjaan dibuat di "branch"
+sendiri, lalu digabung lewat Pull Request agar bisa direview teman.
+
+1. Mulai dari versi main terbaru
+   $ git checkout main
+   $ git pull
+
+2. Buat branch baru untuk pekerjaanmu
+   $ git checkout -b fitur/NAMA-FITUR
+   Contoh nama: fitur/validasi-foto, perbaikan/galat-iqair, dok/laporan
+
+3. Kerjakan, lalu periksa apa yang berubah
+   $ git status
+   $ git diff
+
+4. Simpan perubahan (commit)
+   $ git add -A
+   $ git commit -m "Tambah validasi ukuran foto"
+   Pesan commit: singkat, jelas, menjelaskan APA yang diubah.
+
+5. Kirim branch ke GitHub
+   $ git push -u origin fitur/NAMA-FITUR
+   ("-u" hanya untuk push pertama branch ini; berikutnya cukup "git push".)
+
+6. Di halaman repo GitHub akan muncul tombol "Compare & pull request".
+   Klik, tulis ringkasan perubahan, minta teman me-review, lalu "Merge".
+
+7. Setelah di-merge, SEMUA anggota memperbarui main di laptop masing-masing:
+   $ git checkout main
+   $ git pull
+
+8. Branch yang sudah di-merge boleh dihapus:
+   $ git branch -d fitur/NAMA-FITUR
+
+
+--------------------------------------------------------------------------
+D. MENYELESAIKAN KONFLIK
+--------------------------------------------------------------------------
+
+Konflik terjadi bila dua orang mengubah baris yang sama di file yang sama.
+
+1. Gabungkan main terbaru ke branch-mu
+   $ git checkout fitur/NAMA-FITUR
+   $ git pull origin main
+
+2. Git akan menyebut file yang konflik. Buka file itu; bagian konflik ditandai:
+     <<<<<<< HEAD
+     versi milikmu
+     =======
+     versi dari main
+     >>>>>>> main
+   Pilih isi yang benar (atau gabungkan keduanya), lalu HAPUS ketiga baris
+   penanda (<<<<<<<, =======, >>>>>>>).
+
+3. Tandai selesai dan kirim
+   $ git add -A
+   $ git commit -m "Selesaikan konflik dengan main"
+   $ git push
+
+4. Jalankan test sebelum merge:
+   $ make test
+
+
+--------------------------------------------------------------------------
+E. ATURAN: APA YANG BOLEH DAN TIDAK BOLEH DI-COMMIT
+--------------------------------------------------------------------------
+
+BOLEH di-commit:
+  - Kode: src/, api/, web/, trainer/, scheduler/, tests/
+  - Konfigurasi: config/, compose.yaml, compose.gpu.yaml, Makefile, Dockerfile
+  - Dokumentasi: *.md, file ini
+
+JANGAN di-commit:
+  - .env (password, kunci IQAir, token)
+  - Isi data/ (dataset) dan artifacts/ (model, cache)
+  - Hasil uji asap/simulasi di results/
+
+File .gitignore sudah menjaga ini. Tetap biasakan:
+  $ git status
+SEBELUM menjalankan "git add -A". Bila .env atau data/ muncul di daftar,
+JANGAN lanjutkan; tanyakan ke tim.
+
+Rahasia tidak boleh ditulis langsung di kode. Kode cukup MEMBACA dari environment,
+contohnya os.environ.get("IQAIR_API_KEY"), dan nilainya ditaruh di .env.
+
+Catatan: model di MLflow dan isi database ada di laptop masing-masing (tidak
+lewat git). Model hasil pelatihan lab dibagikan lewat "make export-results".
+
+
+--------------------------------------------------------------------------
+F. PESAN GALAT YANG SERING MUNCUL
+--------------------------------------------------------------------------
+
+"Authentication failed"
+  Token salah, kedaluwarsa, atau yang dimasukkan password akun.
+  -> Buat token baru (scope: repo) dan pakai sebagai password.
+
+"Repository not found"
+  Belum menerima undangan collaborator, atau alamat repo salah.
+  -> Terima undangan; cek alamat dengan: $ git remote -v
+
+"rejected ... (fetch first)" atau "non-fast-forward"
+  Di GitHub ada commit yang belum ada di laptopmu.
+  -> $ git pull   lalu ulangi   $ git push
+
+"Your local changes would be overwritten"
+  Ada perubahan belum di-commit saat pull/checkout.
+  -> commit dulu (git add -A; git commit -m "..."), atau simpan sementara:
+     $ git stash      (lalu setelah pull)   $ git stash pop
+
+"permission denied" saat menjalankan docker
+  -> Lihat README.md bagian D (grup docker / wsl.exe --shutdown).
+
+Website menampilkan "Model belum tersedia"
+  -> $ make train SMOKE=1
+
+
+--------------------------------------------------------------------------
+G. KAMUS SINGKAT PERINTAH GIT
+--------------------------------------------------------------------------
+
+git clone URL           Salin repo dari GitHub ke laptop (sekali di awal).
+git status              Lihat file yang berubah / siap di-commit.
+git diff                Lihat isi perubahan baris per baris.
+git add -A              Siapkan SEMUA perubahan untuk commit.
+git commit -m "pesan"   Simpan perubahan sebagai satu titik riwayat.
+git push                Kirim commit ke GitHub.
+git pull                Ambil dan gabungkan perubahan terbaru dari GitHub.
+git log --oneline       Lihat riwayat commit singkat.
+git checkout NAMA       Pindah ke branch NAMA.
+git checkout -b NAMA    Buat branch baru NAMA lalu pindah ke sana.
+git branch              Lihat daftar branch (yang aktif bertanda *).
+git remote -v           Lihat alamat repo GitHub yang terhubung.
+git stash / stash pop   Simpan sementara perubahan / kembalikan lagi.
+
+Alur paling sering dipakai:
+  git pull  ->  (kerjakan)  ->  git status  ->  git add -A
+  ->  git commit -m "..."  ->  git push
+
+==========================================================================
