@@ -103,7 +103,7 @@ def run(profile_name: str | None = None) -> dict:
     n_classes = len(ds.classes)
     out_root = models_dir(ds.data_version)
     common = {"data_version": ds.data_version, "code_version": code_version(), "git_commit": git_commit(),
-              "profile": profile, "classes": ds.classes, "seed": seed, "smoke": is_smoke()}
+              "profile": profile, "classes": ds.classes, "class_merge": cfg["data"]["class_merge"], "seed": seed, "smoke": is_smoke()}
     logger.info("data %s: train %d, val %d, kelas %s", ds.data_version[:12], len(tr), len(va), ds.classes)
     mlflow.set_experiment("airlens-train")
     candidates: dict = {"data_version": ds.data_version, "models": {}}

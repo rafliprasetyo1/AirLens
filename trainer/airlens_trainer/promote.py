@@ -36,7 +36,8 @@ def evaluate(bundle: Path, paths: list[str], y: np.ndarray) -> dict:
     sel = selective_metrics(probs, y, meta["threshold"]["threshold"], len(meta["classes"]))
     return {"macro_f1": round(m["macro_f1"], 4), "balanced_accuracy": round(m["balanced_accuracy"], 4),
             "ece": round(expected_calibration_error(probs, y), 4), "rejected_fraction": round(sel["rejected_fraction"], 4),
-            "data_version": meta["data_version"], "smoke": meta.get("smoke", False), "name": meta["name"]}
+            "data_version": meta["data_version"], "smoke": meta.get("smoke", False), "name": meta["name"],
+            "classes": meta["classes"]}
 
 
 def shadow_stats(engine, prod_v: str, ch_v: str) -> dict:
@@ -76,6 +77,8 @@ def main() -> int:
     sh = shadow_stats(engine, prod_v, ch_v)
     p, c = res["production"], res["challenger"]
     checks = [
+        ("Skema kelas sama (metrik bisa dibandingkan)", p["classes"] == c["classes"],
+         f"{len(p['classes'])} vs {len(c['classes'])} kelas"),
         ("Test tetap sesuai data challenger (tanpa kebocoran)", c["data_version"] == ds.data_version,
          f"data challenger {c['data_version'][:12]} vs data sekarang {ds.data_version[:12]}"),
         (f"macro-F1 test challenger >= production + {crit['min_macro_f1_gain']}",

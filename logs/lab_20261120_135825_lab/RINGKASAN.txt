@@ -1,0 +1,10 @@
+Ringkasan lab-all 2026-11-20T13:59:36+07:00 · profil lab · SMOKE=0
+tahap        mulai                      selesai                    detik  status      disk_terpakai_GB  data_GB  docker_images_GB
+setup-check  2026-11-20T13:58:25+07:00  2026-11-20T13:58:26+07:00  1      ok          10                0.00     1.068GB
+layanan      2026-11-20T13:58:26+07:00  2026-11-20T13:59:29+07:00  63     gagal(255)  12                0.00     1.486GB
+migrasi      -                          -                          0      dilewati    -                 -        -
+data         -                          -                          0      dilewati    -                 -        -
+train        -                          -                          0      dilewati    -                 -        -
+eval         -                          -                          0      dilewati    -                 -        -
+export       2026-11-20T13:59:29+07:00  2026-11-20T13:59:36+07:00  7      ok          11                0.00     1.486GB
+STATUS: tahap 'layanan' GAGAL — lihat logs/lab_20261120_135825_lab/layanan.log

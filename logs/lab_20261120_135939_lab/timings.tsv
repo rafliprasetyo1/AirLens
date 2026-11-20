@@ -1,0 +1,8 @@
+tahap	mulai	selesai	detik	status	disk_terpakai_GB	data_GB	docker_images_GB
+setup-check	2026-11-20T13:59:39+07:00	2026-11-20T13:59:40+07:00	1	ok	11	0.00	1.486GB
+layanan	2026-11-20T13:59:40+07:00	2026-11-20T14:00:09+07:00	29	ok	13	0.00	2.76GB
+migrasi	2026-11-20T14:00:10+07:00	2026-11-20T14:06:27+07:00	377	gagal(2)	32	0.00	1.338GB
+data	-	-	0	dilewati	-	-	-
+train	-	-	0	dilewati	-	-	-
+eval	-	-	0	dilewati	-	-	-
+export	2026-11-20T14:06:27+07:00	2026-11-20T14:06:51+07:00	24	ok	32	0.00	1.756GB

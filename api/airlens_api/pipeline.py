@@ -16,7 +16,7 @@ from scipy.special import softmax
 from sqlalchemy import Engine
 from sqlalchemy.orm import Session
 
-from airlens.aqi import BREAKPOINTS, CATEGORY_LABELS, aqi_to_category
+from airlens.aqi import BREAKPOINTS, aqi_to_category, class_label, merge_for_classes
 from airlens.data.quality import image_stats, reject_reason
 from airlens.monitoring.signature import input_signature, project
 from airlens.db.models import Prediction
@@ -82,25 +82,27 @@ class PredictionPipeline:
         self.challenger = challenger
         self.uploads_dir = uploads_dir
         self.max_bytes = cfg["api"]["max_upload_mb"] * 2**20
-        self.class_merge = cfg["data"]["class_merge"]
+
+    @staticmethod
+    def _merge(meta: dict) -> dict[str, str]:
+        """Skema kelas milik MODEL (bukan config), agar rollback ke model dengan skema lain tetap benar."""
+        return meta.get("class_merge") or merge_for_classes(meta["classes"])
 
     # ------------------------------------------------------------------ util
-    def _category_view(self, cat: str, classes: list[str]) -> dict:
-        lo, hi = class_ranges(classes, self.class_merge)[cat]
-        merged_from = [c for c, t in self.class_merge.items() if t == cat]
-        label = " / ".join([CATEGORY_LABELS[cat], *(CATEGORY_LABELS[c] for c in merged_from)])
+    def _category_view(self, cat: str, classes: list[str], merge: dict[str, str]) -> dict:
+        lo, hi = class_ranges(classes, merge)[cat]
         bg, fg = COLORS[cat]
-        return {"key": cat, "label": label, "aqi_range": [lo, hi], "color": bg,
+        return {"key": cat, "label": class_label(cat, merge), "aqi_range": [lo, hi], "color": bg,
                 "text_color": fg, "advice": ADVICE[cat]}
 
-    def _iqair_view(self, reading: Reading, pred_cat: str | None, classes: list[str]) -> dict:
-        cat = self.class_merge.get(aqi_to_category(reading.aqi_us), aqi_to_category(reading.aqi_us))
+    def _iqair_view(self, reading: Reading, pred_cat: str | None, classes: list[str], merge: dict[str, str]) -> dict:
+        cat = merge.get(aqi_to_category(reading.aqi_us), aqi_to_category(reading.aqi_us))
         view = {"status": "ok", "aqi_us": reading.aqi_us, "city": reading.city, "state": reading.state,
                 "country": reading.country, "main_pollutant": reading.main_pollutant,
                 "observed_at": reading.observed_at.isoformat() if reading.observed_at else None,
-                "cached": reading.cached, "category": self._category_view(cat, classes)}
+                "cached": reading.cached, "category": self._category_view(cat, classes, merge)}
         if pred_cat:
-            lo, hi = class_ranges(classes, self.class_merge)[pred_cat]
+            lo, hi = class_ranges(classes, merge)[pred_cat]
             view["selisih_kategori"] = classes.index(pred_cat) - classes.index(cat)
             view["jarak_ke_rentang"] = 0 if lo <= reading.aqi_us <= hi else (
                 lo - reading.aqi_us if reading.aqi_us < lo else reading.aqi_us - hi)
@@ -190,11 +192,13 @@ class PredictionPipeline:
             return
         meta = self.models.meta
         classes = meta["classes"]
+        merge = self._merge(meta)
         pca = (meta.get("monitoring_reference") or {}).get("emb_pca")
         if emb is not None and pca:
             input_stats["emb_pca"] = project(emb[0], pca)[0].round(4).tolist()
         probs = softmax(logits[0] / meta["temperature"])
-        k = int(probs.argmax())
+        order = np.argsort(probs)[::-1]
+        k, k2 = int(order[0]), int(order[1])
         threshold = float(meta["threshold"]["threshold"])
         uncertain = float(probs[k]) < threshold
         pred_cat = classes[k]
@@ -216,7 +220,7 @@ class PredictionPipeline:
                 reading = self.iqair.by_city(req.city["city"], req.city["state"], req.city["country"])
             else:
                 raise IQAirUnavailable("tanpa_lokasi", "Pilih kota atau izinkan lokasi untuk pembanding IQAir.")
-            iq_view = self._iqair_view(reading, None if uncertain else pred_cat, classes)
+            iq_view = self._iqair_view(reading, None if uncertain else pred_cat, classes, merge)
             self.jobs.emit(job, "iqair", "selesai")
         except IQAirUnavailable as e:
             iq_view = {"status": "tidak_tersedia", "code": e.code, "message": e.message}
@@ -238,11 +242,13 @@ class PredictionPipeline:
         self._shadow(job, x, input_stats, sha, reading, base_log)
         self.jobs.finish(job, {
             "status": status,
-            "category": None if uncertain else self._category_view(pred_cat, classes),
-            "top_candidate": self._category_view(pred_cat, classes),
+            "category": None if uncertain else self._category_view(pred_cat, classes, merge),
+            "top_candidate": self._category_view(pred_cat, classes, merge),
+            # Kandidat kedua: saat belum pasti, web menampilkan "antara A dan B" (peluang gabungan, terkalibrasi).
+            "runner_up": {**self._category_view(classes[k2], classes, merge), "p": round(float(probs[k2]), 4)},
             "confidence": round(float(probs[k]), 4),
             "threshold": round(threshold, 4),
-            "probabilities": [{"key": c, "label": CATEGORY_LABELS[c], "p": round(float(p), 4)}
+            "probabilities": [{"key": c, "label": class_label(c, merge), "p": round(float(p), 4)}
                               for c, p in zip(classes, probs)],
             "hints": hints,
             "iqair": iq_view,

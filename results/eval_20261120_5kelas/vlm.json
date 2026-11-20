@@ -1,0 +1,7 @@
+{
+  "status": "dilewati",
+  "reason": "LM Studio tidak terjangkau di http://localhost:1234/v1 (ConnectionError)",
+  "model": null,
+  "device": "",
+  "n_images": 0
+}

@@ -20,7 +20,7 @@ import requests
 from sqlalchemy import Engine, select
 from sqlalchemy.orm import Session
 
-from airlens.aqi import aqi_to_category
+from airlens.aqi import aqi_to_category, merge_for_classes
 from airlens.db.models import MonitoringReport, Prediction
 from airlens.monitoring.drift import drift_table
 from airlens.monitoring.signature import FEATURE_LABELS
@@ -44,8 +44,9 @@ def _rate(n: int, d: int) -> float | None:
 
 def compute(rows: list[Prediction], shadow: list[Prediction], meta: dict | None, cfg: dict) -> dict:
     th = cfg["monitoring"]["thresholds"]
-    merge = cfg["data"]["class_merge"]
     classes = meta["classes"] if meta else []
+    # Skema kelas milik model production (bisa berbeda dari config setelah rollback).
+    merge = (meta.get("class_merge") or merge_for_classes(classes)) if meta else cfg["data"]["class_merge"]
     n = len(rows)
     rejected = [r for r in rows if r.status == "rejected"]
     accepted = [r for r in rows if r.status in ("ok", "uncertain")]

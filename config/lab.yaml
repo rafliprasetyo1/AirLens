@@ -42,8 +42,10 @@ data:
   val_frac: 0.15
   test_frac: 0.15
   test_groups: [dhaka]   # kota yang disisihkan penuh untuk test (group_hint)
-  # Disetujui 2026-10-25: hazardous terlalu sedikit lokasi (36 stasiun) untuk val/test bermakna. Lihat DECISIONS.md.
-  class_merge: {hazardous: very_unhealthy}
+  # Disetujui 2026-10-25: hazardous terlalu sedikit lokasi (36 stasiun) untuk val/test bermakna.
+  # Disetujui 2026-11-20: 3 kelas (good->moderate, usg->unhealthy); 85% salah prediksi 5 kelas hanya meleset 1 kelas.
+  # Digabung ke kelas yang LEBIH BURUK agar saran kesehatan konservatif. Lihat DECISIONS.md.
+  class_merge: {good: moderate, usg: unhealthy, hazardous: very_unhealthy}
 
 # Fase 5: monitoring tanpa label + promosi model. Jadwal dalam UTC.
 monitoring:

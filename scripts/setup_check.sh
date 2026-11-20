@@ -71,7 +71,7 @@ fi
 vlm="$(env_get VLM_BASE_URL)"
 if [ -z "$vlm" ]; then
   skip "LM Studio (VLM_BASE_URL kosong; opsional)"
-elif docker run --rm "$CURL_IMAGE" -sf -m 5 "$vlm/models" >/dev/null 2>&1; then
+elif docker run --rm --network host "$CURL_IMAGE" -sf -m 5 "$vlm/models" >/dev/null 2>&1; then
   ok "LM Studio terjangkau dari container: $vlm"
 else
   skip "LM Studio tidak terjangkau di $vlm (opsional; nyalakan server LM Studio bila perlu)"

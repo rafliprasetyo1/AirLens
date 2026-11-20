@@ -3,6 +3,8 @@ import pytest
 from airlens.aqi import (
     CATEGORIES,
     aqi_to_category,
+    class_label,
+    merge_for_classes,
     aqi_to_pm25,
     pm25_to_aqi,
     pm25_to_category,
@@ -82,3 +84,19 @@ def test_invalid_concentration_rejected(bad):
 
 def test_categories_ordered():
     assert CATEGORIES[0] == "good" and CATEGORIES[-1] == "hazardous" and len(CATEGORIES) == 6
+
+
+@pytest.mark.parametrize("classes, merge", [
+    (["good", "moderate", "usg", "unhealthy", "very_unhealthy"], {"hazardous": "very_unhealthy"}),  # model lama (rollback)
+    (["moderate", "unhealthy", "very_unhealthy"], {"good": "moderate", "usg": "unhealthy", "hazardous": "very_unhealthy"}),
+    (list(CATEGORIES), {}),
+])
+def test_merge_for_classes_matches_config_convention(classes, merge):
+    assert merge_for_classes(classes) == merge
+
+
+def test_class_label_lists_members_in_epa_order():
+    merge = merge_for_classes(["moderate", "unhealthy", "very_unhealthy"])
+    assert class_label("moderate", merge) == "Baik / Sedang"
+    assert class_label("unhealthy", merge) == "Tidak sehat bagi kelompok sensitif / Tidak sehat"
+    assert class_label("very_unhealthy", merge) == "Sangat tidak sehat / Berbahaya"

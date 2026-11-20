@@ -88,3 +88,23 @@ def aqi_to_category(aqi: float) -> str:
         if aqi <= limit:
             return cat
     return "hazardous"
+
+
+def merge_for_classes(classes: list[str]) -> dict[str, str]:
+    """Penggabungan kelas yang tersirat dari daftar kelas model: kategori yang tidak ada digabung ke kelas terdekat yang
+    LEBIH BURUK (konservatif untuk saran kesehatan), atau ke kelas terburuk bila tidak ada yang lebih buruk.
+
+    Cocok dengan class_merge di config. Dipakai API/monitoring agar model lama (rollback) tetap tampil sesuai skemanya.
+    """
+    merge = {}
+    for i, cat in enumerate(CATEGORIES):
+        if cat in classes:
+            continue
+        worse = [c for c in CATEGORIES[i + 1:] if c in classes]
+        merge[cat] = worse[0] if worse else [c for c in CATEGORIES[:i] if c in classes][-1]
+    return merge
+
+
+def class_label(cls: str, merge: dict[str, str]) -> str:
+    """Label kelas akhir, mis. 'Baik / Sedang' untuk gabungan good -> moderate (urutan EPA)."""
+    return " / ".join(CATEGORY_LABELS[c] for c in CATEGORIES if c == cls or merge.get(c) == cls)

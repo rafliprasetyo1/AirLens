@@ -15,7 +15,7 @@ import time
 import requests
 from PIL import Image
 
-from airlens.aqi import CATEGORY_LABELS
+from airlens.aqi import class_label, merge_for_classes
 from airlens.models.preprocess import load_image
 
 logger = logging.getLogger("airlens.models.vlm")
@@ -40,7 +40,8 @@ def _schema(classes: list[str]) -> dict:
 
 
 def _prompt(classes: list[str]) -> str:
-    opts = "; ".join(f"{c} = {CATEGORY_LABELS.get(c, c)}" for c in classes)
+    merge = merge_for_classes(classes)
+    opts = "; ".join(f"{c} = {class_label(c, merge)}" for c in classes)
     return (
         "Estimate the US EPA air quality category (PM2.5) visible in this outdoor photo, judging haze, visibility, "
         f"sky color and contrast. Choose exactly one category from: {opts}. "

@@ -138,6 +138,9 @@ def test_uncertain_when_below_threshold(client):
         app.state.models.meta["threshold"]["threshold"] = 0.0
     assert body["result"]["status"] == "uncertain" and body["result"]["category"] is None
     assert body["result"]["top_candidate"]["key"] in CLASSES
+    ru = body["result"]["runner_up"]
+    assert ru["key"] in CLASSES and ru["key"] != body["result"]["top_candidate"]["key"]
+    assert ru["p"] <= body["result"]["confidence"]
 
 
 def test_sse_stream_contains_stages_and_result(client):

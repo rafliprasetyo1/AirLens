@@ -224,11 +224,16 @@ function renderResult(res) {
   root.style.setProperty("--cat", uncertain ? "#e7c35a" : cat.color);
   root.style.setProperty("--cat-ink", uncertain ? "#0b0b0b" : cat.text_color);
 
-  el.eyebrow.textContent = uncertain ? "Belum pasti — kandidat teratas" : "Perkiraan kategori";
+  // Belum pasti: tampilkan dua kandidat teratas (peluang terkalibrasi, jadi boleh dijumlahkan).
+  const ru = uncertain ? res.runner_up : null;
+  el.eyebrow.textContent = uncertain ? (ru ? "Belum pasti — dua kandidat teratas" : "Belum pasti — kandidat teratas")
+    : "Perkiraan kategori";
   el.chip.textContent = uncertain ? `Belum pasti (mungkin: ${cat.label})` : cat.label;
-  el.range.textContent = `${cat.aqi_range[0]}–${cat.aqi_range[1]}`;
+  el.range.textContent = ru ? candidateRange(cat, ru) : `${cat.aqi_range[0]}–${cat.aqi_range[1]}`;
   el.advice.textContent = uncertain
-    ? `Keyakinan ${pct(res.confidence)}% di bawah ambang ${pct(res.threshold)}%. Coba foto lain dengan langit lebih terlihat, atau lihat pembanding IQAir.`
+    ? (ru ? `Kemungkinan antara ${cat.label} (${pct(res.confidence)}%) dan ${ru.label} (${pct(ru.p)}%), `
+        + `peluang gabungan ${pct(res.confidence + ru.p)}%. ` : "")
+      + `Keyakinan ${pct(res.confidence)}% di bawah ambang ${pct(res.threshold)}%. Coba foto lain dengan langit lebih terlihat, atau lihat pembanding IQAir.`
     : cat.advice;
   el.smoke.hidden = !res.model?.smoke;
   el.mainCard.classList.toggle("uncertain", uncertain);
@@ -255,10 +260,18 @@ function renderResult(res) {
   el.cards.hidden = true;
   void el.cards.offsetWidth;
   el.cards.hidden = false;
-  announce(uncertain ? `Hasil belum pasti. Kandidat teratas ${cat.label}.`
+  announce(uncertain ? `Hasil belum pasti. Kandidat teratas ${cat.label}${ru ? `, lalu ${ru.label}` : ""}.`
     : `Perkiraan: ${cat.label}, keyakinan ${pct(res.confidence)} persen.`);
   addHistory(uncertain ? "Belum pasti" : cat.label, uncertain ? "#9a9993" : cat.color,
     `keyakinan ${pct(res.confidence)}%${res.iqair?.status === "ok" ? ` · IQAir ${res.iqair.aqi_us}` : ""}`);
+}
+
+// Rentang AQI dua kandidat: digabung bila bersebelahan, dipisah bila tidak.
+function candidateRange(a, b) {
+  const [lo, hi] = a.aqi_range[0] < b.aqi_range[0] ? [a, b] : [b, a];
+  return lo.aqi_range[1] + 1 === hi.aqi_range[0]
+    ? `${lo.aqi_range[0]}–${hi.aqi_range[1]}`
+    : `${lo.aqi_range[0]}–${lo.aqi_range[1]} atau ${hi.aqi_range[0]}–${hi.aqi_range[1]}`;
 }
 
 function renderIqair(iq) {
