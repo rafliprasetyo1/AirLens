@@ -162,6 +162,39 @@ cp results/airlens_results_lab_*.tar.gz "/mnt/c/Users/<user-lab>/Desktop/"
 
 
 ---------------------------------------------------------------------
+LANGKAH 8b - Nyalakan website (web + api + scheduler) untuk demo
+---------------------------------------------------------------------
+# make lab-all hanya menyalakan db dan mlflow. Website butuh api (memuat model
+# production hasil LANGKAH 7 dari MLflow), web (nginx), dan scheduler (monitoring).
+# Perintah ini membangun image yang belum ada lalu menyalakan SEMUA layanan:
+make up PROFILE=lab
+
+# Kelima layanan harus "healthy": api, db, mlflow, scheduler, web
+make ps PROFILE=lab
+
+# API harus menjawab "model":"ok" (artinya model hasil latih sudah termuat):
+curl -s localhost:8000/health; echo
+docker compose logs api --tail=50 | grep "model production aktif"
+
+# Buka di browser Windows:
+#   Website : http://localhost:8080   (unggah foto luar ruangan)
+#   API     : http://localhost:8000/health
+#   MLflow  : http://localhost:5000
+# Pembanding IQAir hanya tampil bila IQAIR_API_KEY di .env terisi; prediksi tetap jalan tanpanya.
+
+# Lihat log semua layanan (Ctrl+C untuk keluar; layanan tetap jalan):
+#   make logs PROFILE=lab
+# Matikan semua layanan (data dan model tetap aman di volume):
+#   make down PROFILE=lab
+#
+# Masalah website:
+#   "model" bukan "ok"       -> LANGKAH 7 belum selesai / belum ada model production;
+#                               cek: docker compose logs api --tail=100
+#   localhost:8080 tidak bisa -> pastikan web "healthy" di make ps; ulangi make up PROFILE=lab
+#   port 8080/8000 terpakai   -> matikan aplikasi lain yang memakai port itu, lalu make up lagi
+
+
+---------------------------------------------------------------------
 LANGKAH 9 - Push hasil ringkas ke GitHub
 ---------------------------------------------------------------------
 # Yang di-commit HANYA ringkasan kecil (tabel, grafik, durasi). Arsip .tar.gz,
