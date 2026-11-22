@@ -407,7 +407,7 @@ void loop() {
 #include <time.h>
 #include "airlens_roots.h"
 
-#define FW_VERSION "beta-4mq-1.1.1"
+#define FW_VERSION "beta-4mq-1.1.2"
 
 const int PIN_MQ2 = 34, PIN_MQ3 = 35, PIN_MQ7 = 32, PIN_MQ135 = 33;
 unsigned long periodMs = 2000;              // jarak bacaan; bawaan 2 s, diatur lewat SET {"interval":"10"}
@@ -568,7 +568,14 @@ void post(const String& body) {
   http.addHeader("ngrok-skip-browser-warning", "1");
   if (token.length()) http.addHeader("X-Node-Token", token);
   int code = http.POST(body);
-  if (code != 200) { Serial.printf("{\"event\":\"post\",\"code\":%d}\n", code); postOkShown = false; }
+  if (code < 0 && https) {                         // gagal sebelum ada balasan HTTP: tampilkan galat TLS/koneksi aslinya
+    char err[96] = "";
+    secure.lastError(err, sizeof(err));
+    for (char* c = err; *c; c++) if (*c == '"' || *c == '\\') *c = '\'';
+    Serial.printf("{\"event\":\"post\",\"code\":%d,\"detail\":\"%s\",\"tls\":\"%s\"}\n", code,
+                  HTTPClient::errorToString(code).c_str(), err);
+    postOkShown = false;
+  } else if (code != 200) { Serial.printf("{\"event\":\"post\",\"code\":%d}\n", code); postOkShown = false; }
   else if (!postOkShown) { postOkShown = true; Serial.println("{\"event\":\"post\",\"code\":200}"); }
   http.end();
 }
