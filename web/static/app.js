@@ -19,7 +19,11 @@ const narrow = window.matchMedia("(max-width: 860px)");
 const STAGE_TEXT = { mulai: "berjalan…", selesai: "selesai", gagal: "gagal" };
 const STAGE_NAME = { periksa: "Memeriksa foto", analisis: "Menganalisis kabut", iqair: "Membandingkan dengan IQAir" };
 const MAX_BYTES = 10 * 1024 * 1024;
-const TYPES = ["image/jpeg", "image/png", "image/webp"];
+const TYPES = ["image/jpeg", "image/png", "image/webp", "image/heif", "image/heic"];
+// Sebagian browser (Chrome/Edge di Windows dan Android) memberi tipe kosong untuk foto HEIC: cek ekstensinya juga.
+// Server tetap memeriksa isi file yang sebenarnya.
+const EXTS = /\.(jpe?g|png|webp|heic|heif)$/i;
+const isHeif = (f) => /heic|heif/i.test(f.type) || /\.(heic|heif)$/i.test(f.name);
 
 let selected = null;      // File
 let coords = null;        // {lat, lon}
@@ -47,7 +51,7 @@ function fmtTime(iso) {
 // ------------------------------------------------------------------ pilih file & seret-lepas
 function pick(file) {
   if (!file) return;
-  if (!TYPES.includes(file.type)) return showAlert("Format tidak didukung", "Gunakan foto JPEG, PNG, atau WebP.", "warn");
+  if (!TYPES.includes(file.type) && !EXTS.test(file.name)) return showAlert("Format tidak didukung", "Gunakan foto JPG/JPEG, PNG, WebP, atau HEIF/HEIC.", "warn");
   if (file.size > MAX_BYTES) return showAlert("File terlalu besar", "Ukuran maksimal 10 MB.", "warn");
   selected = file;
   if (previewUrl) URL.revokeObjectURL(previewUrl);
@@ -63,7 +67,11 @@ el.img.addEventListener("error", () => {
   if (!el.img.getAttribute("src")) return;
   el.img.hidden = true;
   let msg = el.preview.querySelector(".preview-missing");
-  if (!msg) { msg = node("div", { class: "preview-missing" }, "Pratinjau tidak tersedia: berkas mungkin bukan gambar."); el.preview.prepend(msg); }
+  if (!msg) { msg = node("div", { class: "preview-missing" }, ""); el.preview.prepend(msg); }
+  // Browser selain Safari tidak bisa menampilkan HEIC; fotonya tetap bisa dianalisis server.
+  msg.textContent = selected && isHeif(selected)
+    ? "Pratinjau HEIF/HEIC tidak didukung browser ini. Foto tetap bisa dianalisis."
+    : "Pratinjau tidak tersedia: berkas mungkin bukan gambar.";
   msg.hidden = false;
 });
 el.img.addEventListener("load", () => {

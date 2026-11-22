@@ -546,3 +546,10 @@ Lingkup ditegaskan pemilik: **proyek utama** = foto pengguna → tingkat kualita
 | Breadboard + ESP32 digeser 15 mm ke dinding -X (`BB_X = -29`), celah USB 14 × 11 mm dipusatkan ke port | Sebelumnya mulut micro-USB terbenam ±18 mm dari dinding; logam colokan hanya ±6,5 mm, kabel tidak bisa masuk |
 | Ruang ESP32 diberi jalur udara sendiri: kisi tegak rendah di kedua sisi (masuk) + kisi pendek di tutup (keluar); celah kabel di sekat disumbat busa | ESP32 + AMS1117 ±0,4–0,8 W tanpa jalan keluar selain celah sekat ke ruang sensor; panasnya bisa memengaruhi bacaan MQ. Juga tampilan tidak lagi timpang |
 | Tulisan "AirLens Beta" di tutup diukir 0,6 mm, bukan timbul | Tutup dicetak terbalik (permukaan atas di bed) tanpa support |
+
+## Format foto HEIF/HEIC diterima (2026-11-22)
+
+| Keputusan | Alasan |
+|---|---|
+| Unggahan menerima JPG/JPEG, PNG, WebP, dan HEIF/HEIC (foto bawaan iPhone) lewat `pillow-heif` 1.8.0 (dikunci dengan hash, `make lock` tanpa mengubah paket lain) | Permintaan pemilik: pengunjung dengan iPhone bisa langsung mengunggah tanpa konversi. Validasi tetap berdasarkan isi file (bukan ekstensi/tipe dari browser); EXIF/GPS tetap dibuang; foto yang disimpan (dengan izin) tetap JPG |
+| Browser memeriksa tipe ATAU ekstensi | Chrome/Edge di Windows dan Android sering memberi tipe kosong untuk HEIC. Browser selain Safari tidak bisa menampilkan pratinjau HEIC, jadi pesannya menjelaskan bahwa foto tetap bisa dianalisis |

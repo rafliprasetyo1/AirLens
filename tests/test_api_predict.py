@@ -170,6 +170,29 @@ def test_gif_rejected(client):
     assert body["result"]["code"] == "tipe_tidak_didukung"
 
 
+def test_heif_photo_from_iphone_accepted_and_exif_removed(client, tmp_path):
+    """Foto HEIC (bawaan iPhone) diterima, dianalisis seperti JPEG, GPS dibuang, disimpan sebagai JPG hanya dengan izin."""
+    from pillow_heif import register_heif_opener
+
+    register_heif_opener()
+    jpg = Image.open(io.BytesIO(outdoor_jpeg()))
+    buf = io.BytesIO()
+    jpg.save(buf, format="HEIF", quality=90, exif=_exif_with_gps())
+    heic = buf.getvalue()
+    assert Image.open(io.BytesIO(heic)).format == "HEIF" and Image.open(io.BytesIO(heic)).getexif().get(0x8825)
+    # Chrome/Edge di Windows sering mengirim tipe kosong untuk HEIC; server menilai isi file, bukan tipe dari browser.
+    job_id, body = run(client, heic, name="IMG_0001.HEIC", mime="application/octet-stream", store_photo="true")
+    assert body["result"]["status"] in ("ok", "uncertain"), body["result"]
+    stored = tmp_path / "uploads" / f"{db_row(job_id).image_sha256}.jpg"
+    out = Image.open(stored)
+    assert out.format == "JPEG" and len(out.getexif()) == 0
+
+
+def test_fake_heic_rejected(client):
+    _, body = run(client, b"bukan gambar sama sekali" * 50, name="palsu.heic", mime="image/heic")
+    assert body["result"]["code"] == "bukan_gambar"
+
+
 def test_dark_photo_rejected(client):
     _, body = run(client, outdoor_jpeg(dark=0.12))
     assert body["result"]["code"] == "terlalu_gelap"
