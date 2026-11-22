@@ -53,6 +53,7 @@ ulang setelah rekaman lab (`make beta-recordings-push` + `make kaggle-push`).
 | Tema website gelap (biru tua + hitam), overlay 3D di laptop dan HP | Selesai |
 | Casing: port USB dekat dinding, ventilasi ruang ESP32, tulisan diukir | Selesai, STL/STEP dibuat ulang |
 | File cetak: `hardware/enclosure-beta/stl/airlens_beta_base.stl` + `airlens_beta_lid.stl` (tutup dicetak terbalik) | Siap; ukur modul MQ dan breadboard asli dulu |
+| Uji buka dari HP lewat ngrok (laptop): halaman 200, STL ter-gzip, `/tools` 403, sensor tanpa token 401 | Siap diuji pemilik |
 
 ## Yang dikerjakan di lab (tanpa pelatihan)
 
