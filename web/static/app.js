@@ -160,10 +160,21 @@ async function analyze() {
   if (narrow.matches) el.stages.scrollIntoView({ behavior: reduceMotion.matches ? "auto" : "smooth", block: "start" });
   let job;
   try {
-    const r = await fetch(`${API}/predict`, { method: "POST", body: form });
+    // 502/503/504 = layanan sedang dinyalakan ulang atau tunnel ngrok tersambung ulang: coba lagi otomatis (3 kali, ±9 detik).
+    let r;
+    for (let attempt = 0; ; attempt++) {
+      r = await fetch(`${API}/predict`, { method: "POST", body: form });
+      if (![502, 503, 504].includes(r.status) || attempt >= 3) break;
+      setStage("periksa", "mulai");
+      el.stages.querySelector('[data-stage="periksa"] [data-state]').textContent = `server belum siap, mencoba lagi ${attempt + 1}/3`;
+      announce(`Server belum siap, mencoba lagi ${attempt + 1} dari 3`);
+      await new Promise((ok) => setTimeout(ok, 1500 * (attempt + 1)));
+    }
     if (!r.ok) {
       const body = await r.json().catch(() => ({}));
-      throw new Error(typeof body.detail === "string" ? body.detail : `Server membalas ${r.status}.`);
+      const down = [502, 503, 504].includes(r.status);
+      throw new Error(typeof body.detail === "string" ? body.detail
+        : down ? `Layanan sedang tidak tersedia (server membalas ${r.status}). Tunggu sebentar lalu coba lagi.` : `Server membalas ${r.status}.`);
     }
     job = await r.json();
   } catch (err) {

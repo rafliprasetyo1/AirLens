@@ -4,10 +4,10 @@
 // Halaman (story.js) memberi keadaan yang dituju lewat setTarget(state); adegan ini hanya menggambar.
 import * as THREE from "three";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
-import { MAX_ANISO } from "./parts/kit.js";
-import { buildESP32, ESP32, pinX } from "./parts/esp32.js";
-import { buildMQ, MQ } from "./parts/mq.js";
-import { buildBreadboard, buildResistor, buildJumper, buildFlatJumper, parseSTL, printedMaterial, BB, colX, ROW, RAIL, WIRE } from "./parts/bench.js";
+import { MAX_ANISO } from "./parts/kit.js?v=20261122";
+import { buildESP32, ESP32, pinX } from "./parts/esp32.js?v=20261122";
+import { buildMQ, MQ } from "./parts/mq.js?v=20261122";
+import { buildBreadboard, buildResistor, buildJumper, buildFlatJumper, parseSTL, printedMaterial, BB, colX, ROW, RAIL, WIRE } from "./parts/bench.js?v=20261122";
 
 const FLOOR = 2.4, BB_X = -29, BB_TOP = FLOOR + BB.H;   // BB_X sama dengan beta_case.py (revisi USB 2026-11-22)
 const MQ_X = 54.5, MQ_Y = FLOOR + 9.0;

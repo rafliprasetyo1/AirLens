@@ -553,3 +553,10 @@ Lingkup ditegaskan pemilik: **proyek utama** = foto pengguna → tingkat kualita
 |---|---|
 | Unggahan menerima JPG/JPEG, PNG, WebP, dan HEIF/HEIC (foto bawaan iPhone) lewat `pillow-heif` 1.8.0 (dikunci dengan hash, `make lock` tanpa mengubah paket lain) | Permintaan pemilik: pengunjung dengan iPhone bisa langsung mengunggah tanpa konversi. Validasi tetap berdasarkan isi file (bukan ekstensi/tipe dari browser); EXIF/GPS tetap dibuang; foto yang disimpan (dengan izin) tetap JPG |
 | Browser memeriksa tipe ATAU ekstensi | Chrome/Edge di Windows dan Android sering memberi tipe kosong untuk HEIC. Browser selain Safari tidak bisa menampilkan pratinjau HEIC, jadi pesannya menjelaskan bahwa foto tetap bisa dianalisis |
+
+## Cache browser dan restart layanan (2026-11-22)
+
+| Keputusan | Alasan |
+|---|---|
+| Semua CSS/JS lokal dimuat dengan penanda versi `?v=YYYYMMDD` (HTML, `import` modul, dan `scripts/sync_modules.sh`); naikkan saat CSS/JS berubah | Browser yang menyimpan file lama sebelum aturan `no-cache` tetap memakai versi lama (kasus: `app.js` lama menolak HEIF). URL baru memaksa unduhan baru. Untuk modul ES, versi harus sama di setiap `import` agar tidak ada dua salinan modul |
+| Unggahan foto mencoba lagi otomatis 3 kali (±9 s) bila server membalas 502/503/504 | Saat layanan dinyalakan ulang atau ngrok tersambung ulang, pengunjung tidak langsung melihat error |
