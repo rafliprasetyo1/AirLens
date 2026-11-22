@@ -260,6 +260,27 @@ def test_iqair_down_does_not_block_prediction(client, monkeypatch):
     assert ("iqair", "gagal") in [(e["stage"], e["status"]) for e in body["events"]]
 
 
+def test_nearest_city_for_browser_location(client, monkeypatch):
+    """Tombol 'Gunakan lokasi saya': website menampilkan nama stasiun IQAir terdekat sebelum analisis."""
+    from airlens_api.iqair import IQAirUnavailable, Reading
+    from airlens_api.main import app
+
+    now = datetime.now(timezone.utc)
+    monkeypatch.setattr(app.state.iqair, "by_coords", lambda lat, lon: Reading(
+        id=1, city="Pekanbaru", state="Riau", country="Indonesia", aqi_us=85, main_pollutant="p2",
+        observed_at=now, fetched_at=now, cached=False))
+    r = client.get("/nearest-city", params={"lat": 0.507, "lon": 101.448})
+    assert r.status_code == 200 and r.json()["city"] == "Pekanbaru" and r.json()["state"] == "Riau"
+    assert client.get("/nearest-city", params={"lat": 120, "lon": 0}).status_code == 422
+
+    def boom(*a, **k):
+        raise IQAirUnavailable("jaringan", "IQAir tidak terjangkau.")
+
+    monkeypatch.setattr(app.state.iqair, "by_coords", boom)
+    r = client.get("/nearest-city", params={"lat": 0.5, "lon": 101.4})
+    assert r.status_code == 503 and "IQAir" in r.json()["detail"]
+
+
 def test_iqair_ok_gives_comparison(client, monkeypatch):
     from airlens_api.iqair import Reading
     from airlens_api.main import app

@@ -19,7 +19,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from airlens import __version__
 from airlens.config import CONFIG_DIR, load_profile
 from airlens.db.session import get_engine, ping
-from airlens_api.iqair import IQAirClient
+from airlens_api.iqair import IQAirClient, IQAirUnavailable
 from airlens_api.jobs import JobStore
 from airlens_api.model_store import ModelStore
 from airlens_api.pipeline import PredictionPipeline
@@ -131,6 +131,19 @@ def model_info(request: Request):
 @app.get("/cities")
 def cities():
     return [{"id": c["id"], "name": c["city"], "state": c["state"]} for c in CITIES]
+
+
+@app.get("/nearest-city")
+def nearest_city(request: Request, lat: float, lon: float):
+    """Nama kota stasiun IQAir terdekat dari lokasi browser, agar website bisa menampilkannya sebelum analisis.
+    Memakai cache koordinat yang sama dengan /predict (dibulatkan 0,05°), jadi analisis berikutnya tidak memanggil IQAir lagi."""
+    if not (-90 <= lat <= 90 and -180 <= lon <= 180):
+        raise HTTPException(422, "Koordinat tidak valid.")
+    try:
+        r = request.app.state.iqair.by_coords(lat, lon)
+    except IQAirUnavailable as exc:
+        raise HTTPException(503, exc.message if hasattr(exc, "message") else str(exc)) from None
+    return {"city": r.city, "state": r.state, "country": r.country, "aqi_us": r.aqi_us, "stale": r.stale}
 
 
 @app.post("/predict", status_code=202)

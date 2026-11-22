@@ -99,20 +99,48 @@ async function loadCities() {
     for (const c of await r.json()) el.city.append(node("option", { value: c.id }, `${c.name} (${c.state})`));
   } catch { el.geoStatus.textContent = "Daftar kota gagal dimuat; gunakan lokasi perangkat."; }
 }
+const GEO = "__geo__";   // pilihan dropdown "Lokasi saya" (koordinat perangkat, bukan kota dari daftar)
 el.city.addEventListener("change", () => {
-  if (el.city.value) { coords = null; el.geoStatus.textContent = "Memakai kota yang dipilih."; }
+  if (el.city.value && el.city.value !== GEO) { coords = null; el.geoStatus.textContent = "Memakai kota yang dipilih."; }
 });
+function geoOption(label) {
+  let opt = el.city.querySelector(`option[value="${GEO}"]`);
+  if (!opt) { opt = node("option", { value: GEO }, ""); el.city.insertBefore(opt, el.city.options[1] || null); }
+  opt.textContent = label;
+  el.city.value = GEO;
+}
 el.geo.addEventListener("click", () => {
-  if (!navigator.geolocation) { el.geoStatus.textContent = "Peramban ini tidak mendukung lokasi."; return; }
+  if (!window.isSecureContext) { el.geoStatus.textContent = "Lokasi perangkat hanya bisa dipakai lewat alamat https:// (misalnya alamat ngrok). Pilih kota dari daftar."; return; }
+  if (!navigator.geolocation) { el.geoStatus.textContent = "Peramban ini tidak mendukung lokasi. Pilih kota dari daftar."; return; }
   el.geoStatus.textContent = "Meminta izin lokasi…";
+  el.geo.disabled = true;
   navigator.geolocation.getCurrentPosition(
-    (pos) => {
+    async (pos) => {
+      el.geo.disabled = false;
       coords = { lat: pos.coords.latitude, lon: pos.coords.longitude };
-      el.city.value = "";
-      el.geoStatus.textContent = "Lokasi perangkat dipakai untuk mencari stasiun IQAir terdekat.";
+      geoOption("Lokasi saya (mencari stasiun IQAir…)");
+      el.geoStatus.textContent = `Lokasi ditemukan (${coords.lat.toFixed(2)}, ${coords.lon.toFixed(2)}). Mencari stasiun IQAir terdekat…`;
+      try {
+        const r = await fetch(`${API}/nearest-city?lat=${coords.lat}&lon=${coords.lon}`);
+        if (!r.ok) throw new Error(String(r.status));
+        const c = await r.json();
+        const place = [c.city, c.state].filter(Boolean).join(", ");
+        geoOption(`Lokasi saya: ${place}`);
+        el.geoStatus.textContent = `Pembanding IQAir memakai stasiun terdekat: ${place} (AQI US ${c.aqi_us} saat ini).`;
+      } catch {
+        geoOption("Lokasi saya");
+        el.geoStatus.textContent = "Lokasi perangkat dipakai; stasiun IQAir terdekat dicari saat analisis.";
+      }
     },
-    () => { coords = null; el.geoStatus.textContent = "Izin lokasi ditolak. Pilih kota dari daftar."; },
-    { enableHighAccuracy: false, timeout: 10000, maximumAge: 600000 },
+    (err) => {
+      el.geo.disabled = false;
+      coords = null;
+      el.geoStatus.textContent = err.code === 1
+        ? "Izin lokasi ditolak. Di iPhone: Pengaturan > Privasi & Keamanan > Layanan Lokasi > Situs Web Safari > Saat Digunakan, lalu coba lagi. Atau pilih kota dari daftar."
+        : err.code === 3 ? "Pencarian lokasi terlalu lama. Coba lagi, atau pilih kota dari daftar."
+        : "Lokasi tidak bisa ditentukan (GPS atau jaringan). Pilih kota dari daftar.";
+    },
+    { enableHighAccuracy: false, timeout: 15000, maximumAge: 600000 },
   );
 });
 
@@ -154,7 +182,7 @@ async function analyze() {
   el.placeholder.hidden = false;
   const form = new FormData();
   form.append("file", selected);
-  if (el.city.value) form.append("city_id", el.city.value);
+  if (el.city.value && el.city.value !== GEO) form.append("city_id", el.city.value);
   else if (coords) { form.append("lat", coords.lat); form.append("lon", coords.lon); }
   form.append("store_photo", el.consent.checked ? "true" : "false");
   if (narrow.matches) el.stages.scrollIntoView({ behavior: reduceMotion.matches ? "auto" : "smooth", block: "start" });
