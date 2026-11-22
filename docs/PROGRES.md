@@ -46,6 +46,14 @@ ulang setelah rekaman lab (`make beta-recordings-push` + `make kaggle-push`).
 | gzip di nginx (hemat kuota ngrok) | Selesai |
 | `make test` 296 lulus, `make ui-test` 39/39 | Selesai |
 
+## Casing Beta siap cetak (2026-11-22, malam)
+
+| Bagian | Status |
+|---|---|
+| Tema website gelap (biru tua + hitam), overlay 3D di laptop dan HP | Selesai |
+| Casing: port USB dekat dinding, ventilasi ruang ESP32, tulisan diukir | Selesai, STL/STEP dibuat ulang |
+| File cetak: `hardware/enclosure-beta/stl/airlens_beta_base.stl` + `airlens_beta_lid.stl` (tutup dicetak terbalik) | Siap; ukur modul MQ dan breadboard asli dulu |
+
 ## Yang dikerjakan di lab (tanpa pelatihan)
 
 `make doctor` → `make expo-setup PROFILE=lab` → rakit Beta → flash + Set WiFi (`tools/flash.html`) → pemanasan →
