@@ -560,3 +560,10 @@ Lingkup ditegaskan pemilik: **proyek utama** = foto pengguna → tingkat kualita
 |---|---|
 | Semua CSS/JS lokal dimuat dengan penanda versi `?v=YYYYMMDD` (HTML, `import` modul, dan `scripts/sync_modules.sh`); naikkan saat CSS/JS berubah | Browser yang menyimpan file lama sebelum aturan `no-cache` tetap memakai versi lama (kasus: `app.js` lama menolak HEIF). URL baru memaksa unduhan baru. Untuk modul ES, versi harus sama di setiap `import` agar tidak ada dua salinan modul |
 | Unggahan foto mencoba lagi otomatis 3 kali (±9 s) bila server membalas 502/503/504 | Saat layanan dinyalakan ulang atau ngrok tersambung ulang, pengunjung tidak langsung melihat error |
+
+## JPEG dari iPhone (MPO) diterima (2026-11-22)
+
+| Keputusan | Alasan |
+|---|---|
+| Format `MPO` diterima sebagai JPEG | Saat diunggah dari iPhone, HEIC dikonversi ke JPEG berisi beberapa gambar (peta kedalaman/HDR). Pillow menyebutnya MPO, sehingga ditolak `tipe_tidak_didukung` (terjadi pada uji HP pemilik pukul 22:31). Gambar utama dipakai, gambar tambahan dan metadata dibuang |
+| Pesan penolakan menyebut format yang terdeteksi | Agar kasus format tak terduga berikutnya langsung terlihat dari pesan atau log |

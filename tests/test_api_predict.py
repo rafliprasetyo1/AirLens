@@ -188,6 +188,23 @@ def test_heif_photo_from_iphone_accepted_and_exif_removed(client, tmp_path):
     assert out.format == "JPEG" and len(out.getexif()) == 0
 
 
+def test_iphone_jpeg_mpo_accepted(client):
+    """iPhone mengubah HEIC menjadi JPEG berisi beberapa gambar (MPO) saat diunggah; harus diterima seperti JPEG."""
+    main = Image.open(io.BytesIO(outdoor_jpeg()))
+    buf = io.BytesIO()
+    main.save(buf, format="MPO", save_all=True, append_images=[Image.new("RGB", (160, 120), (90, 90, 90))])
+    assert Image.open(io.BytesIO(buf.getvalue())).format == "MPO"
+    _, body = run(client, buf.getvalue(), name="IMG_0002.jpeg", mime="image/jpeg")
+    assert body["result"]["status"] in ("ok", "uncertain"), body["result"]
+
+
+def test_rejection_names_detected_format(client):
+    buf = io.BytesIO()
+    Image.new("RGB", (200, 150), (120, 160, 220)).save(buf, format="BMP")
+    _, body = run(client, buf.getvalue(), name="a.bmp", mime="image/bmp")
+    assert body["result"]["code"] == "tipe_tidak_didukung" and "BMP" in body["result"]["message"]
+
+
 def test_fake_heic_rejected(client):
     _, body = run(client, b"bukan gambar sama sekali" * 50, name="palsu.heic", mime="image/heic")
     assert body["result"]["code"] == "bukan_gambar"

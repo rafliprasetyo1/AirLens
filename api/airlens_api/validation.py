@@ -12,7 +12,9 @@ from pillow_heif import register_heif_opener
 register_heif_opener()  # foto HEIF/HEIC (bawaan iPhone) dibuka Pillow seperti format lain; EXIF tetap dibuang di bawah
 
 # JPEG mencakup berkas .jpg dan .jpeg (format yang sama); HEIF mencakup .heic dan .heif.
-ALLOWED_FORMATS = {"JPEG": "image/jpeg", "PNG": "image/png", "WEBP": "image/webp", "HEIF": "image/heif"}
+# MPO = JPEG berisi beberapa gambar (iPhone menyisipkan peta kedalaman/HDR saat mengonversi HEIC ke JPEG ketika
+# diunggah). Pillow memakai gambar utamanya; gambar tambahan ikut terbuang bersama metadata.
+ALLOWED_FORMATS = {"JPEG": "image/jpeg", "MPO": "image/jpeg", "PNG": "image/png", "WEBP": "image/webp", "HEIF": "image/heif"}
 MAX_PIXELS = 40_000_000  # ~40 MP; lebih dari ini ditolak (perlindungan decompression bomb)
 
 
@@ -36,7 +38,7 @@ def validate_and_strip(data: bytes, max_bytes: int) -> tuple[Image.Image, str]:
     except (UnidentifiedImageError, OSError, SyntaxError, ValueError, Image.DecompressionBombError):
         raise UploadRejected("bukan_gambar", "File bukan gambar yang valid atau rusak.") from None
     if fmt not in ALLOWED_FORMATS:
-        raise UploadRejected("tipe_tidak_didukung", "Format harus JPG/JPEG, PNG, WebP, atau HEIF/HEIC.")
+        raise UploadRejected("tipe_tidak_didukung", f"Format harus JPG/JPEG, PNG, WebP, atau HEIF/HEIC (terdeteksi: {fmt}).")
     if width * height > MAX_PIXELS:
         raise UploadRejected("terlalu_besar", "Resolusi gambar terlalu besar.")
     try:
