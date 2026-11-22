@@ -3,27 +3,22 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>AirLens Node: hyperlocal air, explained</title>
-  <meta name="description" content="The AirLens Node: the full version as a concept design, and AirLens Beta, which runs at this booth.">
-  <link rel="icon" href="product/airlens-icon.svg" type="image/svg+xml">
-  <link rel="preload" href="vendor/fonts/space-grotesk-latin-300-normal.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="preload" href="vendor/fonts/inter-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="product/product.css">
-  <link rel="stylesheet" href="/shared/nav.css">
-  <script type="importmap">{ "imports": { "three": "./vendor/three/build/three.module.js", "three/addons/": "./vendor/three/examples/jsm/" } }</script>
+  <title>AirLens Beta: the gas sensor box</title>
+  <meta name="description" content="AirLens Beta: an ESP32 and four MQ gas sensors in a printed box. It tells smoke from alcohol and shows which sensor made it sure.">
+  <link rel="icon" href="/product/airlens-icon.svg" type="image/svg+xml">
+  <link rel="preload" href="/vendor/fonts/archivo-latin-wdth-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/shared/theme.css">
+  <link rel="stylesheet" href="/product/product.css">
   <link rel="stylesheet" href="/shared/alerts.css">
+  <script type="importmap">{ "imports": { "three": "/vendor/three/build/three.module.js", "three/addons/": "/vendor/three/examples/jsm/" } }</script>
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="apple-touch-icon" href="/icons/airlens-192.png">
-  <meta name="theme-color" content="#08121c">
+  <meta name="theme-color" content="#e6ebed">
 </head>
-<body>
+<body class="product">
   <a class="skip" href="#main">Skip to content</a>
-
   <header class="bar">
-    <a class="brand" href="/">
-      <img src="product/airlens-icon.svg" alt="" width="28" height="28">
-      <span>AirLens</span>
-    </a>
+    <a class="brand" href="/"><img src="/product/airlens-icon.svg" alt="" width="28" height="28"><span>AirLens</span></a>
     <nav class="site-nav" aria-label="AirLens pages">
       <ul>
         <li><a href="/">Photo demo</a></li>
@@ -34,221 +29,113 @@
     </nav>
   </header>
 
-  <div class="stage" aria-hidden="true">
+  <div class="stage" id="stage" aria-hidden="true">
     <canvas id="stage-canvas"></canvas>
-    <div id="callouts" class="callouts"></div>
-    <p id="stage-tag" class="stage-tag">Full version · concept design</p>
+    <div class="loader" id="loader"><span class="loader-track"><span class="loader-bar" id="loader-bar"></span></span><span id="loader-text">Building the 3D model</span></div>
   </div>
-
-  <div id="loader" class="loader" role="progressbar" aria-label="3D model" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
-    <span class="loader-track"><span id="loader-bar" class="loader-bar"></span></span>
-    <span id="loader-text" class="loader-text" aria-live="polite">Loading 3D model</span>
-  </div>
+  <div class="callouts" id="callouts" aria-hidden="true"></div>
 
   <main id="main">
-    <!-- 1 -->
     <section class="sec hero" data-scene="hero" aria-labelledby="h-hero">
       <div class="copy">
-        <p class="tag">Full version · concept design</p>
-        <h1 id="h-hero">AirLens Node</h1>
-        <p class="lede">Hyperlocal air, explained.</p>
-        <p>Two senses that can each raise an alert: a live camera that recognises smoke, and gas sensors that catch what a camera can't see.</p>
-        <figure class="fallback">
-          <img src="product/concept_assembled.png" alt="Rendering of the AirLens Node concept: a rounded square tower with a dark base and camera head, a light sleeve with angled louvres, and an orange sliding lens cover." loading="lazy">
-        </figure>
-        <p class="note">The full version is a concept design and isn't built for the exhibition. AirLens Beta runs at this booth.</p>
+        <h1 id="h-hero">AirLens Beta</h1>
+        <p class="lede">A box the size of a paperback that smells the air. It tells smoke from alcohol and shows which sensor made it sure.</p>
+        <p class="where">It is running on the table at this booth. <a href="/beta.html">See its live readings</a>.</p>
+        <p class="no3d-note small muted">This browser cannot show the 3D model, so the page shows text only.</p>
       </div>
     </section>
 
-    <!-- 2 -->
-    <section class="sec" data-scene="design" aria-labelledby="h-design">
+    <section class="sec" data-scene="open" aria-labelledby="h-open">
       <div class="copy">
-        <h2 id="h-design">An indoor tower that keeps its eyes covered</h2>
-        <p>A rounded square tower printed in PETG. Louvres are angled at 35° so it prints without much support, and the camera head looks 15° down into the room. A sliding cover closes the lens for privacy. There is no status LED: alerts go to the website.</p>
+        <h2 id="h-open">Lift the lid</h2>
+        <p>The lid clips on and lifts straight off. A half-size breadboard holds the ESP32 on the left. Four gas sensors sit on the right, behind a wall that keeps the warmth of their heaters away from the electronics.</p>
         <dl class="specs">
-          <div><dt>Size</dt><dd>120 × 90 × 205 mm</dd></div>
-          <div><dt>Material</dt><dd>PETG, 2.5 mm walls, rounded corners</dd></div>
-          <div><dt>Camera head</dt><dd>Pocket tilted 15° down</dd></div>
-          <div><dt>Privacy</dt><dd>Physical sliding lens cover, no LED</dd></div>
+          <div><dt>Box</dt><dd>150 × 112 × 42 mm, printed in PETG</dd></div>
+          <div><dt>Power</dt><dd>5 V over micro-USB, about 0.8 A with all four heaters on</dd></div>
         </dl>
       </div>
     </section>
 
-    <!-- 3 -->
-    <section class="sec" data-scene="senses" aria-labelledby="h-senses">
+    <section class="sec" data-scene="esp32" aria-labelledby="h-esp">
       <div class="copy">
-        <h2 id="h-senses">Two senses, either can raise the alarm</h2>
-        <dl class="specs">
-          <div><dt>Eyes</dt><dd>A live camera that recognises smoke. Grad-CAM++ shows which part of the image made the model sure.</dd></div>
-          <div><dt>Nose</dt><dd>Gas sensors that feel invisible gas, such as CO.</dd></div>
-        </dl>
-        <p>Each sense works on its own, and together they decide how urgent an alert is. This replaces the old design, where a gas sensor woke the camera to take a single photo.</p>
+        <h2 id="h-esp">ESP32 DevKit V1</h2>
+        <p class="role">Reads the sensors and sends the numbers</p>
+        <p>A dual-core chip with Wi-Fi on a 30-pin board. Every few seconds it reads four voltages on GPIO 34, 35, 32 and 33 and sends them to AirLens over HTTPS. The AI runs on the AirLens server, not on the board.</p>
+        <p class="small muted">51.5 × 28.3 mm. The ESP-WROOM-32 module keeps its printed antenna at the end without the metal shield.</p>
+        <p class="sr-only">Labelled in the 3D view: ESP-WROOM-32 module, micro-USB port, EN and BOOT buttons, GPIO pins 34, 35, 32 and 33.</p>
       </div>
     </section>
 
-    <!-- 4 -->
-    <section class="sec" data-scene="explode" aria-labelledby="h-explode">
+    <section class="sec tall" data-scene="sensors" aria-labelledby="h-sensors">
       <div class="copy">
-        <h2 id="h-explode">One spine holds every module</h2>
-        <p>The sleeve lifts off after removing four M3 screws from below, which go into heat-set inserts. Underneath, the spine carries the sensors, a double divider, and the Raspberry Pi above it.</p>
-        <p class="muted">Six printed parts: base, spine, sleeve, cap, lens shutter and a wall bracket.</p>
-        <figure class="fallback">
-          <img src="product/concept_cutaway.png" alt="Cutaway rendering of the concept: sensors in the lower zone, a double divider, and the Raspberry Pi 5 with AI HAT+ above it, camera in the head." loading="lazy">
-        </figure>
-      </div>
-    </section>
-
-    <!-- 5–8 -->
-    <section class="sec spot" data-scene="spot" data-spot="0" aria-labelledby="h-pi">
-      <div class="copy">
-        <p class="step">Module 1 of 4</p>
-        <h2 id="h-pi">Raspberry Pi 5 + AI HAT+</h2>
-        <p class="role">Brain and on-device AI</p>
-        <p>The Raspberry Pi 5 (8 GB) with Active Cooler runs the live camera, the smoke model and the data uplink at once. The AI HAT+ (Hailo, 26 TOPS) runs the smoke model on the camera video without loading the processor.</p>
-        <p class="size">Powered by the official 27 W USB-C adapter (5 V 5 A)</p>
-        <p class="sr-only">Labelled in the 3D view: Active Cooler, GPIO header, PCIe to AI HAT+.</p>
-      </div>
-    </section>
-
-    <section class="sec spot" data-scene="spot" data-spot="1" aria-labelledby="h-cam">
-      <div class="copy">
-        <p class="step">Module 2 of 4</p>
-        <h2 id="h-cam">Camera Module 3 Wide</h2>
-        <p class="role">Live camera</p>
-        <p>IMX708, 12 MP, HDR and autofocus, with a 120° diagonal view (102° × 67°). One viewpoint covers a room and stays clear in difficult light.</p>
-        <p>Frames aren't sent out continuously: the node only sends the smoke probability, and the sliding cover shuts the lens.</p>
-        <p class="size">25 × 24 × 12.4 mm</p>
-        <p class="sr-only">Labelled in the 3D view: 120° wide lens, 22-pin camera cable.</p>
-      </div>
-    </section>
-
-    <section class="sec spot" data-scene="spot" data-spot="2" aria-labelledby="h-sen">
-      <div class="copy">
-        <p class="step">Module 3 of 4</p>
-        <h2 id="h-sen">Sensirion SEN66</h2>
-        <p class="role">One sensor, many readings</p>
-        <p>PM1, PM2.5, PM4 and PM10, CO₂ (NDIR), VOC index, NOx index, temperature and humidity, each as its own output rather than one mixed number like an MQ sensor.</p>
-        <p>It presses into a gasketed funnel in the front wall. Inlet and outlet are separated so air doesn't recirculate.</p>
-        <p class="size">55 × 26 × 21 mm, 3.3 V, I²C 0x6B. VOC and NOx are indices, not ppm of a specific gas.</p>
-        <p class="sr-only">Labelled in the 3D view: air inlet, air outlet, gasketed funnel.</p>
-      </div>
-    </section>
-
-    <section class="sec spot" data-scene="spot" data-spot="3" aria-labelledby="h-co">
-      <div class="copy">
-        <p class="step">Module 4 of 4</p>
-        <h2 id="h-co">Alphasense CO-B4 + ISB + ADS1115</h2>
-        <p class="role">The invisible gas that kills</p>
-        <p>A four-electrode electrochemical CO cell, 0–1000 ppm, T90 under 30 s, far more selective and stable than an MQ-7. It faces down, so dust and splashes don't settle on its filter.</p>
-        <p>The Raspberry Pi has no analogue pins, so a 16-bit ADS1115 sits right next to the ISB board and the analogue wires stay under 10 cm.</p>
-        <p class="size">CO in ppm after calibration. AirLens is not a certified CO alarm.</p>
-        <p class="sr-only">Labelled in the 3D view: electrochemical cell, ISB amplifier, ADS1115 ADC.</p>
-      </div>
-    </section>
-
-    <!-- 9 -->
-    <section class="sec" data-scene="zones" aria-labelledby="h-zones">
-      <div class="copy">
-        <h2 id="h-zones">Cool below, warm above</h2>
-        <p>Sensors sit in the cool zone at the bottom. The Pi 5 and AI HAT+ sit above a double divider: two plates with a 3 mm gap filled with EPDM foam. Heat from the Pi never passes the sensors.</p>
-      </div>
-    </section>
-
-    <!-- 10 -->
-    <section class="sec" data-scene="airflow" aria-labelledby="h-air">
-      <div class="copy">
-        <h2 id="h-air">Two air paths that never mix</h2>
-        <ul class="paths" aria-label="Air paths">
-          <li class="room"><span>Room air</span> enters through louvres at the bottom and sides and reaches the sensors</li>
-          <li class="pi"><span>Pi cooling air</span> enters at the back-middle and leaves at the top-back, so its heat neither passes the sensors nor blows toward people</li>
+        <h2 id="h-sensors">Four gas sensors</h2>
+        <p>Each one is a heated tin-oxide bead behind a double steel mesh. When gas reaches the bead, its resistance falls. None of them reacts to only one gas, so the model reads all four together.</p>
+        <ul class="sensor-list" id="sensor-list">
+          <li data-step="0"><strong>MQ-2</strong><span>Smoke and flammable gas</span></li>
+          <li data-step="1"><strong>MQ-3</strong><span>Alcohol vapour</span></li>
+          <li data-step="2"><strong>MQ-7</strong><span>Carbon monoxide, as a hint only: it runs at constant heat</span></li>
+          <li data-step="3"><strong>MQ-135</strong><span>General air quality and VOCs</span></li>
         </ul>
       </div>
     </section>
 
-    <!-- 11 -->
-    <section class="sec events" data-scene="triggers" aria-labelledby="h-trig">
-      <div class="copy wide">
-        <h2 id="h-trig">Two triggers, three alerts</h2>
-        <p>The node only sends raw numbers. The server decides, with one rule set for the full node, the node simulator and the live camera.</p>
-        <div class="matrix" role="table" aria-label="Trigger cases">
-          <div class="mrow mhead" role="row">
-            <span role="columnheader">Event</span><span role="columnheader">Camera</span><span role="columnheader">Gas</span><span role="columnheader">Priority</span><span role="columnheader">Message</span>
-          </div>
-          <div class="mrow priority" role="row">
-            <span role="rowheader"><strong>Smoke confirmed</strong></span>
-            <span role="cell" data-k="Camera">Smoke</span><span role="cell" data-k="Gas">Rising</span><span role="cell" data-k="Priority">High</span>
-            <span role="cell" data-k="Message">“Smoke confirmed: camera and gas sensor agree”</span>
-          </div>
-          <div class="mrow priority" role="row">
-            <span role="rowheader"><strong>Invisible gas</strong></span>
-            <span role="cell" data-k="Camera">No smoke</span><span role="cell" data-k="Gas">Rising</span><span role="cell" data-k="Priority">High</span>
-            <span role="cell" data-k="Message">“Invisible gas detected, likely CO. Ventilate now” (CO), or “Gas detected” (VOC/NOx)</span>
-          </div>
-          <div class="mrow" role="row">
-            <span role="rowheader"><strong>Visible smoke</strong></span>
-            <span role="cell" data-k="Camera">Smoke</span><span role="cell" data-k="Gas">Normal</span><span role="cell" data-k="Priority">Medium</span>
-            <span role="cell" data-k="Message">“Visible smoke, check the room”</span>
-          </div>
-        </div>
-        <p class="muted">Camera: median smoke probability ≥ 0.70 on at least 3 of the last 5 checks. CO: ≥ 30 ppm twice in a row, about the WHO guideline for one hour of exposure. VOC and NOx indices have their own thresholds.</p>
-      </div>
-    </section>
-
-    <!-- 12 -->
-    <section class="sec" data-scene="xai" aria-labelledby="h-xai">
+    <section class="sec" data-scene="divider" aria-labelledby="h-div">
       <div class="copy">
-        <h2 id="h-xai">It shows what it saw</h2>
-        <p>On the Live camera page, Grad-CAM++ paints a heatmap over the video showing which part of the image made the smoke model sure. Frames are analysed in memory and discarded.</p>
-        <figure class="example">
-          <figcaption>Example</figcaption>
-          <p>SHAP explains the decision across the sensors, the camera and the city baseline. Main factors, largest first:</p>
-          <ol class="factors-list">
-            <li>CO-B4 sensor</li><li>Camera</li><li>VOC index</li><li>PM2.5</li><li>City baseline</li>
-          </ol>
-        </figure>
-        <p class="muted">The smoke model is trained mostly on outdoor scenes, so indoor accuracy still needs testing and will be reported as it is.</p>
+        <h2 id="h-div">Five volts in, 3.3 volts out</h2>
+        <p>The sensor boards put out up to 5 V, but the ESP32 can only read up to 3.3 V. Two resistors per sensor scale the signal down before it reaches the pin.</p>
+        <p class="formula"><span>5 V × 20 kΩ ÷ (10 kΩ + 20 kΩ)</span><span>= 3.33 V</span></p>
+        <p class="small muted">Read the colour bands: brown, black, orange is 10 kΩ. Red, black, orange is 20 kΩ.</p>
       </div>
     </section>
 
-    <!-- 13 -->
-    <section class="sec beta" data-scene="beta" aria-labelledby="h-beta">
+    <section class="sec" data-scene="explode" aria-labelledby="h-parts">
       <div class="copy">
-        <p class="tag">Running at this booth</p>
-        <h2 id="h-beta">AirLens Beta</h2>
-        <p class="lede">ESP32 + 4 MQ gas sensors → AI model, explained with SHAP</p>
-        <p>An ESP32 DevKit V1 reads four MQ gas sensors (MQ-2, MQ-3, MQ-7, MQ-135), each through a 10 kΩ / 20 kΩ voltage divider, and sends readings over HTTPS. A small AI model tells clean air, smoke and alcohol apart, and SHAP shows which sensor pushed each decision. It lives in a printed box, 150 × 112 × 42 mm: a tray and a clip-on lid, with the four sensors in a row behind a heat divider because their heaters run warm.</p>
-        <div class="toggle" role="group" aria-label="Beta view">
-          <button type="button" id="beta-wrapped" aria-pressed="true">Wrapped</button>
-          <button type="button" id="beta-unwrapped" aria-pressed="false">Unwrapped</button>
-        </div>
-        <figure class="fallback beta-figure" id="beta-figure" data-open="false">
-          <img class="when-wrapped" src="product/beta_wrapped.png" alt="AirLens Beta in its closed printed box with side louvres and an embossed AirLens Beta label." loading="lazy">
-          <img class="when-unwrapped" src="product/beta_unwrapped.png" alt="AirLens Beta without its box: a breadboard with the ESP32 DevKit V1, four MQ gas sensors in a row, eight resistors and coloured wires." loading="lazy">
-        </figure>
-        <p class="muted">Explained with SHAP. MQ sensors are not selective and the model was trained on another team's sensors, so treat its answer as a hint, not a measurement.</p>
-        <p class="sr-only">Labelled in the unwrapped 3D view: ESP32 DevKit V1, 4 MQ gas sensors, 4 × 10 kΩ / 20 kΩ dividers.</p>
+        <h2 id="h-parts">What's inside</h2>
+        <ul class="parts">
+          <li><b>1</b>ESP32 DevKit V1, 30 pins</li>
+          <li><b>4</b>MQ gas sensor boards: MQ-2, MQ-3, MQ-7, MQ-135</li>
+          <li><b>1</b>Half-size breadboard, 400 holes</li>
+          <li><b>8</b>Resistors: four 10 kΩ and four 20 kΩ</li>
+          <li><b>18</b>Jumper wires, plus a micro-USB cable</li>
+          <li><b>2</b>Printed parts: tray and clip-on lid</li>
+        </ul>
+        <p><a class="text-link" href="/modules/merakit-node-lite.html">Step-by-step build guide (Indonesian)</a></p>
       </div>
     </section>
 
-    <!-- 14 -->
+    <section class="sec" data-scene="flow" aria-labelledby="h-flow">
+      <div class="copy">
+        <h2 id="h-flow">From a whiff of smoke to your phone</h2>
+        <ol class="flow">
+          <li>The sensors' resistance drops as smoke reaches them.</li>
+          <li>The ESP32 sends all four readings to AirLens.</li>
+          <li>AirLens compares each reading with that sensor's clean-air baseline.</li>
+          <li>A LightGBM model picks clean air, alcohol, smoke, or smoke with alcohol.</li>
+          <li>SHAP shows how much each sensor pushed that decision.</li>
+          <li>When the model is at least 70% sure of smoke twice in a row, phones with alerts turned on get a notification.</li>
+        </ol>
+        <p class="small muted">The model was trained on another team's MQ sensors, so treat its answer as a hint, not a measurement.</p>
+      </div>
+    </section>
+
     <section class="sec end" data-scene="end" aria-labelledby="h-end">
       <div class="copy">
-        <h2 id="h-end">Try it here</h2>
-        <p>The camera demo and the Beta sensor run live at this booth.</p>
+        <h2 id="h-end">See it running</h2>
+        <p>The box on the table is sending readings right now.</p>
         <nav class="actions" aria-label="Try AirLens">
-          <a class="cta secondary" href="beta.html">Beta sensor</a>
-          <a class="cta secondary" href="/">Photo demo</a>
-          <a class="cta secondary" href="modules/">Build guides</a>
+          <a class="btn primary" href="/beta.html">Open live readings</a>
+          <a class="btn" href="/">Try the photo demo</a>
+          <a class="btn" href="/modules/">Read the build guides</a>
         </nav>
       </div>
     </section>
   </main>
 
   <footer class="foot">
-    <p>The full version shown is a concept design. AirLens Beta runs at this booth.</p>
+    <p>AirLens Beta is a student project. It is not a certified smoke or carbon monoxide alarm.</p>
   </footer>
 
-  <script type="module" src="product/scroll.js"></script>
+  <script type="module" src="/product/story.js"></script>
   <script src="/shared/alerts.js"></script>
 </body>
 </html>

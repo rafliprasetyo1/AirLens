@@ -6,23 +6,19 @@
   <title>AirLens Beta: four gas sensors explained with SHAP</title>
   <meta name="description" content="Live readings from AirLens Beta: one ESP32, four MQ gas sensors and a small AI model that explains every decision with SHAP.">
   <link rel="icon" href="/product/airlens-icon.svg" type="image/svg+xml">
-  <link rel="preload" href="/vendor/fonts/space-grotesk-latin-300-normal.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="/product/product.css">
-  <link rel="stylesheet" href="/shared/nav.css">
+  <link rel="preload" href="/vendor/fonts/archivo-latin-wdth-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/shared/theme.css">
   <link rel="stylesheet" href="/shared/events.css">
   <link rel="stylesheet" href="/beta/beta.css">
   <link rel="stylesheet" href="/shared/alerts.css">
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="apple-touch-icon" href="/icons/airlens-192.png">
-  <meta name="theme-color" content="#08121c">
+  <meta name="theme-color" content="#e6ebed">
 </head>
 <body>
   <a class="skip" href="#main">Skip to content</a>
   <header class="bar">
-    <a class="brand" href="/">
-      <img src="/product/airlens-icon.svg" alt="" width="28" height="28">
-      <span>AirLens</span>
-    </a>
+    <a class="brand" href="/"><img src="/product/airlens-icon.svg" alt="" width="28" height="28"><span>AirLens</span></a>
     <nav class="site-nav" aria-label="AirLens pages">
       <ul>
         <li><a href="/">Photo demo</a></li>
@@ -35,9 +31,9 @@
 
   <main id="main" class="beta">
     <section class="intro" aria-labelledby="h-beta">
-      <p class="tag">Running at this booth</p>
       <h1 id="h-beta">AirLens Beta</h1>
       <p class="lede">One ESP32, four MQ gas sensors and a small AI model that tells smoke from alcohol, and shows why.</p>
+      <p class="where">Live from the box on the table at this booth. <a href="/product.html">See what is inside it</a>.</p>
     </section>
 
     <div class="event-banner" data-airlens-events data-room="booth" hidden></div>
@@ -45,7 +41,7 @@
     <section class="alerts-panel" data-airlens-alerts-panel aria-labelledby="h-alerts">
       <h2 id="h-alerts" class="sr-only">Alerts</h2>
       <div class="row">
-        <button type="button" data-alerts-toggle>Enable alerts</button>
+        <button type="button" class="btn primary" data-alerts-toggle>Enable alerts</button>
         <label><input type="checkbox" data-alerts-sound checked> Sound</label>
       </div>
       <p data-alerts-status role="status"></p>

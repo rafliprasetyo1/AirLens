@@ -5,35 +5,33 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>AirLens build guides</title>
   <link rel="icon" href="/product/airlens-icon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="/product/product.css">
-  <link rel="stylesheet" href="/shared/nav.css">
+  <link rel="preload" href="/vendor/fonts/archivo-latin-wdth-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/shared/theme.css">
   <style>
-    .guides { padding: 8rem var(--gutter) 5rem; max-width: 52rem; }
+    .guides { padding: clamp(2rem, 5vw, 3.5rem) var(--gutter) 5rem; max-width: 52rem; }
     .guides h1 { font-size: clamp(2.5rem, 6vw, 4rem); }
     .guides .lede { margin-top: 1rem; }
-    .guide-list { list-style: none; margin: 3rem 0 0; padding: 0; border-top: 1px solid var(--line); }
-    .guide-list li { border-bottom: 1px solid var(--line); }
-    .guide-list a { display: grid; gap: .35rem; padding: 1.5rem 0; color: var(--ink); text-decoration: none; }
-    .guide-list a:hover .guide-title, .guide-list a:focus-visible .guide-title { color: var(--sky); }
-    .guide-title { font: 400 1.5rem/1.2 var(--display); letter-spacing: -.01em; }
-    .guide-meta { color: var(--sky); font-size: .875rem; font-weight: 500; }
-    .guide-list p { color: var(--ink-2); max-width: 36em; }
-    .tools-head { margin-top: 3.5rem; font: 300 clamp(1.5rem, 3vw, 2rem) var(--display, system-ui); color: var(--ink); }
-    .tools-head + .guide-list { margin-top: 1.25rem; }
-    .guides .note { margin-top: 2.5rem; max-width: 36em; }
+    .guide-list { list-style: none; margin: 2.5rem 0 0; padding: 0; border-top: 1px solid var(--rule); }
+    .guide-list li { border-bottom: 1px solid var(--rule); }
+    .guide-list a { display: grid; gap: .4rem; padding: 1.4rem 0; color: var(--ink); text-decoration: none; }
+    .guide-list a:hover .guide-title, .guide-list a:focus-visible .guide-title { color: var(--petrol); }
+    .guide-title { font-size: var(--t-xl); font-weight: 720; font-stretch: var(--wide); letter-spacing: -.015em; line-height: 1.15; }
+    .guide-list p { color: var(--ink-2); max-width: 38em; }
+    .guide-meta { font-size: var(--t-sm); font-weight: 600; font-stretch: var(--narrow); color: var(--petrol); }
+    .guide-list .concept .guide-title { color: var(--ink-2); }
+    .guide-list .concept .guide-meta { color: var(--ink-2); }
+    .tools-head { margin-top: 3.5rem; font-size: var(--t-xl); }
+    .tools-head + p { margin-top: .5rem; color: var(--ink-2); }
   </style>
   <link rel="stylesheet" href="/shared/alerts.css">
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="apple-touch-icon" href="/icons/airlens-192.png">
-  <meta name="theme-color" content="#08121c">
+  <meta name="theme-color" content="#e6ebed">
 </head>
 <body>
   <a class="skip" href="#main">Skip to content</a>
   <header class="bar">
-    <a class="brand" href="/">
-      <img src="/product/airlens-icon.svg" alt="" width="28" height="28">
-      <span>AirLens</span>
-    </a>
+    <a class="brand" href="/"><img src="/product/airlens-icon.svg" alt="" width="28" height="28"><span>AirLens</span></a>
     <nav class="site-nav" aria-label="AirLens pages">
       <ul>
         <li><a href="/">Photo demo</a></li>
@@ -46,41 +44,41 @@
 
   <main id="main" class="guides">
     <h1>Build guides</h1>
-    <p class="lede">Step-by-step guides for wiring, testing and assembling the AirLens nodes.</p>
+    <p class="lede">How to wire, test and assemble AirLens, step by step.</p>
     <ul class="guide-list">
       <li>
         <a href="merakit-node-lite.html">
-          <span class="guide-meta">Running at this booth</span>
-          <span class="guide-title">Beta version</span>
+          <span class="guide-title">AirLens Beta</span>
           <p>ESP32 DevKit V1 with four MQ gas sensors (MQ-2, MQ-3, MQ-7, MQ-135), each through a voltage divider, sending readings over HTTPS to a small AI model explained with SHAP.</p>
+          <span class="guide-meta">The box running at this booth. Guide in Indonesian.</span>
         </a>
       </li>
-      <li>
+      <li class="concept">
         <a href="merakit-node-lengkap.html">
-          <span class="guide-meta">Full version · concept design</span>
           <span class="guide-title">Full version (concept)</span>
           <p>Raspberry Pi 5 with AI HAT+, Camera Module 3 Wide, Sensirion SEN66 and Alphasense CO-B4, in a 3D-printed case.</p>
+          <span class="guide-meta">A design study. It has not been built.</span>
         </a>
       </li>
     </ul>
-    <h2 class="tools-head">Beta tools (operator)</h2>
+    <h2 class="tools-head">Operator tools</h2>
+    <p>These open only on the booth computer.</p>
     <ul class="guide-list">
       <li>
         <a href="/tools/flash.html">
-          <span class="guide-meta">Chrome or Edge · USB</span>
           <span class="guide-title">Flash tool</span>
-          <p>Install the AirLens Beta firmware (4 MQ gas sensors) from the browser and save WiFi, the AirLens address and the node token on the device.</p>
+          <p>Install the AirLens Beta firmware from the browser and save Wi-Fi, the AirLens address and the node token on the device.</p>
+          <span class="guide-meta">Needs Chrome or Edge and a USB data cable.</span>
         </a>
       </li>
       <li>
         <a href="/tools/recorder.html">
-          <span class="guide-meta">Chrome or Edge · USB</span>
           <span class="guide-title">Calibration recorder</span>
           <p>Record labelled readings (clean air, incense smoke, hand sanitizer) from the device and download them as CSV.</p>
+          <span class="guide-meta">Needs Chrome or Edge and a USB data cable.</span>
         </a>
       </li>
     </ul>
-    <p class="note muted">The guides are written in Indonesian. They work offline and use system fonts.</p>
   </main>
   <script src="/shared/alerts.js"></script>
 </body>

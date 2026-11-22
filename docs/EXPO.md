@@ -55,7 +55,7 @@ HTTP per bulan**. Yang paling cepat habis adalah **jumlah permintaan**.
 | ESP32 Beta, tiap 10 s (disarankan saat pameran) | 360 | ±0,2 MB |
 | HP pengunjung di halaman Beta (polling 10 s, riwayat bertahap) | ±1.500 selama halaman terbuka | ±1–2 MB |
 | Buka halaman pertama kali (Beta) | ±10 | ±0,15 MB |
-| Halaman Product (model 3D ±3,5 MB) | – | buka **hanya di layar booth** (localhost) |
+| Halaman Product (model 3D AirLens Beta, ±0,55 MB setelah gzip) | ±20 | ±0,55 MB per kunjungan; sebaiknya dibuka di layar booth (localhost) |
 
 Saran:
 - **Layar booth selalu `http://localhost:8080`** (tidak memakai kuota ngrok sama sekali).

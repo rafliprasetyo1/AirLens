@@ -88,7 +88,7 @@ const CONTRAST_FN = `(sel) => {
     check("riwayat sesi bertambah", (await page.$$eval("#history li", (l) => l.filter((x) => !x.classList.contains("muted")).length)) >= 1);
     const cls = (await page.evaluate(() => window.__cls)) - clsBefore;
     check("tidak ada pergeseran tata letak saat hasil muncul (CLS < 0.1)", cls < 0.1, `CLS ${cls.toFixed(4)}`);
-    for (const [sel, label] of [["body", "teks utama"], [".tagline", "teks sekunder"], [".disclaimer strong", "disclaimer"],
+    for (const [sel, label] of [["body", "teks utama"], [".ask .lede", "teks sekunder"], [".disclaimer", "disclaimer"],
       ["#cat-chip", "chip kategori"], [".btn.primary", "tombol utama"], ["#advice", "saran"], [".history li span:last-child", "riwayat"]]) {
       const c = await page.evaluate(`(${CONTRAST_FN})(${JSON.stringify(sel)})`);
       check(`kontras ${label} >= 4.5:1`, c !== null && c >= 4.5, `${c}:1`);
@@ -185,7 +185,8 @@ const CONTRAST_FN = `(sel) => {
       return { id: e.id || e.className || e.tagName, outline: s.outlineStyle !== "none" && parseFloat(s.outlineWidth) >= 2 };
     });
     const seen = [];
-    for (let i = 0; i < 8; i++) { await page.keyboard.press("Tab"); seen.push(await focusInfo()); }
+    // kepala bersama: lewati-ke-hasil, logo, 4 menu, lonceng = 7 tab sebelum area unggah
+    for (let i = 0; i < 12; i++) { await page.keyboard.press("Tab"); seen.push(await focusInfo()); }
     check("Tab menjangkau area unggah, kota, lokasi, persetujuan", ["dropzone", "city", "geo", "consent"].every((id) => seen.some((s) => s.id === id)),
       seen.map((s) => s.id).join(" → "));
     const focusable = seen.filter((s) => s.id !== "BODY");  // setelah elemen terakhir, fokus kembali ke dokumen

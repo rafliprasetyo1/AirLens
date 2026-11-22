@@ -203,7 +203,8 @@ Website memakai model `production` dari MLflow; bila belum ada model terlatih, j
 
 Halaman lain: `/beta.html` (AirLens Beta: 4 MQ + model gas + SHAP + notifikasi), `/tools/flash.html` dan
 `/tools/recorder.html` (alat operator: flash firmware dan rekam kalibrasi lewat Web Serial; hanya dari komputer ini),
-`/product.html`. Simulator (stdlib, jalankan langsung di WSL; token dibaca dari `.env`):
+`/product.html` (isi AirLens Beta dalam 3D: ESP32, empat modul MQ, breadboard, casing cetak). Semua halaman memakai satu tema,
+`web/static/shared/theme.css`. Simulator (stdlib, jalankan langsung di WSL; token dibaca dari `.env`):
 
 ```bash
 python3 scripts/sensor_sim.py --replay dataset   # Beta 4 MQ: putar ulang MultimodalGasData, model + SHAP berganti kelas

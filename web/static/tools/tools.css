@@ -1,51 +1,48 @@
-/* Halaman alat operator (flash + recorder). Token dan font dari product.css; tidak masuk navigasi pengunjung. */
-:root { --alert: #ff9a8f; --ok: #7fd4a8; }
-.tools { padding: 6.5rem var(--gutter) 4rem; max-width: 64rem; }
-.tools h1 { font-size: clamp(2.25rem, 6vw, 3.75rem); line-height: 1; letter-spacing: -.03em; margin-top: .5rem; }
+/* Halaman alat operator (flash + recorder). Token, huruf, kepala, dan tombol dari /shared/theme.css.
+   Tidak masuk navigasi pengunjung; lewat ngrok halaman ini ditolak nginx (403). */
+.tools { padding: clamp(2rem, 5vw, 3rem) var(--gutter) 4rem; max-width: 64rem; }
+.tools .tag { font-size: var(--t-sm); font-weight: 600; font-stretch: var(--narrow); color: var(--amber); }
+.tools h1 { font-size: clamp(2.25rem, 5.6vw, 3.6rem); margin-top: .4rem; }
 .tools h2 { font-size: clamp(1.4rem, 3vw, 1.9rem); }
 .tools p, .tools li, .tools label { color: var(--ink-2); }
 .tools p { max-width: 42em; }
-.tools section { margin-top: 2.75rem; }
+.tools h1 + p { margin-top: 1rem; }
+.tools h1 + p + .notice-box, .tools h1 + p + * + .notice-box { margin-top: 1.25rem; }
+.tools section { margin-top: 2.75rem; padding-top: 1.75rem; border-top: 1px solid var(--rule); }
 .tools section > * + * { margin-top: 1rem; }
-.tools code { color: var(--ink); font-size: .9em; }
-.notice-box { padding: .9rem 1.1rem; border: 1px solid var(--line); border-left: 4px solid var(--sky); border-radius: 10px;
-  background: var(--raised); }
-.notice-box.warn { border-left-color: var(--alert); }
+.tools code { color: var(--ink); }
+.bar-link { margin-left: auto; font-size: var(--t-sm); font-weight: 600; text-decoration: none; }
+.notice-box { padding: .9rem 1.1rem; border-left: 4px solid var(--petrol); border-radius: 8px; background: var(--paper); }
+.notice-box.warn { border-left-color: var(--alert); background: var(--alert-soft); }
 .notice-box p { color: var(--ink) !important; }
 .row { display: flex; flex-wrap: wrap; gap: .75rem 1rem; align-items: center; }
-.btn { font: 500 1rem var(--text); min-height: 44px; padding: .55rem 1.1rem; border-radius: 8px; cursor: pointer;
-  color: var(--ink); background: transparent; border: 1px solid var(--line); }
-.btn:hover:not(:disabled) { border-color: var(--ink-2); }
-.btn.primary { background: var(--sky); border-color: var(--sky); color: #04121d; }
-.btn[aria-pressed="true"] { background: var(--sky); border-color: var(--sky); color: #04121d; }
-.btn:disabled { opacity: .45; cursor: not-allowed; }
 .field { display: grid; gap: .35rem; max-width: 30rem; }
-.field input, .field select { font: inherit; color: var(--ink); background: var(--raised); border: 1px solid var(--line);
-  border-radius: 8px; padding: .55rem .7rem; min-height: 44px; width: 100%; }
-.field small { color: var(--ink-2); font-size: .8125rem; }
+.field label { font-size: var(--t-sm); font-weight: 600; color: var(--ink); }
+.field input, .field select { width: 100%; }
+.field small { color: var(--ink-2); font-size: var(--t-xs); }
 .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem 1.5rem; max-width: 46rem; }
-.status-line { font-variant-numeric: tabular-nums; color: var(--ink) !important; }
+.status-line { font-variant-numeric: tabular-nums; color: var(--ink) !important; font-weight: 600; }
 .status-line[data-kind="error"] { color: var(--alert) !important; }
 .status-line[data-kind="ok"] { color: var(--ok) !important; }
-progress { width: 100%; max-width: 30rem; height: .6rem; accent-color: var(--sky); }
-.log { margin: 0; padding: .8rem 1rem; max-height: 16rem; overflow: auto; background: #050c13; border: 1px solid var(--line);
-  border-radius: 8px; color: var(--ink-2); font: 400 .8125rem/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+progress { width: 100%; max-width: 30rem; height: .6rem; accent-color: var(--petrol); }
+.log { margin: 0; padding: .8rem 1rem; max-height: 16rem; overflow: auto; background: var(--ink); border: 0;
+  border-radius: 8px; color: #d8e2e6; font: 400 .8125rem/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   white-space: pre-wrap; overflow-wrap: anywhere; }
 .fw-list { display: grid; gap: .6rem; margin: 0; padding: 0; list-style: none; }
-.fw-list label { display: flex; gap: .7rem; align-items: baseline; padding: .7rem .9rem; border: 1px solid var(--line);
+.fw-list label { display: flex; gap: .7rem; align-items: baseline; padding: .7rem .9rem; border: 1px solid var(--rule);
   border-radius: 8px; cursor: pointer; color: var(--ink); }
-.fw-list input { accent-color: var(--sky); }
+.fw-list input { accent-color: var(--petrol); }
 .fw-list small { color: var(--ink-2); display: block; }
-.chart-box svg { display: block; width: 100%; height: auto; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
-.chart-box .grid { stroke: var(--line); }
-.chart-box .axis { fill: var(--ink-2); font: 12px var(--text); }
+.chart-box svg { display: block; width: 100%; height: auto; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); }
+.chart-box .grid { stroke: var(--rule-soft); }
+.chart-box .axis { fill: var(--ink-2); font: 12px var(--font); }
 .legend { display: flex; flex-wrap: wrap; gap: .4rem 1.2rem; font-size: .875rem; color: var(--ink-2); }
 .legend span::before { content: ""; display: inline-block; width: 1rem; height: 0; border-top: 3px solid var(--c);
   margin-right: .4rem; vertical-align: middle; }
 .counts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .75rem; margin: 0; }
-.counts div { border: 1px solid var(--line); border-radius: 8px; padding: .6rem .8rem; }
+.counts div { border: 1px solid var(--rule); border-radius: 8px; padding: .6rem .8rem; }
 .counts dt { color: var(--ink-2); font-size: .8125rem; }
-.counts dd { margin: .2rem 0 0; color: var(--ink); font: 400 1.4rem var(--display); font-variant-numeric: tabular-nums; }
+.counts dd { margin: .2rem 0 0; color: var(--ink); font-size: 1.4rem; font-weight: 760; font-stretch: var(--wide); font-variant-numeric: tabular-nums; }
 @media (max-width: 700px) {
   .form-grid, .counts { grid-template-columns: minmax(0, 1fr); }
 }

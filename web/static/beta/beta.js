@@ -21,8 +21,9 @@ const el = {
 };
 const WORDS = { warming_up: "Warming up", normal: "Normal", alert: "Alert", offline: "Offline" };
 const CLASS_TEXT = { clean_air: "Clean air", alcohol: "Alcohol / VOC", smoke: "Smoke", smoke_alcohol: "Smoke + alcohol" };
-const SENSORS = [["MQ2", "MQ-2", "#2ba8e0"], ["MQ3", "MQ-3", "#f2c14e"], ["MQ7", "MQ-7", "#c9a7ff"],
-  ["MQ135", "MQ-135", "#7fd4a8"]];
+// sama dengan warna kabel sinyal di model 3D (product/beta-scene.js), digelapkan agar kontras di atas latar putih
+const SENSORS = [["MQ2", "MQ-2", "#1f6fd6"], ["MQ3", "MQ-3", "#9a7400"], ["MQ7", "MQ-7", "#7b3fc0"],
+  ["MQ135", "MQ-135", "#1f8a45"]];
 const FEATURE_TEXT = { r_mq2: "MQ-2", r_mq3: "MQ-3", r_mq7: "MQ-7", r_mq135: "MQ-135", mq3_over_mq2: "MQ-3 / MQ-2" };
 let nodeId = null, chosenByUser = false, timer = 0;
 let histNode = null, histRows = [], nodesCache = null, nodesAt = 0, explainFor = null;

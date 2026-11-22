@@ -5,24 +5,32 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Merakit AirLens Beta</title>
 <meta name="claude:viewport-fit-sides" content="cover">
+<link rel="icon" href="/product/airlens-icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/shared/theme.css">
+<link rel="stylesheet" href="/shared/alerts.css">
+<style>nav.toc { top: 73px !important; max-height: calc(100vh - 89px) !important; } section { scroll-margin-top: 80px !important; }</style>
 <style>
-/* Tata letak: daftar isi menempel di kiri (desktop), langkah-langkah perakitan di kanan seperti lembar kerja bengkel.
+/* Warna dan huruf mengikuti tema website AirLens (web/static/shared/theme.css): latar kabut abu kebiruan, tinta slate,
+   satu warna aksi petrol, huruf Archivo (judul lebar). Di website, font dimuat dari /vendor/fonts (tanpa domain luar).
+   Tata letak: daftar isi menempel di kiri (desktop), langkah-langkah perakitan di kanan seperti lembar kerja bengkel.
    Warna kabel mengikuti kebiasaan elektronika: merah 5 V, oranye 3,3 V, hitam GND; warna lain untuk sinyal. */
 :root {
-  --bg: #F3F6F8; --paper: #FFFFFF; --ink: #10222E; --ink-2: #4A5E6B; --line: #D5DEE4; --soft: #E8F0F5;
-  --accent: #1C6FA8; --accent-ink: #FFFFFF; --amber: #B4610E; --amber-soft: #FDF1E3; --danger: #B3261E; --danger-soft: #FCE9E7;
+  --bg: #E6EBED; --paper: #FFFFFF; --ink: #18262E; --ink-2: #4B5C66; --line: #CBD5DA; --soft: #E3EAED;
+  --accent: #0A5C78; --accent-ink: #FFFFFF; --amber: #B4610E; --amber-soft: #FDF1E3; --danger: #B3261E; --danger-soft: #FCE9E7;
   --ok: #17794A; --ok-soft: #E3F4EA; --code-bg: #0F1E28; --code-ink: #E3EEF4; --code-dim: #6E8796;
   --w5v: #D7263D; --w33: #F08A24; --wgnd: #1B1F24; --wsig1: #1F7AE0; --wsig2: #2BA84A; --wsig3: #8E44C9; --wsig4: #D1A10F;
-  --f-head: "Space Grotesk", "Segoe UI", sans-serif; --f-body: "Inter", system-ui, sans-serif; --f-mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+  --f-head: "Archivo", "Segoe UI", sans-serif; --f-body: "Archivo", system-ui, sans-serif; --f-mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
   --bg: #0C161D; --paper: #13222C; --ink: #E6EFF4; --ink-2: #9DB3C1; --line: #24394A; --soft: #182C38;
-  --accent: #5CB4EC; --accent-ink: #06202E; --amber: #F2A65A; --amber-soft: #2E2214; --danger: #FF8A80; --danger-soft: #34181A;
+  --accent: #6CC0DC; --accent-ink: #06202E; --amber: #F2A65A; --amber-soft: #2E2214; --danger: #FF8A80; --danger-soft: #34181A;
   --ok: #5DD39A; --ok-soft: #12291E; --code-bg: #08121A; --code-ink: #E3EEF4; --code-dim: #6E8796; --wgnd: #C9D3DA; color-scheme: dark; } }
 :root[data-theme="dark"] {
   --bg: #0C161D; --paper: #13222C; --ink: #E6EFF4; --ink-2: #9DB3C1; --line: #24394A; --soft: #182C38;
-  --accent: #5CB4EC; --accent-ink: #06202E; --amber: #F2A65A; --amber-soft: #2E2214; --danger: #FF8A80; --danger-soft: #34181A;
+  --accent: #6CC0DC; --accent-ink: #06202E; --amber: #F2A65A; --amber-soft: #2E2214; --danger: #FF8A80; --danger-soft: #34181A;
   --ok: #5DD39A; --ok-soft: #12291E; --code-bg: #08121A; --code-ink: #E3EEF4; --code-dim: #6E8796; --wgnd: #C9D3DA; color-scheme: dark; }
+@font-face { font-family: "Archivo"; font-style: normal; font-display: swap; font-weight: 100 900; font-stretch: 62% 125%;
+  src: url("/vendor/fonts/archivo-latin-wdth-normal.woff2") format("woff2"); }
 * { box-sizing: border-box; }
 body { background: var(--bg); color: var(--ink); font: 400 16px/1.65 var(--f-body); }
 a { color: var(--accent); }
@@ -32,8 +40,8 @@ header.intro { grid-column: 1 / -1; display: grid; gap: 14px; padding-bottom: 12
 header.intro h1 { margin: 0; font: 700 clamp(30px, 4.4vw, 46px)/1.1 var(--f-head); letter-spacing: -.5px; text-wrap: balance; }
 header.intro p { margin: 0; max-width: 68ch; color: var(--ink-2); font-size: 17px; }
 .progress { display: flex; align-items: center; gap: 12px; font-size: 14px; color: var(--ink-2); }
-.bar { flex: 0 1 320px; height: 8px; background: var(--soft); border-radius: 99px; overflow: hidden; }
-.bar i { display: block; height: 100%; width: 0; background: var(--ok); transition: width .3s; }
+.pbar { flex: 0 1 320px; height: 8px; background: var(--soft); border-radius: 99px; overflow: hidden; }
+.pbar i { display: block; height: 100%; width: 0; background: var(--ok); transition: width .3s; }
 nav.toc { position: sticky; top: calc(16px + env(safe-area-inset-top, 0px)); align-self: start; max-height: calc(100vh - 32px); overflow-y: auto; font-size: 14px; }
 nav.toc ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
 nav.toc a { display: flex; gap: 8px; align-items: baseline; padding: 6px 10px; border-radius: 8px; color: var(--ink-2); text-decoration: none; }
@@ -98,14 +106,25 @@ details.math > summary { color: var(--amber); }
   nav.toc { position: static; max-height: none; border: 1px solid var(--line); border-radius: 12px; background: var(--paper); padding: 8px; }
   .explain li { grid-template-columns: 1fr; gap: 2px; }
 }
-@media (prefers-reduced-motion: reduce) { .bar i { transition: none; } html { scroll-behavior: auto; } }
+@media (prefers-reduced-motion: reduce) { .pbar i { transition: none; } html { scroll-behavior: auto; } }
+header.intro h1, section > h2, h3 { font-stretch: 116%; }   /* judul lebar seperti website (setelah shorthand font) */
 </style>
+<header class="bar">
+  <a class="brand" href="/"><img src="/product/airlens-icon.svg" alt="" width="28" height="28"><span>AirLens</span></a>
+  <nav class="site-nav" aria-label="AirLens pages"><ul>
+    <li><a href="/">Photo demo</a></li>
+    <li><a href="/beta.html">Beta sensor</a></li>
+    <li><a href="/product.html">Product</a></li>
+    <li><a href="/modules/" aria-current="page">Build guides</a></li>
+  </ul></nav>
+</header>
+
 
 <div class="wrap">
   <header class="intro">
     <h1>Merakit AirLens Beta</h1>
     <p>Node AirLens Beta: satu papan ESP32, empat sensor gas MQ (MQ-2, MQ-3, MQ-7, MQ-135), delapan resistor, dan adaptor 5 V. Setiap 2 detik ESP32 mengirim bacaan ke AirLens lewat internet (alamat ngrok). Model AI kecil di website menebak apakah udaranya bersih, ada asap, ada alkohol, atau keduanya, lalu menjelaskan alasannya dengan SHAP.</p>
-    <div class="progress"><div class="bar" aria-hidden="true"><i id="bar"></i></div><span id="progress-text">0 dari 0 langkah selesai</span></div>
+    <div class="progress"><div class="pbar" aria-hidden="true"><i id="bar"></i></div><span id="progress-text">0 dari 0 langkah selesai</span></div>
   </header>
 
   <nav class="toc" aria-label="Daftar isi">
@@ -698,3 +717,5 @@ document.querySelectorAll("main > section").forEach((s) => io.observe(s));
 </script>
 
 </html>
+
+<script src="/shared/alerts.js"></script>

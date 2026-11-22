@@ -35,6 +35,17 @@ Target: semua siap sebelum sesi lab, sehingga di lab tinggal **merakit alat Beta
 Catatan jujur: kelas High di Dhaka hanya 33 foto (recall 0,21). Model gas belum melihat data dari alat sendiri; dilatih
 ulang setelah rekaman lab (`make beta-recordings-push` + `make kaggle-push`).
 
+## Perombakan tampilan website (2026-11-22, sore)
+
+| Bagian | Status |
+|---|---|
+| Satu tema untuk semua halaman (`shared/theme.css`, huruf Archivo lokal) | Selesai |
+| Halaman Foto: lembar hasil + bidang warna AQI resmi, tanpa tumpukan kartu | Selesai |
+| Halaman Beta, panduan perakitan, alat operator: tema yang sama | Selesai |
+| Halaman Product: kini AirLens Beta, model 3D modul seperti aslinya (ESP32, MQ, breadboard, resistor, kabel, casing STL) | Selesai |
+| gzip di nginx (hemat kuota ngrok) | Selesai |
+| `make test` 296 lulus, `make ui-test` 39/39 | Selesai |
+
 ## Yang dikerjakan di lab (tanpa pelatihan)
 
 `make doctor` → `make expo-setup PROFILE=lab` → rakit Beta → flash + Set WiFi (`tools/flash.html`) → pemanasan →

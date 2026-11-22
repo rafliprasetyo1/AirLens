@@ -524,3 +524,16 @@ Lingkup ditegaskan pemilik: **proyek utama** = foto pengguna → tingkat kualita
 - **Kernel Kaggle v1 gagal** di tahap data karena `unar` tidak ada di image Kaggle (pelatihan belum sempat berjalan);
   kernel kini memasangnya, dan rantai model foto serta model Beta dipisah agar satu kegagalan tidak menggagalkan yang lain.
 - Riwayat commit lokal yang belum di-push dibatalkan (`git reset --soft origin/main`) dan dibuat ulang lebih ringkas.
+
+## Perombakan tampilan website (2026-11-22)
+
+| Keputusan | Alasan |
+|---|---|
+| Satu tema untuk semua halaman (`web/static/shared/theme.css`): latar abu kebiruan `#E6EBED`, tinta slate `#18262E`, satu warna aksi petrol `#0A5C78` | Sebelumnya halaman Foto terang dan halaman lain gelap. Warna terang lain hanya untuk data (tingkat AQI resmi, peringatan), jadi warna selalu berarti "udara". Menghindari pola template gelap + satu aksen neon |
+| Satu keluarga huruf, Archivo variabel (lebar 62–125 %), disimpan lokal (90 KB) | Judul lebar dan tebal seperti cetakan panel alat ukur, isi lebar normal, label sedikit dipadatkan. Menggantikan Space Grotesk + Inter + font sistem (tiga gaya berbeda). Lokal agar booth tetap rapi saat internet putus |
+| Halaman Foto: lembar hasil dengan garis pemisah, bukan tumpukan kartu; bidang hasil diwarnai warna resmi AQI dari API | Satu hal yang mencolok per halaman. ID elemen tetap sama, jadi `app.js` dan uji UI tidak berubah perilakunya |
+| Halaman Product kini tentang AirLens Beta (bukan konsep versi lengkap) | Beta yang benar-benar dipamerkan. Konsep versi lengkap tetap di panduan dan `hardware/`, tidak dimuat halaman Product |
+| Model 3D modul dibangun di browser (`product/parts/`), bukan balok GLB | ESP32 DevKit V1 (WROOM-32 berpelindung beretsa, antena meander, micro-USB, EN/BOOT, CP2102, AMS1117, 30 pin bersolder), modul MQ FC-22 (jaring baja ganda, cincin crimp, trimpot 3296, LM393 di bawah), breadboard 400 lubang, resistor dengan gelang warna asli, kabel dupont. Ukuran asli dalam mm; tekstur digambar di kanvas sehingga tidak ada unduhan tekstur |
+| Casing dari STL cetak asli (`hardware/enclosure-beta/stl/`) + gzip di nginx | Casing di layar sama dengan yang dicetak. Gzip: STL 329 KB -> 55 KB, three.js ±1,3 MB -> ±300 KB (hemat kuota ngrok) |
+| Tata letak ESP32 di breadboard mengikuti kenyataan: baris pin di b dan j, baris a sisi GPIO terbuka | DevKit V1 menutup semua lubang breadboard kecuali satu baris; kabel GPIO 34/35/32/33 masuk ke baris itu |
+| Warna garis sensor di grafik Beta = warna kabel sinyal di model 3D (MQ-2 biru, MQ-3 kuning tua, MQ-7 ungu, MQ-135 hijau) | Pengunjung bisa mencocokkan grafik dengan kabel di model |

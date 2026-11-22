@@ -1,16 +1,12 @@
-/* Lonceng notifikasi di header (semua halaman) + panel "Enable alerts" (Beta, Live). Warna mengikuti token halaman. */
-.alerts-bell { display: inline-grid; place-items: center; flex: none; width: 40px; height: 40px; margin-left: .75rem;
-  border-radius: 50%; border: 1px solid var(--line, #1f3242); background: transparent; color: var(--ink-2, #9db0bf);
-  cursor: pointer; }
-.alerts-bell:hover { color: var(--ink, #e8eef3); }
-.alerts-bell[aria-pressed="true"] { color: #04121d; background: var(--sky, #2ba8e0); border-color: var(--sky, #2ba8e0); }
-.alerts-panel { margin-top: 2rem; padding: 1rem 1.25rem; border: 1px solid var(--line, #1f3242); border-radius: 10px;
-  background: var(--raised, #0e1c29); max-width: 46rem; display: grid; gap: .6rem; }
+/* Lonceng notifikasi di header (semua halaman) + panel "Enable alerts" (halaman Beta). Token dari /shared/theme.css. */
+.alerts-bell { display: inline-grid; place-items: center; flex: none; width: 44px; height: 44px; margin-left: auto;
+  border-radius: 50%; border: 1px solid var(--rule); background: transparent; color: var(--ink-2); cursor: pointer; }
+.alerts-bell:hover { color: var(--ink); border-color: var(--ink-2); }
+.alerts-bell[aria-pressed="true"] { color: var(--petrol-ink); background: var(--petrol); border-color: var(--petrol); }
+.alerts-panel { margin-top: 2rem; padding: 1.1rem 1.25rem; border-left: 4px solid var(--petrol); border-radius: 8px;
+  background: var(--paper); max-width: 46rem; display: grid; gap: .65rem; }
 .alerts-panel .row { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem 1.2rem; }
-.alerts-panel button { font: 500 1rem var(--text, system-ui); min-height: 44px; padding: .5rem 1.1rem; border-radius: 8px;
-  cursor: pointer; background: var(--sky, #2ba8e0); border: 1px solid var(--sky, #2ba8e0); color: #04121d; }
-.alerts-panel label { display: inline-flex; align-items: center; gap: .45rem; color: var(--ink-2, #9db0bf); font-size: .9375rem; }
-.alerts-panel input { width: 18px; height: 18px; accent-color: var(--sky, #2ba8e0); }
-.alerts-panel p { margin: 0; color: var(--ink-2, #9db0bf) !important; font-size: .875rem; max-width: 42em; }
-.alerts-panel [data-alerts-status] { color: var(--ink, #e8eef3) !important; font-size: .9375rem; min-height: 1.4em; }
-@media (max-width: 560px) { .alerts-bell { width: 36px; height: 36px; margin-left: .4rem; } }
+.alerts-panel label { display: inline-flex; align-items: center; gap: .45rem; color: var(--ink-2); font-size: var(--t-sm); }
+.alerts-panel input { width: 18px; height: 18px; }
+.alerts-panel p { margin: 0; color: var(--ink-2) !important; font-size: var(--t-sm); max-width: 42em; }
+.alerts-panel [data-alerts-status] { color: var(--ink) !important; font-weight: 600; min-height: 1.4em; }
