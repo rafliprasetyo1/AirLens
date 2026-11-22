@@ -286,9 +286,10 @@ export function createScene(canvas, { weak = false, onProgress } = {}) {
     renderer.setSize(w, h, false);
     camera.aspect = w / h;
     // layar lebar: kanvas selebar layar di belakang teks; geser titik tengah gambar ke kanan (pusat di ±70 % lebar)
-    // agar model berada di bagian yang bebas teks. Layar sempit/tegak: tanpa geser.
+    // agar model berada di bagian yang bebas teks.
     const wide = !matchMedia("(max-width: 899px), (orientation: portrait)").matches;
-    if (wide) camera.setViewOffset(w, h, -w * 0.2, 0, w, h); else camera.clearViewOffset();
+    // HP: geser gambar ke atas agar model berada di ±45 % atas layar, di atas teks
+    if (wide) camera.setViewOffset(w, h, -w * 0.2, 0, w, h); else camera.setViewOffset(w, h, 0, h * 0.24, w, h);
     camera.updateProjectionMatrix();
     dirty = true; kick();
   }

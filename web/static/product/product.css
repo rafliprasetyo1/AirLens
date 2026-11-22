@@ -84,19 +84,21 @@ main { position: relative; z-index: 3; width: calc(100vw - var(--stage-w)); }
 .no-3d .no3d-note { display: block; }
 
 /* layar sempit atau tegak: panggung di atas (52 % tinggi), teks menggulir di bawahnya */
+/* layar sempit atau tegak (HP): overlay juga. Panggung memenuhi layar, model di ±45 % atas (kamera digeser ke atas di
+   beta-scene.js), scrim gelap dari bawah. Teks menggulir di atas model dalam panel gelap semi-transparan yang buram. */
 @media (max-width: 899px), (orientation: portrait) {
-  :root { --stage-h: 50svh; }
-  .stage { z-index: 4; left: 0; width: auto; height: var(--stage-h); bottom: auto; border-bottom: 1px solid var(--rule-soft);
-    background: radial-gradient(70% 60% at 50% 50%, #16233c 0%, var(--haze) 100%); }
-  .stage::after { display: none; }
-  .callouts { z-index: 5; }
+  .stage { background: radial-gradient(80% 45% at 50% 32%, #16233c 0%, var(--haze) 100%); }
+  .stage::after { background: linear-gradient(0deg, var(--haze) 0%, rgb(11 20 36 / .9) 30%, rgb(11 20 36 / .4) 48%, rgb(11 20 36 / 0) 60%); }
   main, .product .foot { width: auto; }
-  main { padding-top: var(--stage-h); }
-  .sec { min-height: auto; padding: 2.25rem var(--gutter) 30svh; align-items: flex-start; }
-  .sec.hero { padding-top: 1.75rem; }
-  .sec.tall { min-height: 130svh; }
-  .sec.tall .copy { top: calc(var(--bar-h) + var(--stage-h) + 1rem); }
-  .copy { max-width: 36rem; }
+  /* jarak bawah besar: panel lama sudah keluar layar sebelum adegan berikutnya mulai, jadi model terlihat bersih */
+  .sec { min-height: 90svh; padding: 40svh var(--gutter) 34svh; align-items: flex-start; }
+  .sec.hero { min-height: calc(100svh - var(--bar-h)); align-items: flex-start; padding-top: 50svh; }
+  .sec.tall { min-height: 230svh; padding-bottom: 20svh; }
+  .sec.tall .copy { top: calc(var(--bar-h) + 38svh); }
+  .sensor-list { margin-top: var(--s-2); }
+  .sensor-list li { grid-template-columns: 4.75rem minmax(0, 1fr); gap: var(--s-1); padding: 6px 0 6px 12px; font-size: var(--t-sm); line-height: 1.35; }
+  .copy { max-width: 36rem; padding: 18px 20px 20px; border-radius: 12px; background: rgb(11 20 36 / .72);
+    -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
   .callout .txt { font-size: var(--t-xs); }
   .callout .txt small { display: none; }
 }

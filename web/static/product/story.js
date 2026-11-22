@@ -104,7 +104,7 @@ async function start() {
   let queued = false;
   function update() {
     queued = false;
-    const ref = innerHeight * (narrowQuery.matches ? 0.8 : 0.5);
+    const ref = innerHeight * (narrowQuery.matches ? 0.55 : 0.5);
     let sec = sections[0], p = 0;
     for (const s of sections) {
       const r = s.getBoundingClientRect();
@@ -112,9 +112,12 @@ async function start() {
     }
     const name = sec.dataset.scene;
     const st = { ...BASE, mq: [0, 0, 0, 0], ...SCENES[name](p) };
-    // bagian 3D yang bebas teks: 60 % lebar di layar lebar (kanvas penuh, model digeser ke kanan)
-    const aspect = canvas.clientWidth * (narrowQuery.matches ? 1 : 0.6) / Math.max(1, canvas.clientHeight);
+    // bagian 3D yang bebas teks: 60 % lebar di layar lebar, separuh atas di HP
+    const aspect = narrowQuery.matches ? canvas.clientWidth / Math.max(1, canvas.clientHeight * 0.5)   // HP: separuh atas layar
+      : canvas.clientWidth * 0.6 / Math.max(1, canvas.clientHeight);
     if (aspect < 1.25) st.dist *= Math.min(1.9, 1.25 / Math.max(aspect, 0.5));
+    // HP: kanvas setinggi layar, tetapi model hanya boleh mengisi separuh atas -> kamera mundur sebanding
+    if (narrowQuery.matches) st.dist *= 1.9;
     stage.setTarget(st);
     const labels = name === "sensors" ? [MQ_LABELS[st.step]] : (LABELS[name] || []);
     shown = new Set(labels.map(([n, t, s, ang, len]) => callout(n, t, s, ang, len)));
