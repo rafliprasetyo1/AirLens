@@ -42,22 +42,23 @@ Dihitung dengan model `airlens-beta-gas/6`:
 MQ-2 saja dinilai clean air (68 %): model belajar dari sensor tim lain; dilatih ulang dengan rekaman alat sendiri.
 Wokwi bukan sensor fisik, jadi ini uji alur, bukan uji akurasi.
 
-## Mengirim ke AirLens (ngrok)
+## Mengirim ke AirLens: `make gladi` (kapan saja, laptop atau komputer lab)
 
-Pastikan AirLens menyala dengan alamat ngrok (`make expo-setup` atau `make expo-public`). Ketik satu baris ini di
-kotak input Serial Monitor (ganti `<NGROK_DOMAIN>` dan `<SENSOR_TOKEN>` dengan nilai dari `.env`; token cukup
-diketik di sini, jangan disimpan di proyek Wokwi):
+Butuh AirLens dan ngrok menyala (`make expo-setup` atau `make expo-public`). Lalu di terminal:
 
+```bash
+make gladi        # buka jalur HTTP sementara + cetak perintah SET siap tempel
+make gladi-stop   # setelah selesai: tutup jalur, hapus data node wokwi-*, ganti token, nyalakan ulang api
 ```
-SET {"ssid":"Wokwi-GUEST","pass":"","url":"https://<NGROK_DOMAIN>/api/sensor/readings","token":"<SENSOR_TOKEN>","node":"wokwi-01"}
-```
 
-Serial Monitor menjawab `{"event":"saved",...}`, lalu `{"event":"wifi","status":"connected",...}`. Setelah itu buka
-`https://<NGROK_DOMAIN>/beta.html`: node `wokwi-01` muncul. Server menunggu 3 menit pemanasan dan 24 bacaan untuk
-baseline udara bersih (biarkan ppm rendah), lalu model dan SHAP mulai bekerja. Naikkan ppm MQ-2 dan MQ-135 untuk
-melihat kelas dan waterfall SHAP berubah.
-
-`GET` menampilkan pengaturan tersimpan (kata sandi dan token tidak pernah dicetak). `CLEAR` menghapus semuanya.
+- Wokwi memakai jalur **HTTP** khusus gladi: CPU ESP32 di Wokwi terlalu lambat untuk jabat tangan HTTPS (ngrok memutusnya,
+  `SSL - The connection indicated an EOF`). Alamat HTTPS utama untuk HP dan alat asli tidak berubah.
+- Token ikut terkirim tanpa enkripsi lewat jalur gladi, karena itu `make gladi-stop` menggantinya. Bila ESP32 asli
+  sudah menyimpan token, pakai `make gladi-stop KEEP_TOKENS=1`, lalu ganti token sebelum pameran (`make tokens ROTATE=1`
+  + simpan ke ESP32 lewat flash.html).
+- Tanda berhasil di Serial: `{"event":"wifi","status":"connected",...}`, `{"event":"time","status":"ok"}`,
+  `{"event":"post","code":200}`. Biarkan tab Wokwi tetap terlihat; tab di latar belakang menjeda simulasi (status Offline).
+- Setiap Stop/Run di Wokwi menghapus pengaturan tersimpan: kirim ulang `SET`.
 
 ## Keterbatasan simulator
 

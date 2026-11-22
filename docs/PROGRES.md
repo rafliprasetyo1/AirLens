@@ -55,6 +55,15 @@ ulang setelah rekaman lab (`make beta-recordings-push` + `make kaggle-push`).
 | File cetak: `hardware/enclosure-beta/stl/airlens_beta_base.stl` + `airlens_beta_lid.stl` (tutup dicetak terbalik) | Siap; ukur modul MQ dan breadboard asli dulu |
 | Uji buka dari HP lewat ngrok (laptop): halaman 200, STL ter-gzip, `/tools` 403, sensor tanpa token 401 | Siap diuji pemilik |
 
+## Gladi Wokwi (2026-11-23 dini hari)
+
+| Bagian | Status |
+|---|---|
+| ESP32 simulasi -> ngrok -> AirLens -> halaman Beta di HP (`post 200`, clean air 97 %) | **Berhasil** |
+| Bug firmware ditemukan saat gladi: sinkron jam NTP diulang terus (alat tidak pernah mengirim di jaringan lambat) | Diperbaiki, `beta-4mq-1.1.1`; `1.1.2` mencetak galat TLS bila HTTPS gagal |
+| Batasan Wokwi: pembagi resistor analog tidak disimulasikan; HTTPS terlalu lambat | Diagram Wokwi AOUT langsung ke GPIO; jalur HTTP khusus gladi |
+| `make gladi` / `make gladi-stop` (bisa kapan saja, juga di lab sebelum merakit) | Selesai; token diganti setelah gladi |
+
 ## Yang dikerjakan di lab (tanpa pelatihan)
 
 `make doctor` → `make expo-setup PROFILE=lab` → rakit Beta → flash + Set WiFi (`tools/flash.html`) → pemanasan →

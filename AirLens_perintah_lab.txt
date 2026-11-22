@@ -82,6 +82,17 @@ make expo-setup PROFILE=lab
 
 
 ---------------------------------------------------------------------
+LANGKAH 3b (opsional) - Gladi tanpa alat dengan Wokwi, kapan saja
+---------------------------------------------------------------------
+# Memastikan alur alat -> ngrok -> AirLens -> HP berjalan sebelum menyentuh hardware.
+make gladi
+# Ikuti petunjuk di layar (Wokwi di Chrome, tempel perintah SET, pantau halaman Beta dari HP).
+# Selesai gladi (WAJIB, menutup jalur HTTP dan mengganti token):
+make gladi-stop
+# Token baru inilah yang disimpan ke ESP32 asli di LANGKAH 5.
+
+
+---------------------------------------------------------------------
 LANGKAH 4 - Rakit AirLens Beta dan uji tiap sensor
 ---------------------------------------------------------------------
 # Buka panduan di Chrome komputer ini:

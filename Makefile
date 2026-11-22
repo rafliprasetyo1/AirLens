@@ -28,10 +28,10 @@ UV_COMPILE := uv pip compile --quiet --generate-hashes --python-version 3.12 \
 	data train eval retrain promote rollback monitor lab-all export-results sync-modules \
 	data-beta train-beta promote-beta rollback-beta firmware-beta \
 	import-beta-recordings beta-recordings-push import-results compare-merge vapid-keys kaggle-push kaggle-status kaggle-pull \
-	models-publish models-pull expo-public expo-public-stop tokens doctor expo-setup
+	models-publish models-pull expo-public expo-public-stop tokens doctor expo-setup gladi gladi-stop
 
 help:
-	@echo "Target: setup-check up down ps logs test ui-test docs-check lock data train eval retrain promote rollback monitor drift-sim lab-all export-results sync-modules data-beta train-beta promote-beta rollback-beta firmware-beta import-beta-recordings beta-recordings-push import-results compare-merge vapid-keys kaggle-push kaggle-status kaggle-pull models-publish models-pull expo-public expo-public-stop tokens doctor expo-setup"
+	@echo "Target: setup-check up down ps logs test ui-test docs-check lock data train eval retrain promote rollback monitor drift-sim lab-all export-results sync-modules data-beta train-beta promote-beta rollback-beta firmware-beta import-beta-recordings beta-recordings-push import-results compare-merge vapid-keys kaggle-push kaggle-status kaggle-pull models-publish models-pull expo-public expo-public-stop tokens doctor expo-setup gladi gladi-stop"
 	@echo "Contoh: make up PROFILE=laptop"
 
 setup-check:
@@ -177,7 +177,13 @@ expo-setup:
 
 # Token sensor/node acak ke .env bila kosong (wajib di mode expo); tidak dicetak.
 tokens:
-	scripts/tokens.sh
+	ROTATE=$(ROTATE) scripts/tokens.sh
+
+# Gladi tanpa alat (Wokwi -> ngrok -> AirLens), kapan saja. Butuh ngrok menyala (make expo-public / expo-setup).
+gladi:
+	scripts/gladi.sh start
+gladi-stop:
+	KEEP_TOKENS=$(KEEP_TOKENS) scripts/gladi.sh stop
 
 # ngrok (akun free: domain acak per sesi, disimpan/ditimpa ke NGROK_DOMAIN di .env). Lihat docs/EXPO.md.
 expo-public: env-check

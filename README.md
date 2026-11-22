@@ -389,6 +389,8 @@ AirLens/
 | `make vapid-keys` | Buat kunci VAPID Web Push ke `.env` (sekali, tidak dicetak); notifikasi kejadian saat website tertutup | Tahap 4 |
 | `make kaggle-push` / `kaggle-status` / `kaggle-pull` | Pelatihan di Kaggle Notebook (GPU): unggah kode + kernel, pantau, unduh arsip hasil (format sama dengan lab) | Prompt 7 |
 | `make models-publish [MODELS_APPROVED=1]` | Kemas model production (foto AQI, gas Beta) + manifest sha256; unggah ke dataset Kaggle privat `airlens-models` hanya setelah disetujui | Prompt 7 |
+| `make gladi` / `make gladi-stop [KEEP_TOKENS=1]` | Gladi tanpa alat: ESP32 simulasi di Wokwi mengirim ke AirLens lewat jalur HTTP sementara di ngrok; stop menutup jalur, menghapus data node `wokwi-*`, dan mengganti token. Lihat `wokwi/README.md` | Gladi |
+| `make tokens [ROTATE=1]` | Isi token sensor/node acak di `.env` bila kosong; `ROTATE=1` mengganti token lama | Pameran |
 | `make models-pull [VERSION=n]` | Ambil paket model, periksa sha256, impor ke MLflow mesin ini, pasang alias (aman diulang) | Prompt 7 |
 | `make doctor` | Laporan kesiapan yang sama di laptop dan lab (Docker, .env tanpa nilai, ngrok, Kaggle, model aktif, uji cepat) | Prompt 7 |
 | `make expo-setup` | Satu perintah hari pameran: doctor → models-pull → layanan mode expo → ngrok → QR. Lihat `docs/EXPO.md`, `docs/EXPO_HARI_H.txt` | Prompt 7 |
