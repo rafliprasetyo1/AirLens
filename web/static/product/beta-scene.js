@@ -21,40 +21,55 @@ const ESP_COL = 9;                                  // kolom breadboard untuk pi
 const espColumn = (i) => ESP_COL + 7 - i;           // pin i -> kolom
 const hole = (c, z) => new THREE.Vector3(BB_X + colX(c), BB_TOP, z);
 
-function assemble(caseGeo) {
+// Tahap 1 (langsung): casing saja. Bagian pembuka halaman hanya menampilkan kotak tertutup, jadi casing dirender segera.
+function buildCase(caseGeo) {
   const root = new THREE.Group();
   const P = {};   // bagian yang bisa digerakkan
-
-  // nampan dan tutup
   P.base = new THREE.Mesh(caseGeo.base, printedMaterial(0x4a5360));   // PETG abu grafit
   P.lid = new THREE.Mesh(caseGeo.lid, printedMaterial(0xe3e5e3));
   for (const m of [P.base, P.lid]) { m.castShadow = m.receiveShadow = true; m.material.transparent = true; root.add(m); }
+  P.base.userData.mats = [P.base.material];
+  P.lid.userData.mats = [P.lid.material];
+  const A = { lid: [P.lid, null], base: [P.base, new THREE.Vector3(-62, 24, 56)] };
+  return { root, P, A, signal: [], complete: false };
+}
 
+// jeda di antara modul agar halaman tetap responsif selama isi casing dibangun
+const pause = () => new Promise((r) => (window.requestIdleCallback ? requestIdleCallback(() => r(), { timeout: 150 }) : setTimeout(r, 16)));
+
+// Tahap 2 (bertahap, di latar belakang): isi casing, satu modul per jeda.
+async function buildInside(kit) {
+  const { root, P } = kit;
+  await pause();
   // breadboard
   P.breadboard = buildBreadboard();
   P.breadboard.position.set(BB_X, FLOOR, 0);
   root.add(P.breadboard);
 
   // ESP32: baris kiri (-Z) di baris b, baris kanan di baris j -> baris a di sisi -Z tetap terbuka untuk kabel
+  await pause();
   P.esp32 = buildESP32();
   const espCx = BB_X + colX(ESP_COL) - ESP32.headerX;
   P.esp32.position.set(espCx, BB_TOP + ESP32.plastic, (ROW.b + ROW.j) / 2);
   root.add(P.esp32);
 
   // modul MQ
-  P.mq = SENSORS.map((s) => {
+  P.mq = [];
+  for (const s of SENSORS) {
+    await pause();
     const m = buildMQ(s.model);
     m.position.set(MQ_X, MQ_Y, s.z);
     root.add(m);
-    return m;
-  });
+    P.mq.push(m);
+  }
+  await pause();
 
   // pembagi tegangan dan kabel di atas breadboard
   P.bench = new THREE.Group();
   root.add(P.bench);
   P.wires = new THREE.Group();
   root.add(P.wires);
-  const signal = [];      // lintasan sinyal untuk animasi denyut: MQ AO -> pembagi -> GPIO
+  const signal = kit.signal;      // lintasan sinyal untuk animasi denyut: MQ AO -> pembagi -> GPIO
   P.resistors = [];
   SENSORS.forEach((s, j) => {
     const cb = 19 + 3 * j;
@@ -112,26 +127,24 @@ function assemble(caseGeo) {
     });
     P[key].userData.mats = [...clones.values()];
   }
-  P.base.userData.mats = [P.base.material];
-  P.lid.userData.mats = [P.lid.material];
 
   // titik label (lokal terhadap bagian)
-  const A = {
+  Object.assign(kit.A, {
     wroom: [P.esp32, new THREE.Vector3(ESP32.L / 2 - 14, 5.2, 0)],
     usb: [P.esp32, new THREE.Vector3(-ESP32.L / 2 + 1, 4.4, 0)],
     buttons: [P.esp32, new THREE.Vector3(-21.6, 3.6, -7.6)],
     gpio: [P.esp32, new THREE.Vector3(pinX(4.5), 2.4, -ESP32.rowZ)],
     r10: [P.resistors[1].r10, new THREE.Vector3().addVectors(hole(22, ROW.f), hole(22, ROW.e)).multiplyScalar(0.5).setY(BB_TOP + 3)],
     r20: [P.resistors[1].r20, new THREE.Vector3().addVectors(hole(22, ROW.b), hole(22, RAIL.negMinusOut)).multiplyScalar(0.5).setY(BB_TOP + 3)],
-    lid: [P.lid, null], base: [P.base, new THREE.Vector3(-62, 24, 56)], breadboard: [P.breadboard, new THREE.Vector3(-34, BB.H, 22)],
+    breadboard: [P.breadboard, new THREE.Vector3(-34, BB.H, 22)],
     esp: [P.esp32, new THREE.Vector3(-10, 3, 0)],
     ...Object.fromEntries(P.mq.map((m, k) => [`mq${k}`, [m, new THREE.Vector3(MQ.sensorX, 17, 0)]])),
-  };
-  return { root, P, A, signal };
+  });
 }
 
 // ---------------------------------------------------------------- adegan
 export function createScene(canvas, { weak = false, onProgress } = {}) {
+  performance.mark("airlens:mulai");
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: "high-performance" });
   renderer.setClearColor(0x000000, 0);
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -173,13 +186,13 @@ export function createScene(canvas, { weak = false, onProgress } = {}) {
   const pulses = [];
 
   async function load(base) {
-    const CASE_REV = "2026-11-22c";   // naikkan setiap STL casing diganti (STL di-cache browser 1 hari)
+    const CASE_REV = "2026-11-22c";   // naikkan setiap STL casing diganti (STL di-cache 1 hari); samakan dengan preload di product.html
     const urls = [`${base}airlens_beta_base.stl?v=${CASE_REV}`, `${base}airlens_beta_lid.stl?v=${CASE_REV}`];
     const got = [0, 0], total = [0, 0];
     const bufs = await Promise.all(urls.map(async (u, i) => {
       const res = await fetch(u);
       if (!res.ok) throw new Error(`${u}: HTTP ${res.status}`);
-      total[i] = Number(res.headers.get("Content-Length")) || 400000;
+      total[i] = Number(res.headers.get("Content-Length")) || [60000, 105000][i];   // gzip tidak mengirim panjang: perkiraan ukuran terkompresi
       const reader = res.body.getReader(), parts = [];
       for (;;) {
         const { done, value } = await reader.read();
@@ -191,9 +204,11 @@ export function createScene(canvas, { weak = false, onProgress } = {}) {
       for (const p of parts) { out.set(p, o); o += p.byteLength; }
       return out.buffer;
     }));
-    await document.fonts?.ready;
-    kit = assemble({ base: parseSTL(bufs[0]), lid: parseSTL(bufs[1]) });
+    performance.mark("airlens:stl-unduh");
+    kit = buildCase({ base: parseSTL(bufs[0]), lid: parseSTL(bufs[1]) });
+    performance.mark("airlens:casing");
     scene.add(kit.root);
+    kit.rest = { lid: kit.P.lid.position.clone(), base: kit.P.base.position.clone() };
     for (let k = 0; k < 12; k++) {
       const p = new THREE.Mesh(new THREE.SphereGeometry(1.7, 16, 12), new THREE.MeshBasicMaterial({ color: 0x0b8fd6, transparent: true }));
       p.visible = false;
@@ -201,8 +216,17 @@ export function createScene(canvas, { weak = false, onProgress } = {}) {
       pulses.push(p);
     }
     onProgress?.(1);
-    kit.rest = Object.fromEntries(Object.entries({ lid: kit.P.lid, base: kit.P.base, breadboard: kit.P.breadboard, esp32: kit.P.esp32,
-      bench: kit.P.bench, wires: kit.P.wires, ...Object.fromEntries(kit.P.mq.map((m, k) => [`mq${k}`, m])) }).map(([k, o]) => [k, o.position.clone()]));
+    kick();
+    // isi casing dibangun bertahap; tekstur silkscreen butuh font sudah dimuat
+    kit.inside = (async () => {
+      await document.fonts?.ready;
+      await buildInside(kit);
+      Object.assign(kit.rest, Object.fromEntries(Object.entries({ breadboard: kit.P.breadboard, esp32: kit.P.esp32, bench: kit.P.bench,
+        wires: kit.P.wires, ...Object.fromEntries(kit.P.mq.map((m, k) => [`mq${k}`, m])) }).map(([k, o]) => [k, o.position.clone()])));
+      kit.complete = true;
+      performance.mark("airlens:isi");
+      kick();
+    })();
     return kit;
   }
 
@@ -234,6 +258,7 @@ export function createScene(canvas, { weak = false, onProgress } = {}) {
     P.lid.rotation.z = cur.lid * 0.06;
     fade(P.lid, cur.lidFade);
     P.base.position.y = rest.base.y - ex * 36;
+    if (!kit.complete) return;     // isi casing belum selesai dibangun
     P.breadboard.position.y = rest.breadboard.y - ex * 12;
     P.bench.position.y = rest.bench.y - ex * 12;
     P.esp32.position.y = rest.esp32.y + cur.esp * 24 + ex * 26;

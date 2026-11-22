@@ -203,8 +203,8 @@ export function led(colour, x, z, y, size = "0603") {
   const [L, W] = size === "0805" ? [2.0, 1.25] : [1.6, 0.8];
   const g = new THREE.Group();
   g.add(box(L, 0.25, W, mat("ledbase", () => new THREE.MeshStandardMaterial({ color: 0xe9e4d6, roughness: 0.4 }))));
-  const lens = new THREE.MeshPhysicalMaterial({ color: colour, emissive: colour, emissiveIntensity: 0, roughness: 0.15,
-    transmission: 0.3, thickness: 0.4 });
+  // tanpa "transmission": efek kaca itu memaksa seluruh adegan dirender dua kali per frame
+  const lens = new THREE.MeshPhysicalMaterial({ color: colour, emissive: colour, emissiveIntensity: 0, roughness: 0.15, clearcoat: 0.6 });
   g.add(box(L * 0.8, 0.35, W * 0.9, lens, 0, 0.25, 0));
   for (const s of [-1, 1]) g.add(box(L * 0.15, 0.3, W + 0.02, M.tin(), s * L * 0.43, 0, 0));
   g.position.set(x, y, z);
