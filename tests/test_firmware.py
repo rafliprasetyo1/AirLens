@@ -53,9 +53,13 @@ def test_wokwi_sketch_identical_and_diagram_wired_like_device():
     gas = [p for p in d["parts"] if p["type"] == "wokwi-gas-sensor"]
     assert len(gas) == 4
     links = {(a, b) for a, b, *_ in d["connections"]} | {(b, a) for a, b, *_ in d["connections"]}
+    # Wokwi tidak menyimulasikan resistor bersama komponen analog (docs.wokwi.com/parts/wokwi-resistor): dengan pembagi
+    # 10k/20k, pin ADC membaca angka tetap berapa pun ppm-nya. Di simulasi AOUT langsung ke GPIO; alat asli WAJIB
+    # memakai pembagi (5 V -> ±3,3 V), lihat panduan perakitan dan hardware/README.md.
+    assert not [p for p in d["parts"] if p["type"] == "wokwi-resistor"]
     for sid, pin in (("mq2", "34"), ("mq3", "35"), ("mq7", "32"), ("mq135", "33")):
-        assert (f"{sid}:AOUT", f"{sid}_r1:1") in links and (f"{sid}_r1:2", f"esp:{pin}") in links
-        assert parts[f"{sid}_r1"]["attrs"]["value"] == "10000" and parts[f"{sid}_r2"]["attrs"]["value"] == "20000"
+        assert (f"{sid}:AOUT", f"esp:{pin}") in links
+        assert (f"{sid}:VCC", "esp:5V") in links
         assert parts[f"{sid}_label"]["attrs"]["text"].startswith("MQ-")
 
 

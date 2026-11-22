@@ -1,9 +1,14 @@
 # Proyek Wokwi: latihan AirLens Beta tanpa alat
 
-Simulasi ESP32 DevKit + empat sensor gas (diberi nama MQ-2, MQ-3, MQ-7, MQ-135) di GPIO34/35/32/33, masing-masing lewat
-pembagi 10 kΩ / 20 kΩ seperti alat asli. Sketch-nya (`beta/sketch.ino`) identik dengan firmware Beta
-(`firmware/beta/beta.ino`): baca empat ADC tiap 2 detik, cetak JSON di Serial, dan kirim ke AirLens lewat HTTPS
-(alamat ngrok) bila WiFi dan URL sudah diatur.
+Simulasi ESP32 DevKit + empat sensor gas (diberi nama MQ-2, MQ-3, MQ-7, MQ-135) di GPIO34/35/32/33. Sketch-nya
+(`beta/sketch.ino`) identik dengan firmware Beta (`firmware/beta/beta.ino`): baca empat ADC tiap 2 detik, cetak JSON di
+Serial, dan kirim ke AirLens bila WiFi dan URL sudah diatur.
+
+**Beda dengan alat asli:** di Wokwi, AOUT tiap sensor tersambung **langsung** ke GPIO, tanpa pembagi 10 kΩ / 20 kΩ.
+Wokwi tidak menyimulasikan resistor bersama komponen analog ("You won't be able to use resistors together with analog
+components", docs.wokwi.com/parts/wokwi-resistor): dengan pembagi, pin membaca angka tetap berapa pun ppm-nya. Alat asli
+**wajib** memakai pembagi (5 V dari sensor menjadi ±3,3 V di pin ESP32); ikuti panduan perakitan, bukan gambar ini.
+Kabel sinyal berwarna sama dengan model 3D dan grafik halaman Beta (MQ-2 biru, MQ-3 kuning, MQ-7 ungu, MQ-135 hijau).
 
 ## Cara membuka (tanpa instalasi)
 
@@ -19,6 +24,23 @@ pembagi 10 kΩ / 20 kΩ seperti alat asli. Sketch-nya (`beta/sketch.ino`) identi
 - Serial Monitor mencetak `{"event":"boot",...}`, lalu satu baris JSON tiap 2 detik, misalnya
   `{"node_id":"lite-01","uptime_s":12,"mq2_mv":...,"mq3_mv":...,"mq7_mv":...,"mq135_mv":...}`.
 - Klik salah satu sensor gas lalu geser nilai **ppm**: tegangannya naik dan angka mV di Serial ikut berubah.
+
+## Kombinasi uji (setelah status Normal di halaman Beta)
+
+Model membaca rasio terhadap udara bersih, jadi patokannya angka mV di Serial, bukan ppm. Naikkan ppm sensor yang
+disebut sampai `mqX_mv`-nya minimal **2× nilai awal** (nilai saat semua 400 ppm); sensor lain biarkan.
+Dihitung dengan model `airlens-beta-gas/6`:
+
+| Uji | Sensor dinaikkan | Hasil | Halaman Beta |
+|---|---|---|---|
+| Udara bersih | tidak ada | clean air 97 % | Normal |
+| Asap | MQ-3 + MQ-135 | smoke 100 % | Alert + notifikasi |
+| Asap (sederhana) | MQ-135 | smoke 90 % | Alert + notifikasi |
+| Asap + alkohol | MQ-2 + MQ-3 + MQ-7 | smoke + alcohol 99 % | Alert + notifikasi |
+| Alkohol | MQ-2 + MQ-7 | alcohol 93 % | Ditampilkan, tanpa peringatan |
+
+MQ-2 saja dinilai clean air (68 %): model belajar dari sensor tim lain; dilatih ulang dengan rekaman alat sendiri.
+Wokwi bukan sensor fisik, jadi ini uji alur, bukan uji akurasi.
 
 ## Mengirim ke AirLens (ngrok)
 
