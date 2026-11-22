@@ -1,12 +1,12 @@
 {
   "name": "AirLens",
   "short_name": "AirLens",
-  "description": "Air quality from photos, a live smoke camera and the AirLens Beta gas sensor, with alerts.",
+  "description": "Air quality from photos and the AirLens Beta gas sensor, with alerts.",
   "start_url": "/beta.html",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#08121c",
-  "theme_color": "#08121c",
+  "background_color": "#05080d",
+  "theme_color": "#05080d",
   "icons": [
     {"src": "/icons/airlens-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable"},
     {"src": "/icons/airlens-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"}

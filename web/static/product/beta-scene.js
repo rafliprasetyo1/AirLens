@@ -26,7 +26,7 @@ function assemble(caseGeo) {
   const P = {};   // bagian yang bisa digerakkan
 
   // nampan dan tutup
-  P.base = new THREE.Mesh(caseGeo.base, printedMaterial(0x39414a));
+  P.base = new THREE.Mesh(caseGeo.base, printedMaterial(0x4a5360));   // PETG abu grafit
   P.lid = new THREE.Mesh(caseGeo.lid, printedMaterial(0xe3e5e3));
   for (const m of [P.base, P.lid]) { m.castShadow = m.receiveShadow = true; m.material.transparent = true; root.add(m); }
 
@@ -147,8 +147,8 @@ export function createScene(canvas, { weak = false, onProgress } = {}) {
   scene.environment = pmrem.fromScene(new RoomEnvironment(renderer), 0.03).texture;
   pmrem.dispose();
 
-  // studio terang: langit lembut, cahaya utama kiri-atas-depan dengan bayangan lembut, isian dingin dari kanan
-  scene.add(new THREE.HemisphereLight(0xf2f6f8, 0x8a959b, 0.9));
+  // studio gelap: cahaya utama hangat kiri-atas-depan dengan bayangan lembut, isian dingin dari kanan, garis tepi dari belakang
+  scene.add(new THREE.HemisphereLight(0xdfe8f4, 0x1a2436, 0.75));
   const key = new THREE.DirectionalLight(0xfff8f0, 2.4);
   key.position.set(-160, 340, 220);
   key.castShadow = true;
@@ -158,10 +158,13 @@ export function createScene(canvas, { weak = false, onProgress } = {}) {
   key.shadow.normalBias = 0.02;
   key.shadow.radius = 5;
   scene.add(key);
-  const fill = new THREE.DirectionalLight(0xdbe9f0, 0.7);
+  const fill = new THREE.DirectionalLight(0xc9d8ec, 0.6);
   fill.position.set(260, 120, -140);
   scene.add(fill);
-  const floor = new THREE.Mesh(new THREE.PlaneGeometry(2400, 2400), new THREE.ShadowMaterial({ opacity: 0.16 }));
+  const rim = new THREE.DirectionalLight(0xbcd0ea, 1.1);   // memisahkan casing gelap dari latar gelap
+  rim.position.set(-120, 160, -320);
+  scene.add(rim);
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(2400, 2400), new THREE.ShadowMaterial({ opacity: 0.45 }));
   floor.rotation.x = -Math.PI / 2;
   floor.receiveShadow = true;
   scene.add(floor);

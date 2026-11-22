@@ -14,21 +14,14 @@
    satu warna aksi petrol, huruf Archivo (judul lebar). Di website, font dimuat dari /vendor/fonts (tanpa domain luar).
    Tata letak: daftar isi menempel di kiri (desktop), langkah-langkah perakitan di kanan seperti lembar kerja bengkel.
    Warna kabel mengikuti kebiasaan elektronika: merah 5 V, oranye 3,3 V, hitam GND; warna lain untuk sinyal. */
-:root {
-  --bg: #E6EBED; --paper: #FFFFFF; --ink: #18262E; --ink-2: #4B5C66; --line: #CBD5DA; --soft: #E3EAED;
-  --accent: #0A5C78; --accent-ink: #FFFFFF; --amber: #B4610E; --amber-soft: #FDF1E3; --danger: #B3261E; --danger-soft: #FCE9E7;
-  --ok: #17794A; --ok-soft: #E3F4EA; --code-bg: #0F1E28; --code-ink: #E3EEF4; --code-dim: #6E8796;
-  --w5v: #D7263D; --w33: #F08A24; --wgnd: #1B1F24; --wsig1: #1F7AE0; --wsig2: #2BA84A; --wsig3: #8E44C9; --wsig4: #D1A10F;
+:root {   /* gelap seperti website: biru tua + hitam, aksi kuningan pucat */
+  --bg: #0B1424; --paper: #111D30; --ink: #EAEFF5; --ink-2: #A6B4C4; --line: #2A3A52; --soft: #16233A;
+  --accent: #D9B872; --accent-ink: #13100A; --amber: #F0BE5A; --amber-soft: #33280F; --danger: #FF8E84; --danger-soft: #3B1B20;
+  --ok: #63D19A; --ok-soft: #12291E; --code-bg: #05080D; --code-ink: #E3EEF4; --code-dim: #7D8B9B;
+  --w5v: #FF5A6A; --w33: #F5A04A; --wgnd: #C9D3DA; --wsig1: #5AA2FF; --wsig2: #4FC27F; --wsig3: #B591F2; --wsig4: #E3B23C;
   --f-head: "Archivo", "Segoe UI", sans-serif; --f-body: "Archivo", system-ui, sans-serif; --f-mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+  color-scheme: dark;
 }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
-  --bg: #0C161D; --paper: #13222C; --ink: #E6EFF4; --ink-2: #9DB3C1; --line: #24394A; --soft: #182C38;
-  --accent: #6CC0DC; --accent-ink: #06202E; --amber: #F2A65A; --amber-soft: #2E2214; --danger: #FF8A80; --danger-soft: #34181A;
-  --ok: #5DD39A; --ok-soft: #12291E; --code-bg: #08121A; --code-ink: #E3EEF4; --code-dim: #6E8796; --wgnd: #C9D3DA; color-scheme: dark; } }
-:root[data-theme="dark"] {
-  --bg: #0C161D; --paper: #13222C; --ink: #E6EFF4; --ink-2: #9DB3C1; --line: #24394A; --soft: #182C38;
-  --accent: #6CC0DC; --accent-ink: #06202E; --amber: #F2A65A; --amber-soft: #2E2214; --danger: #FF8A80; --danger-soft: #34181A;
-  --ok: #5DD39A; --ok-soft: #12291E; --code-bg: #08121A; --code-ink: #E3EEF4; --code-dim: #6E8796; --wgnd: #C9D3DA; color-scheme: dark; }
 @font-face { font-family: "Archivo"; font-style: normal; font-display: swap; font-weight: 100 900; font-stretch: 62% 125%;
   src: url("/vendor/fonts/archivo-latin-wdth-normal.woff2") format("woff2"); }
 * { box-sizing: border-box; }

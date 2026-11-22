@@ -8,8 +8,8 @@ const el = {
   legend: $("legend"), latest: $("latest"), download: $("download"), clear: $("clear"), rows: $("rows"),
   noSerial: $("no-serial"),
 };
-const SENSORS = [["mq2_mv", "MQ-2", "#1f6fd6"], ["mq3_mv", "MQ-3", "#9a7400"], ["mq7_mv", "MQ-7", "#7b3fc0"],
-  ["mq135_mv", "MQ-135", "#1f8a45"]];
+const SENSORS = [["mq2_mv", "MQ-2", "#5aa2ff"], ["mq3_mv", "MQ-3", "#e3b23c"], ["mq7_mv", "MQ-7", "#b591f2"],
+  ["mq135_mv", "MQ-135", "#4fc27f"]];
 const WINDOW_MS = 10 * 60 * 1000;
 let port = null, reader = null, label = "none", records = [];
 const seconds = { clean_air: 0, smoke: 0, alcohol: 0, smoke_alcohol: 0 };

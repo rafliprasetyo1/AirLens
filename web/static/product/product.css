@@ -6,7 +6,7 @@
 
 /* panggung: latar studio terang (sapuan abu kebiruan), bayangan model jatuh ke "meja" */
 .stage { position: fixed; z-index: 1; top: var(--bar-h); right: 0; bottom: 0; width: var(--stage-w);
-  background: radial-gradient(120% 90% at 55% 42%, #f6f8f9 0%, #e9eef0 55%, #d9e0e3 100%); }
+  background: radial-gradient(110% 85% at 55% 45%, #172540 0%, #0d172a 55%, #070c16 100%); }   /* panggung studio gelap */
 .stage canvas { display: block; width: 100%; height: 100%; }
 .callouts { position: fixed; inset: 0; z-index: 2; pointer-events: none; }
 
@@ -21,7 +21,7 @@
   will-change: transform; }
 .callout.on { opacity: 1; }
 .callout::before { content: ""; position: absolute; left: -4px; top: -4px; width: 8px; height: 8px; border-radius: 50%;
-  background: var(--petrol); box-shadow: 0 0 0 3px rgb(255 255 255 / .85); }
+  background: var(--petrol); box-shadow: 0 0 0 3px var(--night); }
 .callout .lead { position: absolute; left: 0; top: 0; height: 1px; background: var(--ink); transform-origin: 0 0; }
 .callout .txt { position: absolute; white-space: nowrap; font-size: var(--t-sm); font-weight: 640; line-height: 1.25;
   font-stretch: var(--narrow); color: var(--ink); text-shadow: 0 0 3px var(--paper), 0 0 6px var(--paper), 0 0 10px var(--paper); }

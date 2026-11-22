@@ -2,7 +2,7 @@
    Hal yang mencolok di halaman ini hanya satu: bidang hasil yang diwarnai tingkat kualitas udara (warna resmi AQI dari API).
    Sisanya lembar putih dengan garis pemisah, bukan tumpukan kartu. */
 
-:root { --cat: #9aa6ac; --cat-ink: #18262e; --gauge-len: 157; }
+:root { --cat: #2a3a52; --cat-ink: #eaeff5; --gauge-len: 157; }
 
 .layout { display: grid; grid-template-columns: minmax(0, 30rem) minmax(0, 1fr); gap: 2.5rem clamp(2rem, 5vw, 5rem);
   padding: clamp(2rem, 5vw, 3.5rem) var(--gutter) 3rem; max-width: 84rem; }
@@ -17,7 +17,7 @@
 .step span { color: var(--petrol); font-weight: 780; font-stretch: var(--wide); font-variant-numeric: tabular-nums; }
 
 .dropzone { position: relative; display: grid; place-items: center; min-height: 230px; overflow: hidden; cursor: pointer; text-align: center;
-  border: 2px dashed #8fa3ad; border-radius: var(--r-media); background: var(--paper); transition: border-color .2s, background-color .2s; }
+  border: 2px dashed #3d5170; border-radius: var(--r-media); background: var(--paper); transition: border-color .2s, background-color .2s; }
 .dropzone:hover { border-color: var(--petrol); }
 .dropzone.drag { border-color: var(--petrol); border-style: solid; background: var(--petrol-soft); }
 .dz-empty { padding: 1.75rem 1.25rem; display: grid; gap: .4rem; justify-items: center; }
@@ -29,7 +29,7 @@
 .preview-missing { display: grid; place-items: center; aspect-ratio: 4 / 3; background: var(--rule-soft); color: var(--ink-2); padding: 1rem; }
 /* garis pemindai: hanya saat foto diperiksa/dianalisis */
 .scanner { position: absolute; left: 0; right: 0; top: 0; height: 2px; opacity: 0; pointer-events: none; background: var(--petrol);
-  box-shadow: 0 0 12px 3px rgb(10 92 120 / .45); }
+}
 .scanning .scanner { opacity: 1; animation: scan 1.6s ease-in-out infinite alternate; }
 @keyframes scan { from { top: 0; } to { top: calc(100% - 3rem); } }
 
@@ -59,7 +59,7 @@
 .stages li.gagal { border-top-color: var(--alert); color: var(--ink); }
 .stages li.gagal .dot { background: var(--alert); }
 .stages li.gagal .state { color: var(--alert); }
-@keyframes pulse { 50% { box-shadow: 0 0 0 5px rgb(10 92 120 / .18); } }
+@keyframes pulse { 50% { box-shadow: 0 0 0 5px rgb(217 184 114 / .2); } }
 @media (max-width: 480px) {
   .stages { grid-template-columns: minmax(0, 1fr); gap: .35rem; }
   .stages li { grid-template-columns: 10px minmax(0, 1fr) auto; border-top: 0; border-left: 3px solid var(--rule-soft); padding: .2rem 0 .2rem .6rem; }
@@ -108,7 +108,7 @@
 .main-card.uncertain .chip { font-size: clamp(1.5rem, 3.6vw, 2.2rem); }
 .main-card.uncertain .chip::before { content: "⚠ "; }
 .badge { grid-column: 1 / -1; justify-self: start; font-size: var(--t-xs); font-weight: 600; padding: .15rem .55rem; border-radius: 4px;
-  background: rgb(255 255 255 / .75); color: var(--amber); }
+  background: rgb(5 8 13 / .8); color: var(--amber); }
 @media (max-width: 480px) { .main-card { grid-template-columns: minmax(0, 1fr); } .gauge { justify-self: start; } }
 
 .iq-grid { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .25rem 1rem; align-items: baseline; }
@@ -139,7 +139,7 @@
 .history h3 { font-size: var(--t-md); font-weight: 680; margin-bottom: .5rem; }
 .history ul { list-style: none; padding: 0; margin: 0; display: grid; gap: .4rem; font-size: var(--t-sm); }
 .history li { display: flex; gap: .55rem; align-items: center; }
-.history .swatch { width: 12px; height: 12px; border-radius: 3px; flex: none; outline: 1px solid rgb(24 38 46 / .25); outline-offset: -1px; }
+.history .swatch { width: 12px; height: 12px; border-radius: 3px; flex: none; outline: 1px solid rgb(234 239 245 / .25); outline-offset: -1px; }
 
 @media (prefers-reduced-motion: reduce) {
   .scanning .scanner { opacity: 1; top: auto; bottom: 3rem; }   /* tetap menandai "sedang dianalisis" tanpa gerak */
