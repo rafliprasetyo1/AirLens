@@ -5,8 +5,12 @@
 :root { --bar-h: 57px; --stage-w: 60vw; }
 
 /* panggung: latar studio terang (sapuan abu kebiruan), bayangan model jatuh ke "meja" */
-.stage { position: fixed; z-index: 1; top: var(--bar-h); right: 0; bottom: 0; width: var(--stage-w);
-  background: radial-gradient(60% 55% at 55% 48%, #16233c 0%, var(--haze) 100%); }   /* sorot lembut; tepi = warna latar halaman, tanpa garis sambungan */
+/* lebar: panggung selebar layar di belakang teks (overlay). Model digeser ke kanan oleh kamera (beta-scene.js), dan bagian
+   yang melebar ke kiri memudar di bawah scrim gelap, jadi tidak ada garis potong. --stage-w = lebar bagian 3D yang bebas teks. */
+.stage { position: fixed; z-index: 1; top: var(--bar-h); left: 0; right: 0; bottom: 0;
+  background: radial-gradient(45% 55% at 68% 48%, #16233c 0%, var(--haze) 100%); }
+.stage::after { content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(90deg, var(--haze) 0%, rgb(11 20 36 / .92) 30%, rgb(11 20 36 / .55) 40%, rgb(11 20 36 / 0) 52%); }
 .stage canvas { display: block; width: 100%; height: 100%; }
 .callouts { position: fixed; inset: 0; z-index: 2; pointer-events: none; }
 
@@ -24,7 +28,7 @@
   background: var(--petrol); box-shadow: 0 0 0 3px var(--night); }
 .callout .lead { position: absolute; left: 0; top: 0; height: 1px; background: var(--ink); transform-origin: 0 0; }
 .callout .txt { position: absolute; white-space: nowrap; font-size: var(--t-sm); font-weight: 640; line-height: 1.25;
-  font-stretch: var(--narrow); color: var(--ink); text-shadow: 0 0 3px var(--paper), 0 0 6px var(--paper), 0 0 10px var(--paper); }
+  font-stretch: var(--narrow); color: var(--ink); padding: 3px 8px; border-radius: 4px; background: rgb(5 8 13 / .82); }   /* terbaca di atas permukaan terang (breadboard, tutup putih) */
 .callout .txt small { display: block; font-weight: 450; color: var(--ink-2); font-size: var(--t-xs); }
 
 /* teks cerita */
@@ -82,7 +86,9 @@ main { position: relative; z-index: 3; width: calc(100vw - var(--stage-w)); }
 /* layar sempit atau tegak: panggung di atas (52 % tinggi), teks menggulir di bawahnya */
 @media (max-width: 899px), (orientation: portrait) {
   :root { --stage-h: 50svh; }
-  .stage { z-index: 4; left: 0; width: auto; height: var(--stage-h); bottom: auto; border-bottom: 1px solid var(--rule-soft); }
+  .stage { z-index: 4; left: 0; width: auto; height: var(--stage-h); bottom: auto; border-bottom: 1px solid var(--rule-soft);
+    background: radial-gradient(70% 60% at 50% 50%, #16233c 0%, var(--haze) 100%); }
+  .stage::after { display: none; }
   .callouts { z-index: 5; }
   main, .product .foot { width: auto; }
   main { padding-top: var(--stage-h); }

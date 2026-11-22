@@ -112,7 +112,8 @@ async function start() {
     }
     const name = sec.dataset.scene;
     const st = { ...BASE, mq: [0, 0, 0, 0], ...SCENES[name](p) };
-    const aspect = canvas.clientWidth / Math.max(1, canvas.clientHeight);
+    // bagian 3D yang bebas teks: 60 % lebar di layar lebar (kanvas penuh, model digeser ke kanan)
+    const aspect = canvas.clientWidth * (narrowQuery.matches ? 1 : 0.6) / Math.max(1, canvas.clientHeight);
     if (aspect < 1.25) st.dist *= Math.min(1.9, 1.25 / Math.max(aspect, 0.5));
     stage.setTarget(st);
     const labels = name === "sensors" ? [MQ_LABELS[st.step]] : (LABELS[name] || []);

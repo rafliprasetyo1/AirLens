@@ -285,8 +285,10 @@ export function createScene(canvas, { weak = false, onProgress } = {}) {
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, maxDpr));
     renderer.setSize(w, h, false);
     camera.aspect = w / h;
-    // layar tegak: mundurkan kamera agar seluruh alat tetap masuk bingkai
-    camera.userData.portrait = w / h < 1;
+    // layar lebar: kanvas selebar layar di belakang teks; geser titik tengah gambar ke kanan (pusat di ±70 % lebar)
+    // agar model berada di bagian yang bebas teks. Layar sempit/tegak: tanpa geser.
+    const wide = !matchMedia("(max-width: 899px), (orientation: portrait)").matches;
+    if (wide) camera.setViewOffset(w, h, -w * 0.2, 0, w, h); else camera.clearViewOffset();
     camera.updateProjectionMatrix();
     dirty = true; kick();
   }
