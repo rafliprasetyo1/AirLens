@@ -9,6 +9,7 @@ license, attribution. Kolom tambahan: location_id, group_hint, hour, pm25_derive
 
 import logging
 import re
+from pathlib import Path
 from datetime import datetime, time, timedelta
 
 import numpy as np
@@ -136,6 +137,42 @@ INDIA_NEPAL_IMG_DIR = "Air Pollution Image Dataset/Air Pollution Image Dataset/C
 INDIA_NEPAL_KEEP = {"Biratnagar, Nepal": ("biratnagar", "Biratnagar", 26.4525, 87.2718)}  # koordinat pusat kota (perkiraan)
 
 
+class _DirReader:
+    """Pembaca folder yang sudah diekstrak (input Kaggle Notebook) dengan antarmuka open/read seperti ZipFile."""
+
+    def __init__(self, root: Path):
+        self.root = Path(root)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *a):
+        return False
+
+    def open(self, name: str):
+        return (self.root / name).open("rb")
+
+    def read(self, name: str) -> bytes:
+        return (self.root / name).read_bytes()
+
+
+def _india_nepal_reader():
+    """Zip dari Kaggle API (laptop/lab), atau folder input Kaggle Notebook (INDIA_NEPAL_DIR) yang memuat CSV yang sama."""
+    import os
+    import zipfile
+
+    from airlens.data.download import INDIA_NEPAL_ZIP
+
+    folder = os.environ.get("INDIA_NEPAL_DIR")
+    if folder:
+        for d, _, files in os.walk(folder, followlinks=True):
+            cand = Path(d)
+            if (cand / INDIA_NEPAL_CSV).exists():
+                return _DirReader(cand)
+        raise RuntimeError(f"{INDIA_NEPAL_CSV} tidak ditemukan di {folder}")
+    return zipfile.ZipFile(RAW_DIR / "india_nepal" / INDIA_NEPAL_ZIP)
+
+
 def load_india_nepal(fraction: float, seed: int) -> pd.DataFrame:
     import zipfile
 
@@ -143,7 +180,7 @@ def load_india_nepal(fraction: float, seed: int) -> pd.DataFrame:
 
     out_dir = IMAGES_DIR / "india_nepal"
     out_dir.mkdir(parents=True, exist_ok=True)
-    with zipfile.ZipFile(RAW_DIR / "india_nepal" / INDIA_NEPAL_ZIP) as z:
+    with _india_nepal_reader() as z:
         meta = pd.read_csv(z.open(INDIA_NEPAL_CSV))
         dropped = {"lokasi_india_label_tidak_jelas": int((~meta["Location"].isin(INDIA_NEPAL_KEEP)).sum())}
         meta = meta[meta["Location"].isin(INDIA_NEPAL_KEEP)].copy()

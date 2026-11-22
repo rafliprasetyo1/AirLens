@@ -14,6 +14,7 @@ import numpy as np
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from airlens.tiers import normalize_classes
 from airlens.config import load_profile
 from airlens.data.paths import RESULTS_DIR
 from airlens.db.models import Prediction
@@ -37,7 +38,7 @@ def evaluate(bundle: Path, paths: list[str], y: np.ndarray) -> dict:
     return {"macro_f1": round(m["macro_f1"], 4), "balanced_accuracy": round(m["balanced_accuracy"], 4),
             "ece": round(expected_calibration_error(probs, y), 4), "rejected_fraction": round(sel["rejected_fraction"], 4),
             "data_version": meta["data_version"], "smoke": meta.get("smoke", False), "name": meta["name"],
-            "classes": meta["classes"]}
+            "classes": meta["classes"], "class_merge": meta.get("class_merge")}
 
 
 def shadow_stats(engine, prod_v: str, ch_v: str) -> dict:
@@ -77,7 +78,9 @@ def main() -> int:
     sh = shadow_stats(engine, prod_v, ch_v)
     p, c = res["production"], res["challenger"]
     checks = [
-        ("Skema kelas sama (metrik bisa dibandingkan)", p["classes"] == c["classes"],
+        # nama lama 3 kelas (moderate/unhealthy/very_unhealthy) = skema tiga tingkat yang sama (airlens.tiers)
+        ("Skema kelas sama (metrik bisa dibandingkan)",
+         normalize_classes(p["classes"], p["class_merge"]) == normalize_classes(c["classes"], c["class_merge"]),
          f"{len(p['classes'])} vs {len(c['classes'])} kelas"),
         ("Test tetap sesuai data challenger (tanpa kebocoran)", c["data_version"] == ds.data_version,
          f"data challenger {c['data_version'][:12]} vs data sekarang {ds.data_version[:12]}"),

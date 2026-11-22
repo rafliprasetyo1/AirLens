@@ -1,0 +1,700 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Merakit AirLens Beta</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Tata letak: daftar isi menempel di kiri (desktop), langkah-langkah perakitan di kanan seperti lembar kerja bengkel.
+   Warna kabel mengikuti kebiasaan elektronika: merah 5 V, oranye 3,3 V, hitam GND; warna lain untuk sinyal. */
+:root {
+  --bg: #F3F6F8; --paper: #FFFFFF; --ink: #10222E; --ink-2: #4A5E6B; --line: #D5DEE4; --soft: #E8F0F5;
+  --accent: #1C6FA8; --accent-ink: #FFFFFF; --amber: #B4610E; --amber-soft: #FDF1E3; --danger: #B3261E; --danger-soft: #FCE9E7;
+  --ok: #17794A; --ok-soft: #E3F4EA; --code-bg: #0F1E28; --code-ink: #E3EEF4; --code-dim: #6E8796;
+  --w5v: #D7263D; --w33: #F08A24; --wgnd: #1B1F24; --wsig1: #1F7AE0; --wsig2: #2BA84A; --wsig3: #8E44C9; --wsig4: #D1A10F;
+  --f-head: "Space Grotesk", "Segoe UI", sans-serif; --f-body: "Inter", system-ui, sans-serif; --f-mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0C161D; --paper: #13222C; --ink: #E6EFF4; --ink-2: #9DB3C1; --line: #24394A; --soft: #182C38;
+  --accent: #5CB4EC; --accent-ink: #06202E; --amber: #F2A65A; --amber-soft: #2E2214; --danger: #FF8A80; --danger-soft: #34181A;
+  --ok: #5DD39A; --ok-soft: #12291E; --code-bg: #08121A; --code-ink: #E3EEF4; --code-dim: #6E8796; --wgnd: #C9D3DA; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0C161D; --paper: #13222C; --ink: #E6EFF4; --ink-2: #9DB3C1; --line: #24394A; --soft: #182C38;
+  --accent: #5CB4EC; --accent-ink: #06202E; --amber: #F2A65A; --amber-soft: #2E2214; --danger: #FF8A80; --danger-soft: #34181A;
+  --ok: #5DD39A; --ok-soft: #12291E; --code-bg: #08121A; --code-ink: #E3EEF4; --code-dim: #6E8796; --wgnd: #C9D3DA; color-scheme: dark; }
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font: 400 16px/1.65 var(--f-body); }
+a { color: var(--accent); }
+.wrap { max-width: 1240px; margin: 0 auto; padding-block: 28px 80px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 40px; }
+header.intro { grid-column: 1 / -1; display: grid; gap: 14px; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
+header.intro h1 { margin: 0; font: 700 clamp(30px, 4.4vw, 46px)/1.1 var(--f-head); letter-spacing: -.5px; text-wrap: balance; }
+header.intro p { margin: 0; max-width: 68ch; color: var(--ink-2); font-size: 17px; }
+.progress { display: flex; align-items: center; gap: 12px; font-size: 14px; color: var(--ink-2); }
+.bar { flex: 0 1 320px; height: 8px; background: var(--soft); border-radius: 99px; overflow: hidden; }
+.bar i { display: block; height: 100%; width: 0; background: var(--ok); transition: width .3s; }
+nav.toc { position: sticky; top: calc(16px + env(safe-area-inset-top, 0px)); align-self: start; max-height: calc(100vh - 32px); overflow-y: auto; font-size: 14px; }
+nav.toc ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+nav.toc a { display: flex; gap: 8px; align-items: baseline; padding: 6px 10px; border-radius: 8px; color: var(--ink-2); text-decoration: none; }
+nav.toc a:hover, nav.toc a.on { background: var(--soft); color: var(--ink); }
+nav.toc a .tick { width: 14px; flex: none; color: var(--ok); font-weight: 700; }
+nav.toc .grp { margin: 14px 10px 4px; font: 600 12px var(--f-body); color: var(--ink-2); letter-spacing: .4px; }
+main { min-width: 0; display: grid; gap: 56px; }
+section { scroll-margin-top: 20px; display: grid; gap: 16px; }
+section > h2 { margin: 0; font: 700 28px/1.2 var(--f-head); text-wrap: balance; display: flex; gap: 12px; align-items: baseline; }
+section > h2 .num { font: 500 16px var(--f-mono); color: var(--accent); flex: none; }
+h3 { margin: 10px 0 0; font: 700 19px var(--f-head); }
+p, li { max-width: 72ch; }
+p { margin: 0; }
+ul, ol { margin: 0; padding-left: 22px; display: grid; gap: 6px; }
+.lead { font-size: 17px; color: var(--ink-2); }
+.card { background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; }
+.note, .warn, .danger, .tip { border-radius: 12px; padding: 14px 16px; display: grid; gap: 6px; font-size: 15px; }
+.note { background: var(--soft); }
+.tip { background: var(--ok-soft); }
+.warn { background: var(--amber-soft); }
+.danger { background: var(--danger-soft); }
+.note b:first-child, .warn b:first-child, .danger b:first-child, .tip b:first-child { font-family: var(--f-head); }
+.warn b:first-child { color: var(--amber); } .danger b:first-child { color: var(--danger); } .tip b:first-child { color: var(--ok); }
+.tbl { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--paper); }
+table { border-collapse: collapse; width: 100%; font-size: 14.5px; min-width: 560px; }
+th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-weight: 600; background: var(--soft); }
+tr:last-child td { border-bottom: 0; }
+td code, p code, li code { font: 500 13.5px var(--f-mono); background: var(--soft); padding: 1px 6px; border-radius: 5px; }
+.wire { display: inline-block; width: 22px; height: 6px; border-radius: 3px; vertical-align: middle; margin-right: 6px; }
+details { border: 1px solid var(--line); border-radius: 12px; background: var(--paper); }
+details > summary { cursor: pointer; padding: 12px 16px; font-weight: 600; list-style-position: inside; }
+details > .in { padding: 0 16px 16px; display: grid; gap: 10px; }
+details.math > summary { color: var(--amber); }
+.code { background: var(--code-bg); color: var(--code-ink); border-radius: 12px; overflow: hidden; }
+.code .head { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px 8px 16px; font: 500 13px var(--f-mono); color: var(--code-dim); border-bottom: 1px solid rgba(255,255,255,.08); }
+.code button { font: 600 13px var(--f-body); color: var(--code-ink); background: rgba(255,255,255,.08); border: 0; padding: 6px 12px; border-radius: 8px; cursor: pointer; }
+.code button:focus-visible, .check input:focus-visible, nav.toc a:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+.code pre { margin: 0; padding: 12px 0; overflow-x: auto; font: 400 13.5px/1.6 var(--f-mono); counter-reset: ln; }
+.code pre span { display: block; padding: 0 16px 0 0; white-space: pre; }
+.code pre span::before { counter-increment: ln; content: counter(ln); display: inline-block; width: 42px; padding-right: 14px; text-align: right; color: var(--code-dim); user-select: none; }
+.explain { list-style: none; padding: 0; gap: 8px; }
+.explain li { display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 10px; font-size: 15px; }
+.explain li > b { font: 500 13px var(--f-mono); color: var(--accent); padding-top: 2px; }
+.serial { font: 400 13.5px/1.6 var(--f-mono); background: var(--soft); border-radius: 10px; padding: 10px 14px; white-space: pre; overflow-x: auto; }
+.diagram { background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: 12px; overflow-x: auto; }
+.diagram svg { display: block; min-width: 640px; width: 100%; height: auto; }
+.diagram svg text { font-family: var(--f-body); fill: var(--ink); }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: 13.5px; color: var(--ink-2); padding: 6px 4px 0; }
+.steps { counter-reset: st; list-style: none; padding: 0; gap: 10px; }
+.steps > li { counter-increment: st; display: grid; grid-template-columns: 32px minmax(0, 1fr); gap: 10px; }
+.steps > li::before { content: counter(st); font: 700 14px var(--f-head); width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: var(--soft); color: var(--accent); }
+.check { display: inline-flex; align-items: center; gap: 10px; font-weight: 600; padding: 10px 14px; border-radius: 10px; border: 1px solid var(--line); background: var(--paper); cursor: pointer; justify-self: start; }
+.check input { width: 18px; height: 18px; accent-color: var(--ok); }
+.check:has(input:checked) { background: var(--ok-soft); border-color: transparent; color: var(--ok); }
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+.grid2 .card h3 { margin: 0 0 6px; }
+.pill { display: inline-block; font: 600 12px var(--f-body); padding: 2px 9px; border-radius: 99px; background: var(--soft); color: var(--ink-2); }
+.pill.need { background: var(--amber-soft); color: var(--amber); }
+@media (max-width: 900px) {
+  .wrap { grid-template-columns: 1fr; gap: 24px; }
+  nav.toc { position: static; max-height: none; border: 1px solid var(--line); border-radius: 12px; background: var(--paper); padding: 8px; }
+  .explain li { grid-template-columns: 1fr; gap: 2px; }
+}
+@media (prefers-reduced-motion: reduce) { .bar i { transition: none; } html { scroll-behavior: auto; } }
+</style>
+
+<div class="wrap">
+  <header class="intro">
+    <h1>Merakit AirLens Beta</h1>
+    <p>Node AirLens Beta: satu papan ESP32, empat sensor gas MQ (MQ-2, MQ-3, MQ-7, MQ-135), delapan resistor, dan adaptor 5 V. Setiap 2 detik ESP32 mengirim bacaan ke AirLens lewat internet (alamat ngrok). Model AI kecil di website menebak apakah udaranya bersih, ada asap, ada alkohol, atau keduanya, lalu menjelaskan alasannya dengan SHAP.</p>
+    <div class="progress"><div class="bar" aria-hidden="true"><i id="bar"></i></div><span id="progress-text">0 dari 0 langkah selesai</span></div>
+  </header>
+
+  <nav class="toc" aria-label="Daftar isi">
+    <ol id="toc"></ol>
+  </nav>
+
+  <main>
+    <section id="gambaran" data-group="Persiapan">
+      <h2><span class="num">0</span>Gambaran besar</h2>
+      <p class="lead">Empat sensor mencium udara, ESP32 membaca tegangannya dan mengirim angkanya lewat HTTPS, lalu website AirLens menghitung rasio terhadap udara bersih, menjalankan model, dan menampilkan grafik SHAP: sensor mana yang paling mendorong keputusan.</p>
+      <div class="diagram" id="dg-overview" role="img" aria-label="Diagram AirLens Beta: empat sensor MQ ke ESP32, ESP32 ke website lewat internet"></div>
+      <div class="grid2">
+        <div class="card"><h3>Versi Beta (halaman ini)</h3><p>4 sensor gas, adaptor 5 V 2 A, model AI + SHAP di website. Biaya sekitar Rp180–300 rb.</p></div>
+        <div class="card"><h3>Versi lengkap</h3><p>Sensor debu, sensor CO elektrokimia, sensor iklim, kamera kejadian, microSD, dan Raspberry Pi. Ada di modul <em>Merakit Node AirLens</em> (konsep).</p></div>
+      </div>
+    </section>
+
+    <section id="komponen" data-group="Persiapan">
+      <h2><span class="num">1</span>Belanja</h2>
+      <div class="tbl"><table>
+        <thead><tr><th>Barang</th><th>Jumlah</th><th>Perkiraan harga</th><th>Catatan</th></tr></thead>
+        <tbody>
+          <tr><td><b>ESP32 DevKit V1</b> (30 pin)</td><td>1</td><td>Rp55–90 rb</td><td>Otak + WiFi</td></tr>
+          <tr><td><b>Modul MQ-2</b> (asap)</td><td>1</td><td>Rp15–25 rb</td><td rowspan="4">Papan kecil dengan 4 pin: VCC, GND, DO, AO</td></tr>
+          <tr><td><b>Modul MQ-3</b> (alkohol)</td><td>1</td><td>Rp15–25 rb</td></tr>
+          <tr><td><b>Modul MQ-7</b> (indikasi CO)</td><td>1</td><td>Rp20–30 rb</td></tr>
+          <tr><td><b>Modul MQ-135</b> (kualitas udara/VOC)</td><td>1</td><td>Rp15–25 rb</td></tr>
+          <tr><td>Resistor <b>10 kΩ</b> dan <b>20 kΩ</b></td><td>4 + 4</td><td>Rp5–10 rb (satu set)</td><td>Kalau tidak ada 20 kΩ: dua 10 kΩ diseri</td></tr>
+          <tr><td><b>Adaptor 5 V 2 A</b> + kabel USB data</td><td>1</td><td>Rp25–40 rb</td><td>Empat pemanas MQ butuh ±600 mA; port USB laptop tidak cukup</td></tr>
+          <tr><td>Breadboard besar + kabel jumper male-male</td><td>1 + 20</td><td>Rp25–40 rb</td><td></td></tr>
+          <tr><td><b>Total</b></td><td></td><td><b>±Rp180–300 rb</b></td><td>Multimeter pinjam dari lab bila ada</td></tr>
+        </tbody>
+      </table></div>
+      <label class="check"><input type="checkbox" id="ck-komponen"> Barang sudah lengkap</label>
+    </section>
+
+    <section id="dasar" data-group="Persiapan">
+      <h2><span class="num">2</span>Tiga hal yang perlu kamu tahu</h2>
+      <div class="grid2">
+        <div class="card"><h3>5 V vs 3,3 V</h3><p>Pemanas MQ butuh 5 V, jadi keluaran sensornya bisa sampai 5 V. Pin ESP32 hanya tahan 3,3 V. Setiap sinyal sensor dilewatkan <b>pembagi tegangan</b> (10 kΩ + 20 kΩ) yang mengecilkan 5 V menjadi paling tinggi 3,33 V.</p></div>
+        <div class="card"><h3>Hanya pin ADC1</h3><p>Sensor dipasang di GPIO34, 35, 32, dan 33. Pin ADC2 tidak bisa dibaca saat WiFi menyala, jadi jangan dipakai.</p></div>
+        <div class="card"><h3>Daya cukup + GND bersama</h3><p>Empat pemanas menarik ±600 mA. Pakai adaptor 5 V 2 A. Semua GND (sensor, resistor, ESP32) harus tersambung.</p></div>
+      </div>
+      <details class="math"><summary>Hitungan (opsional): pembagi tegangan dan Rs</summary><div class="in">
+        <p>Tegangan di pin = tegangan sensor × 20 kΩ ÷ (10 kΩ + 20 kΩ) = 5 V × 0,667 = <b>3,33 V</b>. ESP32 hanya mengirim tegangan pin (mV). Server menghitung balik tegangan sensor (× 1,5) dan hambatan sensor <b>Rs = RL × (5 V − Vout) ÷ Vout</b>. Makin banyak gas, makin kecil Rs.</p>
+      </div></details>
+      <div class="danger"><b>Keselamatan</b><ul>
+        <li>Cabut daya setiap kali memindah kabel.</li>
+        <li>Jangan pernah menyambung 5 V (pin VIN) ke pin GPIO atau ke pin 3V3.</li>
+        <li>Sensor MQ menjadi hangat; itu normal. Jangan disentuh setelah lama menyala.</li>
+        <li>Uji hanya dengan <b>dupa</b> dan <b>hand sanitizer</b>, di ruangan berventilasi. Jangan pernah membuat gas CO (mesin, arang, kompor di dalam ruangan). Jauhkan api dari sanitizer.</li>
+      </ul></div>
+      <label class="check"><input type="checkbox" id="ck-dasar"> Sudah paham dan membaca keselamatan</label>
+    </section>
+
+    <section id="software" data-group="Persiapan">
+      <h2><span class="num">3</span>Dua cara memasang program</h2>
+      <div class="grid2">
+        <div class="card"><h3>A. Dari browser (disarankan)</h3><p>Tanpa instal apa pun. Jalankan AirLens, buka <code>http://localhost:8080/tools/flash.html</code> di Chrome, colokkan ESP32, klik <b>Connect a device</b> lalu <b>Flash firmware</b>. Dipakai di langkah 4.</p></div>
+        <div class="card"><h3>B. Arduino IDE</h3><p>Untuk langkah 1 dan 3 (program uji) atau bila ingin mengubah kode. Ikuti langkah di bawah.</p></div>
+      </div>
+      <ol class="steps">
+        <li><div>Pasang <b>Arduino IDE 2</b> dari <a href="https://www.arduino.cc/en/software" target="_blank" rel="noopener">arduino.cc/en/software</a>.</div></li>
+        <li><div><b>File → Preferences</b>, di <em>Additional boards manager URLs</em> tempel:<div class="serial">https://espressif.github.io/arduino-esp32/package_esp32_index.json</div></div></li>
+        <li><div><b>Tools → Board → Boards Manager</b>, cari <code>esp32</code>, pasang <b>esp32 by Espressif Systems</b> versi 3.3.x.</div></li>
+        <li><div>Colokkan ESP32. Bila port tidak muncul di <b>Tools → Port</b> (atau di halaman flash), komputer butuh driver <b>CP210x</b> atau <b>CH340</b>. Memasang driver butuh hak admin; kalau tidak punya, flash dari laptop lain. Alamat AirLens (ngrok) sama, jadi alat tidak perlu di-flash ulang di komputer lain.</div></li>
+      </ol>
+      <label class="check"><input type="checkbox" id="ck-software"> ESP32 terdeteksi (Arduino IDE atau halaman flash)</label>
+    </section>
+
+    <section id="l1" data-group="Rakit dan uji">
+      <h2><span class="num">4</span>Langkah 1 · ESP32 hidup</h2>
+      <p>Sama seperti praktikum LED: pilih <b>Tools → Board → esp32 → ESP32 Dev Module</b>, upload, buka <b>Serial Monitor</b> di <b>115200 baud</b>.</p>
+      <div class="code" data-src="c1" data-name="beta_1_esp32.ino"></div>
+      <details><summary>Arti setiap baris</summary><div class="in"><ul class="explain">
+        <li><b>Baris 2</b><span>LED biru bawaan papan ada di GPIO2.</span></li>
+        <li><b>Baris 4–9</b><span><code>setup()</code> berjalan sekali: pin LED jadi keluaran, Serial dibuka pada 115200 baud, cetak "ESP32 siap!".</span></li>
+        <li><b>Baris 11–18</b><span><code>loop()</code> berulang: LED nyala 0,5 detik, mati 0,5 detik, dan setiap perubahan dicetak.</span></li>
+      </ul></div></details>
+      <div class="serial">ESP32 siap!
+LED nyala
+LED mati</div>
+      <details><summary>Kalau bermasalah</summary><div class="in"><ul>
+        <li><b>"Failed to connect":</b> tahan tombol <b>BOOT</b> saat muncul <em>Connecting…</em>.</li>
+        <li><b>Tulisan acak:</b> Serial Monitor belum 115200 baud.</li>
+      </ul></div></details>
+      <label class="check"><input type="checkbox" id="ck-l1"> LED berkedip dan teks muncul</label>
+    </section>
+
+    <section id="l2" data-group="Rakit dan uji">
+      <h2><span class="num">5</span>Langkah 2 · Pasang empat MQ</h2>
+      <p>Setiap sensor disambung dengan cara yang sama: VCC ke 5 V, GND ke GND, AO lewat pembagi tegangan ke satu pin ADC1. Daya 5 V dari adaptor masuk lewat USB ESP32, dan pin <b>VIN</b> meneruskannya ke keempat sensor.</p>
+      <div class="tbl"><table>
+        <thead><tr><th>Sensor</th><th>Mencium</th><th>AO → 10 kΩ → titik tengah → pin</th><th>Titik tengah → 20 kΩ →</th></tr></thead>
+        <tbody>
+          <tr><td><i class="wire" style="background:var(--wsig1)"></i><b>MQ-2</b></td><td>asap, LPG</td><td><b>GPIO34</b></td><td>GND</td></tr>
+          <tr><td><i class="wire" style="background:var(--wsig4)"></i><b>MQ-3</b></td><td>alkohol</td><td><b>GPIO35</b></td><td>GND</td></tr>
+          <tr><td><i class="wire" style="background:var(--wsig3)"></i><b>MQ-7</b></td><td>indikasi CO</td><td><b>GPIO32</b></td><td>GND</td></tr>
+          <tr><td><i class="wire" style="background:var(--wsig2)"></i><b>MQ-135</b></td><td>kualitas udara, VOC</td><td><b>GPIO33</b></td><td>GND</td></tr>
+        </tbody>
+      </table></div>
+      <div class="diagram" id="dg-mq" role="img" aria-label="Empat modul MQ ke ESP32, masing-masing lewat pembagi tegangan 10 kΩ dan 20 kΩ"></div>
+      <div class="legend"><span><i class="wire" style="background:var(--w5v)"></i>5 V</span><span><i class="wire" style="background:var(--wgnd)"></i>GND</span><span><i class="wire" style="background:var(--wsig1)"></i>MQ-2</span><span><i class="wire" style="background:var(--wsig4)"></i>MQ-3</span><span><i class="wire" style="background:var(--wsig3)"></i>MQ-7</span><span><i class="wire" style="background:var(--wsig2)"></i>MQ-135</span></div>
+      <ol class="steps">
+        <li><div>Buat dua jalur di breadboard: jalur merah <b>5 V</b> dari pin <b>VIN</b> ESP32, jalur biru <b>GND</b> dari pin <b>GND</b> ESP32.</div></li>
+        <li><div>Untuk setiap sensor: <b>VCC</b> ke jalur 5 V, <b>GND</b> ke jalur GND, pin <b>DO</b> dibiarkan kosong.</div></li>
+        <li><div>Untuk setiap sensor: <b>AO</b> → resistor <b>10 kΩ</b> → baris breadboard <b>titik tengah</b>. Dari titik tengah: satu kabel ke pin ESP32 sesuai tabel, dan resistor <b>20 kΩ</b> ke jalur GND.</div></li>
+        <li><div>Colokkan adaptor 5 V 2 A ke USB ESP32. Kalau ada multimeter, ukur keempat titik tengah ke GND: semuanya harus <b>di bawah 3,3 V</b>. Kalau lebih, 10 kΩ dan 20 kΩ tertukar.</div></li>
+      </ol>
+      <label class="check"><input type="checkbox" id="ck-l2"> Empat MQ terpasang dan semua titik tengah di bawah 3,3 V</label>
+    </section>
+
+    <section id="l3" data-group="Rakit dan uji">
+      <h2><span class="num">6</span>Langkah 3 · Uji tiap sensor</h2>
+      <p>Program uji ini mencetak tegangan keempat pin (mV) setiap 2 detik. <b>Makin banyak gas, makin tinggi tegangan</b> (karena Rs sensor turun). Biarkan sensor <b>pemanasan 15–30 menit</b> sampai angkanya stabil.</p>
+      <div class="code" data-src="c2" data-name="beta_2_uji_4mq.ino"></div>
+      <details><summary>Arti setiap baris</summary><div class="in"><ul class="explain">
+        <li><b>Baris 1–2</b><span>Nama dan pin keempat sensor, urut sama dengan tabel langkah 2.</span></li>
+        <li><b>Baris 4–8</b><span><code>bacaMv</code>: baca tegangan pin 16 kali dan rata-ratakan (dalam milivolt) agar derau ADC teredam.</span></li>
+        <li><b>Baris 10–14</b><span>Buka Serial, atur ADC 12 bit dengan rentang ±3,1 V, dan ingatkan soal pemanasan.</span></li>
+        <li><b>Baris 16–23</b><span>Setiap 2 detik cetak keempat tegangan dalam satu baris. Angka 0 berarti kabel lepas; angka di atas 3.100 berarti pembagi salah pasang.</span></li>
+      </ul></div></details>
+      <div class="serial">Pemanasan MQ: tunggu 15-30 menit sampai angka stabil.
+MQ-2 912 mV | MQ-3 803 mV | MQ-7 1004 mV | MQ-135 851 mV</div>
+      <div class="tbl"><table>
+        <thead><tr><th>Sensor</th><th>Uji</th><th>Yang diharapkan</th></tr></thead>
+        <tbody>
+          <tr><td>MQ-2</td><td>Nyalakan dupa, dekatkan asapnya (±20 cm) beberapa detik</td><td>mV naik jelas, lalu turun lagi setelah asap pergi</td></tr>
+          <tr><td>MQ-3</td><td>Teteskan hand sanitizer di tisu, dekatkan (jangan menempel)</td><td>mV naik cepat</td></tr>
+          <tr><td>MQ-135</td><td>Dupa atau sanitizer</td><td>mV naik pada keduanya</td></tr>
+          <tr><td>MQ-7</td><td><b>Jangan</b> menguji dengan CO. Cukup pastikan angkanya stabil dan sensor hangat</td><td>Angka valid (bukan 0, bukan &gt;3.100); bisa sedikit naik saat ada asap dupa</td></tr>
+        </tbody>
+      </table></div>
+      <details><summary>Kalau bermasalah</summary><div class="in"><ul>
+        <li><b>0 mV terus:</b> kabel AO, resistor, atau kabel ke pin lepas.</li>
+        <li><b>Di atas 3.100 mV:</b> resistor 10 kΩ dan 20 kΩ tertukar. Cabut daya dan perbaiki.</li>
+        <li><b>Tidak berubah saat diberi uap:</b> cek VCC ke jalur 5 V (bukan 3V3) dan pastikan sensor terasa hangat.</li>
+        <li><b>ESP32 restart sendiri:</b> daya kurang. Pakai adaptor 5 V 2 A, bukan port USB laptop.</li>
+      </ul></div></details>
+      <label class="check"><input type="checkbox" id="ck-l3"> Keempat sensor terbaca, MQ-2/MQ-3/MQ-135 naik saat diuji</label>
+    </section>
+
+    <section id="l4" data-group="Sambungkan ke AirLens">
+      <h2><span class="num">7</span>Langkah 4 · Firmware AirLens + WiFi</h2>
+      <p>Firmware AirLens membaca keempat sensor tiap 2 detik dan mengirimnya ke AirLens lewat <b>HTTPS ke alamat ngrok</b>. Nama WiFi, kata sandi, alamat server, dan token <b>tidak ditulis di kode</b>: semuanya disimpan di memori ESP32 lewat halaman flash.</p>
+      <ol class="steps">
+        <li><div>Di komputer AirLens, buka <code>http://localhost:8080/tools/flash.html</code> di Chrome (atau buka tautan <b>Flash tool</b> di halaman Build guides).</div></li>
+        <li><div>Pilih <b>AirLens Beta: 4 MQ gas sensors</b>, klik <b>Connect a device</b>, pilih port ESP32, lalu <b>Flash firmware</b>. Tunggu sampai "Done".</div></li>
+        <li><div>Isi formulir <b>Set WiFi and server</b>: nama dan sandi WiFi (2,4 GHz), <b>Server URL</b> = <code>https://&lt;alamat-ngrok&gt;/api/sensor/readings</code>, <b>Node token</b> = nilai <code>SENSOR_TOKEN</code> dari <code>.env</code>, nama node <code>lite-01</code>. Klik <b>Save to device</b>.</div></li>
+        <li><div>Log di bawah halaman harus menunjukkan <code>"wifi","status":"connected"</code>, lalu satu baris bacaan tiap 2 detik tanpa pesan galat.</div></li>
+      </ol>
+      <p>Lewat Arduino IDE juga bisa: buka <code>firmware/beta/beta.ino</code> dari repo (berkas <code>airlens_roots.h</code> ada di folder yang sama), upload, lalu kirim pengaturan dengan mengetik satu baris di Serial Monitor:</p>
+      <div class="serial">SET {"ssid":"NamaWiFi","pass":"SandiWiFi","url":"https://&lt;alamat-ngrok&gt;/api/sensor/readings","token":"&lt;SENSOR_TOKEN&gt;","node":"lite-01"}</div>
+      <div class="code" data-src="c3" data-name="firmware/beta/beta.ino"></div>
+      <details><summary>Arti setiap bagian</summary><div class="in"><ul class="explain">
+        <li><b>Baris 1–19</b><span>Penjelasan singkat: apa yang dikirim, perintah Serial, dan alasan memakai HTTPS dengan sertifikat (bukan <code>setInsecure()</code>).</span></li>
+        <li><b>Baris 21–26</b><span>Pustaka WiFi, HTTPS, HTTP, memori NVS (<code>Preferences</code>), jam, dan berkas sertifikat akar Let's Encrypt yang dipakai domain ngrok.</span></li>
+        <li><b>Baris 28–32</b><span>Versi firmware, pin keempat sensor (ADC1), jarak antar bacaan 2 detik, dan jumlah sampel rata-rata.</span></li>
+        <li><b>Baris 34–38</b><span>Variabel pengaturan (WiFi, URL, token, nama node) dan penanda waktu.</span></li>
+        <li><b>Baris 40–48</b><span><code>loadSettings</code>: ambil pengaturan dari memori NVS; nama node bawaan <code>lite-01</code>.</span></li>
+        <li><b>Baris 50–68</b><span><code>jsonValue</code> dan <code>hasKey</code>: membaca nilai dari perintah <code>SET {...}</code> yang dikirim halaman flash.</span></li>
+        <li><b>Baris 70–74</b><span><code>printSettings</code>: mencetak pengaturan tersimpan. Kata sandi dan token <b>tidak pernah dicetak</b>, hanya "ada/tidak".</span></li>
+        <li><b>Baris 76–112</b><span><code>handleCommand</code>: <code>SET</code> menyimpan pengaturan lalu menyambung ulang WiFi; <code>GET</code> menampilkan pengaturan; <code>CLEAR</code> menghapus semuanya; <code>REBOOT</code> menyalakan ulang.</span></li>
+        <li><b>Baris 114–124</b><span><code>readSerial</code>: kumpulkan huruf dari Serial sampai Enter, lalu jalankan perintahnya.</span></li>
+        <li><b>Baris 126–133</b><span><code>ensureWifi</code>: sambung ke WiFi tanpa memblokir; kalau gagal, coba lagi tiap 15 detik sambil tetap membaca sensor.</span></li>
+        <li><b>Baris 135–144</b><span><code>syncTime</code>: ambil jam dari internet (NTP). Jam yang benar dibutuhkan untuk memeriksa masa berlaku sertifikat HTTPS.</span></li>
+        <li><b>Baris 146–150</b><span><code>readMv</code>: rata-rata 16 bacaan tegangan pin dalam milivolt.</span></li>
+        <li><b>Baris 152–174</b><span><code>post</code>: kirim JSON ke AirLens. Koneksi HTTPS dipakai ulang agar tidak berjabat tangan TLS tiap 2 detik. Header <code>ngrok-skip-browser-warning</code> melewati halaman peringatan ngrok, <code>X-Node-Token</code> membuktikan bahwa ini alat kita.</span></li>
+        <li><b>Baris 176–184</b><span><code>setup</code>: buka Serial, atur ADC, pasang sertifikat akar, muat pengaturan.</span></li>
+        <li><b>Baris 186–199</b><span><code>loop</code>: layani perintah Serial dan WiFi; setiap 2 detik baca keempat sensor, cetak satu baris JSON, lalu kirim.</span></li>
+      </ul></div></details>
+      <details><summary>Kalau bermasalah</summary><div class="in"><ul>
+        <li><b>WiFi tidak tersambung:</b> nama atau sandi salah, atau WiFi hanya 5 GHz (ESP32 hanya 2,4 GHz).</li>
+        <li><b><code>"code":401</code>:</b> token salah. Samakan dengan <code>SENSOR_TOKEN</code> di <code>.env</code>.</li>
+        <li><b><code>"code":-1</code> terus:</b> alamat ngrok salah, ngrok belum menyala, atau internet putus. ESP32 akan terus mencoba.</li>
+        <li><b>Port tidak muncul di halaman flash:</b> driver USB belum ada (butuh admin). Flash dari laptop lain.</li>
+      </ul></div></details>
+      <label class="check"><input type="checkbox" id="ck-l4"> ESP32 tersambung WiFi dan bacaan terkirim</label>
+    </section>
+
+    <section id="l5" data-group="Sambungkan ke AirLens">
+      <h2><span class="num">8</span>Langkah 5 · Rekam kalibrasi</h2>
+      <p>Model AI dilatih dengan data sensor tim lain. Rekaman dari alat kita sendiri menunjukkan seberapa jauh model meleset di alat ini, dan bisa dipakai untuk melatih ulang.</p>
+      <ol class="steps">
+        <li><div>Biarkan sensor <b>pemanasan ±30 menit</b> di udara bersih.</div></li>
+        <li><div>Buka <code>http://localhost:8080/tools/recorder.html</code> di Chrome, klik <b>Connect a device</b>. Grafik empat sensor muncul.</div></li>
+        <li><div>Pilih label lalu rekam <b>±10 menit per label</b>: <b>Clean air</b> → <b>Incense smoke</b> (dupa ±50 cm) → <b>Clean air</b> lagi (buka jendela) → <b>Hand sanitizer</b> (tisu basah di dekat sensor) → <b>Smoke + sanitizer</b>.</div></li>
+        <li><div>Klik <b>Download CSV</b> dan unggah ke folder Google Drive tim. Di laptop: <code>make import-beta-recordings CSV=&lt;berkas.csv&gt;</code>.</div></li>
+      </ol>
+      <div class="danger"><b>Keselamatan</b><p>Hanya dupa dan hand sanitizer, di ruangan berventilasi. Jangan pernah membuat CO. Jauhkan api dupa dari sanitizer.</p></div>
+      <label class="check"><input type="checkbox" id="ck-l5"> CSV rekaman sudah diunduh dan diunggah</label>
+    </section>
+
+    <section id="website" data-group="Sambungkan ke AirLens">
+      <h2><span class="num">9</span>Di website AirLens</h2>
+      <p>Buka halaman <b>Beta sensor</b> (<code>/beta.html</code>, lewat alamat ngrok bisa dari HP). Website:</p>
+      <ul>
+        <li>Menunggu 3 menit pemanasan, lalu memakai median 24 bacaan berikutnya sebagai <b>baseline udara bersih</b> tiap sensor.</li>
+        <li>Mengubah setiap bacaan menjadi rasio terhadap baseline (makin kecil = makin banyak gas) dan menjalankan model: <b>Clean air</b>, <b>Alcohol / VOC</b>, <b>Smoke</b>, atau <b>Smoke + alcohol</b>, lengkap dengan peluangnya.</li>
+        <li>Menampilkan <b>grafik SHAP waterfall</b>: dari skor rata-rata model, sensor mana yang mendorong ke kelas terpilih (merah) dan mana yang menjauhkan (biru).</li>
+        <li>Memunculkan peringatan bila model yakin ≥70% ada asap dua kali berturut-turut, dengan kalimat alasan, misalnya "Smoke likely: MQ-135 at 0.64× clean air (+1.92), …". Alkohol hanya ditampilkan, tidak memicu peringatan (di data latih alkohol sulit dibedakan dari udara bersih).</li>
+      </ul>
+      <div class="note"><b>Batasan yang perlu jujur ditulis di laporan</b><p>Model dilatih dengan data alat lain (MultimodalGasData). Sensor MQ tidak selektif. MQ-7 tanpa siklus pemanas hanya indikatif, jadi ini <b>bukan alarm CO</b>. Alat ini juga tidak mengukur PM2.5.</p></div>
+    </section>
+
+    <section id="kotak" data-group="Sambungkan ke AirLens">
+      <h2><span class="num">10</span>Kotak untuk booth</h2>
+      <ol class="steps">
+        <li><div>Cetak casing Beta (<code>hardware/enclosure-beta/</code>) atau pakai kotak plastik dengan banyak lubang di sisi dan atas.</div></li>
+        <li><div>Empat MQ berjajar di ruang sensor, di balik sekat panas, menghadap kisi. Jangan ditutup rapat: sensor harus "mencium" udara.</div></li>
+        <li><div>ESP32 dan breadboard di ruang lain, kabel adaptor keluar lewat satu lubang.</div></li>
+        <li><div>Tempel label "AirLens Beta" dan logo AirLens.</div></li>
+      </ol>
+      <label class="check"><input type="checkbox" id="ck-kotak"> Node Beta siap dibawa ke booth</label>
+    </section>
+  </main>
+</div>
+
+<script type="text/plain" id="c1">// Uji 1: ESP32 hidup dan bisa "bicara" lewat Serial
+const int LED = 2;            // LED biru bawaan ESP32 DevKit V1
+
+void setup() {
+  pinMode(LED, OUTPUT);
+  Serial.begin(115200);
+  delay(500);
+  Serial.println("ESP32 siap!");
+}
+
+void loop() {
+  digitalWrite(LED, HIGH);
+  Serial.println("LED nyala");
+  delay(500);
+  digitalWrite(LED, LOW);
+  Serial.println("LED mati");
+  delay(500);
+}</script>
+
+<script type="text/plain" id="c2">const char* NAMA[] = {"MQ-2", "MQ-3", "MQ-7", "MQ-135"};
+const int PIN[] = {34, 35, 32, 33};                 // hanya ADC1 (aman saat WiFi menyala)
+
+int bacaMv(int pin) {
+  long total = 0;
+  for (int i = 0; i < 16; i++) total += analogReadMilliVolts(pin);
+  return total / 16;                                // milivolt di pin ESP32 (setelah pembagi)
+}
+
+void setup() {
+  Serial.begin(115200);
+  analogReadResolution(12);
+  analogSetAttenuation(ADC_11db);                   // rentang pin 0 - ±3,1 V
+  Serial.println("Pemanasan MQ: tunggu 15-30 menit sampai angka stabil.");
+}
+
+void loop() {
+  for (int i = 0; i < 4; i++) {
+    Serial.printf("%s %d mV", NAMA[i], bacaMv(PIN[i]));
+    Serial.print(i < 3 ? " | " : "\n");
+  }
+  delay(2000);
+}</script>
+
+<script type="text/plain" id="c3">// AirLens Beta: ESP32 DevKit + 4 sensor gas MQ (MQ-2, MQ-3, MQ-7, MQ-135).
+//
+// Setiap 2 detik: baca tegangan keempat pin ADC (rata-rata 16 sampel, analogReadMilliVolts), cetak satu baris JSON
+// di Serial (dibaca tools/recorder.html), dan bila WiFi + URL tersimpan, kirim JSON yang sama ke AirLens lewat HTTPS:
+//   POST https://<NGROK_DOMAIN>/api/sensor/readings
+//   {"node_id":"lite-01","uptime_s":125,"mq2_mv":812,"mq3_mv":640,"mq7_mv":905,"mq135_mv":701}
+// Server yang menghitung Rs, baseline udara bersih, model AI, dan SHAP. Alat ini hanya mengukur dan mengirim.
+//
+// WiFi, kata sandi, URL server, token, dan nama node TIDAK ditulis di kode. Semuanya dikirim lewat Serial dari
+// halaman tools/flash.html, lalu disimpan di NVS (Preferences). Perintah Serial (satu baris, 115200 baud):
+//   SET {"ssid":"...","pass":"...","url":"https://.../api/sensor/readings","token":"...","node":"lite-01","interval":"2"}
+//   GET      -> pengaturan tersimpan (kata sandi dan token tidak pernah dicetak, hanya "ada/tidak")
+//   CLEAR    -> hapus semua pengaturan
+//   REBOOT
+//
+// HTTPS: sertifikat server diverifikasi terhadap akar Let's Encrypt (ISRG Root X1, X2, YE) di airlens_roots.h, yang
+// dipakai domain ngrok. Tidak memakai setInsecure(). Jam disinkronkan lewat NTP sebelum koneksi pertama.
+// Pin: hanya ADC1 (GPIO32-39), karena ADC2 tidak bisa dibaca saat WiFi menyala. Setiap AO MQ lewat pembagi
+// 10 kΩ / 20 kΩ, sehingga 5 V menjadi ±3,3 V di pin.
+
+#include <WiFi.h>
+#include <WiFiClientSecure.h>
+#include <HTTPClient.h>
+#include <Preferences.h>
+#include <time.h>
+#include "airlens_roots.h"
+
+#define FW_VERSION "beta-4mq-1.1.0"
+
+const int PIN_MQ2 = 34, PIN_MQ3 = 35, PIN_MQ7 = 32, PIN_MQ135 = 33;
+unsigned long periodMs = 2000;              // jarak bacaan; bawaan 2 s, diatur lewat SET {"interval":"10"}
+const int SAMPLES = 16;                     // rata-rata untuk meredam derau ADC
+
+Preferences prefs;
+String ssid, pass, url, token, nodeId;
+unsigned long lastRead = 0, lastWifiTry = 0;
+bool timeSynced = false;
+String line;                                // baris perintah Serial yang sedang diketik
+
+void loadSettings() {
+  prefs.begin("airlens", true);
+  ssid = prefs.getString("ssid", "");
+  pass = prefs.getString("pass", "");
+  url = prefs.getString("url", "");
+  token = prefs.getString("token", "");
+  nodeId = prefs.getString("node", "lite-01");
+  periodMs = (unsigned long)constrain(prefs.getString("interval", "2").toInt(), 2L, 60L) * 1000UL;
+  prefs.end();
+}
+
+// Ambil nilai string dari JSON datar sederhana {"k":"v",...}. Cukup untuk perintah SET dari halaman alat.
+String jsonValue(const String& json, const char* key) {
+  String pat = String("\"") + key + "\"";
+  int k = json.indexOf(pat);
+  if (k < 0) return String();
+  int colon = json.indexOf(':', k + pat.length());
+  int q1 = json.indexOf('"', colon + 1);
+  if (colon < 0 || q1 < 0) return String();
+  String out;
+  for (int i = q1 + 1; i < (int)json.length(); i++) {
+    char c = json[i];
+    if (c == '\\' && i + 1 < (int)json.length()) { out += json[++i]; continue; }
+    if (c == '"') return out;
+    out += c;
+  }
+  return String();
+}
+
+bool hasKey(const String& json, const char* key) { return json.indexOf(String("\"") + key + "\"") >= 0; }
+
+void printSettings() {
+  Serial.printf("{\"event\":\"settings\",\"fw\":\"%s\",\"node\":\"%s\",\"ssid\":\"%s\",\"url\":\"%s\","
+                "\"interval_s\":%lu,\"has_pass\":%s,\"has_token\":%s}\n", FW_VERSION, nodeId.c_str(), ssid.c_str(),
+                url.c_str(), periodMs / 1000, pass.length() ? "true" : "false", token.length() ? "true" : "false");
+}
+
+void handleCommand(String cmd) {
+  cmd.trim();
+  if (cmd.startsWith("SET ")) {
+    String json = cmd.substring(4);
+    prefs.begin("airlens", false);
+    String saved;
+    const char* keys[] = {"ssid", "pass", "url", "token", "node", "interval"};
+    for (const char* k : keys) {
+      if (hasKey(json, k)) {
+        prefs.putString(k, jsonValue(json, k));
+        saved += String(saved.length() ? "," : "") + "\"" + k + "\"";
+      }
+    }
+    prefs.end();
+    loadSettings();
+    WiFi.disconnect();
+    lastWifiTry = 0;
+    timeSynced = false;
+    Serial.printf("{\"event\":\"saved\",\"keys\":[%s]}\n", saved.c_str());
+    printSettings();
+  } else if (cmd == "GET") {
+    printSettings();
+  } else if (cmd == "CLEAR") {
+    prefs.begin("airlens", false);
+    prefs.clear();
+    prefs.end();
+    loadSettings();
+    WiFi.disconnect();
+    Serial.println("{\"event\":\"cleared\"}");
+  } else if (cmd == "REBOOT") {
+    Serial.println("{\"event\":\"reboot\"}");
+    delay(100);
+    ESP.restart();
+  } else if (cmd.length()) {
+    Serial.println("{\"event\":\"error\",\"detail\":\"perintah tidak dikenal (SET/GET/CLEAR/REBOOT)\"}");
+  }
+}
+
+void readSerial() {
+  while (Serial.available()) {
+    char c = Serial.read();
+    if (c == '\n' || c == '\r') {
+      if (line.length()) handleCommand(line);
+      line = "";
+    } else if (line.length() < 600) {
+      line += c;
+    }
+  }
+}
+
+void ensureWifi() {
+  if (!ssid.length() || WiFi.status() == WL_CONNECTED) return;
+  if (lastWifiTry && millis() - lastWifiTry < 15000) return;   // coba lagi tiap 15 detik, tanpa memblokir
+  lastWifiTry = millis();
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(ssid.c_str(), pass.c_str());
+  Serial.printf("{\"event\":\"wifi\",\"status\":\"connecting\",\"ssid\":\"%s\"}\n", ssid.c_str());
+}
+
+void syncTime() {
+  if (timeSynced || WiFi.status() != WL_CONNECTED) return;
+  configTime(0, 0, "pool.ntp.org", "time.google.com");
+  struct tm t;
+  if (getLocalTime(&t, 5000)) {
+    timeSynced = true;
+    Serial.printf("{\"event\":\"wifi\",\"status\":\"connected\",\"ip\":\"%s\",\"time\":\"ok\"}\n",
+                  WiFi.localIP().toString().c_str());
+  }
+}
+
+int readMv(int pin) {
+  long sum = 0;
+  for (int i = 0; i < SAMPLES; i++) sum += analogReadMilliVolts(pin);
+  return (int)(sum / SAMPLES);
+}
+
+// Klien dibuat sekali dan koneksi dipakai ulang (keep-alive): handshake TLS ±1 s tidak diulang tiap 2 detik.
+WiFiClientSecure secure;
+WiFiClient plain;
+HTTPClient http;
+
+void post(const String& body) {
+  if (!url.length() || WiFi.status() != WL_CONNECTED) return;
+  bool https = url.startsWith("https://");
+  if (https) {
+    if (!timeSynced) return;                       // validasi sertifikat butuh jam yang benar
+    if (!http.begin(secure, url)) return;
+  } else {
+    if (!http.begin(plain, url)) return;           // http:// hanya untuk uji lokal (localhost/LAN), bukan pameran
+  }
+  http.setReuse(true);
+  http.setTimeout(8000);
+  http.addHeader("Content-Type", "application/json");
+  http.addHeader("ngrok-skip-browser-warning", "1");
+  if (token.length()) http.addHeader("X-Node-Token", token);
+  int code = http.POST(body);
+  if (code != 200) Serial.printf("{\"event\":\"post\",\"code\":%d}\n", code);
+  http.end();
+}
+
+void setup() {
+  Serial.begin(115200);
+  analogReadResolution(12);
+  analogSetAttenuation(ADC_11db);                  // rentang pin ±0-3,1 V
+  secure.setCACert(AIRLENS_ROOT_CAS);              // akar Let's Encrypt untuk domain ngrok (bukan setInsecure)
+  loadSettings();
+  Serial.printf("{\"event\":\"boot\",\"fw\":\"%s\"}\n", FW_VERSION);
+  printSettings();
+}
+
+void loop() {
+  readSerial();
+  ensureWifi();
+  syncTime();
+  if (millis() - lastRead >= periodMs) {
+    lastRead = millis();
+    char body[200];
+    snprintf(body, sizeof(body),
+             "{\"node_id\":\"%s\",\"uptime_s\":%lu,\"mq2_mv\":%d,\"mq3_mv\":%d,\"mq7_mv\":%d,\"mq135_mv\":%d}",
+             nodeId.c_str(), millis() / 1000, readMv(PIN_MQ2), readMv(PIN_MQ3), readMv(PIN_MQ7), readMv(PIN_MQ135));
+    Serial.println(body);
+    post(String(body));
+  }
+}</script>
+<script>
+// ---------- blok kode bernomor + tombol salin ----------
+document.querySelectorAll(".code[data-src]").forEach((box) => {
+  const src = document.getElementById(box.dataset.src).textContent.replace(/^\n/, "");
+  const head = document.createElement("div"); head.className = "head";
+  const name = document.createElement("span"); name.textContent = box.dataset.name;
+  const btn = document.createElement("button"); btn.type = "button"; btn.textContent = "Salin";
+  head.append(name, btn);
+  const pre = document.createElement("pre");
+  for (const line of src.split("\n")) { const s = document.createElement("span"); s.textContent = line || " "; pre.appendChild(s); }
+  box.append(head, pre);
+  btn.addEventListener("click", async () => {
+    try { await navigator.clipboard.writeText(src); btn.textContent = "Tersalin"; }
+    catch { const r = document.createRange(); r.selectNodeContents(pre); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r); btn.textContent = "Teks dipilih, tekan Ctrl+C"; }
+    setTimeout(() => (btn.textContent = "Salin"), 2200);
+  });
+});
+
+// ---------- diagram kabel (SVG) ----------
+const NS = "http://www.w3.org/2000/svg";
+const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+function el(tag, attrs, parent, text) {
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (text != null) e.textContent = text;
+  parent && parent.appendChild(e); return e;
+}
+function board(svg, x, y, w, title, pins, side, fill) {
+  const h = 44 + pins.length * 26;
+  el("rect", { x, y, width: w, height: h, rx: 12, fill, stroke: css("--line"), "stroke-width": 1.5 }, svg);
+  el("text", { x: x + w / 2, y: y + 26, "text-anchor": "middle", "font-weight": 700, "font-size": 15 }, svg, title);
+  const pos = {};
+  pins.forEach((p, i) => {
+    const py = y + 50 + i * 26, px = side === "r" ? x + w : x;
+    el("circle", { cx: px, cy: py, r: 5, fill: css("--paper"), stroke: css("--ink-2"), "stroke-width": 1.5 }, svg);
+    el("text", { x: side === "r" ? px - 12 : px + 12, y: py + 4.5, "text-anchor": side === "r" ? "end" : "start", "font-size": 13 }, svg, p);
+    pos[p] = [px, py];
+  });
+  return { pos, h };
+}
+function wire(svg, a, b, color, label) {
+  const mx = (a[0] + b[0]) / 2;
+  el("path", { d: `M${a[0]} ${a[1]} C ${mx} ${a[1]}, ${mx} ${b[1]}, ${b[0]} ${b[1]}`, fill: "none", stroke: color, "stroke-width": 3.2, "stroke-linecap": "round" }, svg);
+  if (label) el("text", { x: mx, y: (a[1] + b[1]) / 2 - 6, "text-anchor": "middle", "font-size": 12, fill: css("--ink-2") }, svg, label);
+}
+function simple(id, left, right, wires, height) {
+  const host = document.getElementById(id); host.innerHTML = "";
+  const svg = el("svg", { viewBox: `0 0 760 ${height}` }, host);
+  const L = board(svg, 30, 20, 230, left.title, left.pins, "r", css("--soft"));
+  const R = board(svg, 500, 20, 230, right.title, right.pins, "l", css("--paper"));
+  for (const [lp, rp, col, lab] of wires) wire(svg, L.pos[lp], R.pos[rp], css(col), lab);
+}
+function drawAll() {
+  {
+    const host = document.getElementById("dg-overview"); host.innerHTML = "";
+    const svg = el("svg", { viewBox: "0 0 760 190" }, host);
+    const blk = (x, y, w, h, t, s, f) => { el("rect", { x, y, width: w, height: h, rx: 12, fill: f, stroke: css("--line"), "stroke-width": 1.5 }, svg);
+      el("text", { x: x + w / 2, y: y + h / 2 - 3, "text-anchor": "middle", "font-weight": 700, "font-size": 14 }, svg, t);
+      el("text", { x: x + w / 2, y: y + h / 2 + 15, "text-anchor": "middle", "font-size": 12, fill: css("--ink-2") }, svg, s); };
+    blk(20, 60, 170, 70, "4 sensor MQ", "MQ-2 · MQ-3 · MQ-7 · MQ-135", css("--paper"));
+    blk(290, 60, 170, 70, "ESP32", "baca mV + kirim HTTPS", css("--soft"));
+    blk(560, 60, 180, 70, "Website AirLens", "model AI + SHAP", css("--paper"));
+    wire(svg, [190, 95], [290, 95], css("--wsig4"), "4 sinyal analog");
+    el("path", { d: "M460 95 L 560 95", fill: "none", stroke: css("--accent"), "stroke-width": 3, "stroke-dasharray": "7 6" }, svg);
+    el("text", { x: 510, y: 85, "text-anchor": "middle", "font-size": 12, fill: css("--ink-2") }, svg, "internet (ngrok), tiap 2 detik");
+    el("text", { x: 375, y: 160, "text-anchor": "middle", "font-size": 12, fill: css("--ink-2") }, svg, "Daya: adaptor 5 V 2 A (empat pemanas ±600 mA)");
+  }
+  {
+    const host = document.getElementById("dg-mq"); host.innerHTML = "";
+    const svg = el("svg", { viewBox: "0 0 760 420" }, host);
+    // ESP32 di kanan, empat modul MQ di kiri; tiap sinyal lewat 10 kΩ ke titik tengah, lalu 20 kΩ ke GND
+    el("rect", { x: 600, y: 30, width: 140, height: 360, rx: 12, fill: css("--soft"), stroke: css("--line"), "stroke-width": 1.5 }, svg);
+    el("text", { x: 670, y: 56, "text-anchor": "middle", "font-weight": 700, "font-size": 15 }, svg, "ESP32");
+    const ep = { VIN: 80, GPIO34: 130, GPIO35: 200, GPIO32: 270, GPIO33: 340, GND: 375 };
+    for (const [p, y] of Object.entries(ep)) { el("circle", { cx: 600, cy: y, r: 5, fill: css("--paper"), stroke: css("--ink-2"), "stroke-width": 1.5 }, svg); el("text", { x: 614, y: y + 4.5, "font-size": 13 }, svg, p); }
+    const ln = (pts, col, w = 3) => el("polyline", { points: pts.map((p) => p.join(",")).join(" "), fill: "none", stroke: css(col), "stroke-width": w, "stroke-linejoin": "round" }, svg);
+    ln([[600, 80], [560, 80], [560, 20], [150, 20]], "--w5v"); el("text", { x: 300, y: 14, "font-size": 12.5, "font-weight": 600 }, svg, "jalur 5 V (dari VIN)");
+    ln([[600, 375], [560, 375], [560, 408], [150, 408]], "--wgnd"); el("text", { x: 300, y: 402, "font-size": 12.5, "font-weight": 600 }, svg, "jalur GND");
+    const sensors = [["MQ-2", "GPIO34", "--wsig1"], ["MQ-3", "GPIO35", "--wsig4"], ["MQ-7", "GPIO32", "--wsig3"], ["MQ-135", "GPIO33", "--wsig2"]];
+    sensors.forEach(([name, pin, col], i) => {
+      const y = 50 + i * 88;
+      el("rect", { x: 30, y, width: 120, height: 70, rx: 10, fill: css("--paper"), stroke: css("--line"), "stroke-width": 1.5 }, svg);
+      el("text", { x: 90, y: y + 24, "text-anchor": "middle", "font-weight": 700, "font-size": 14 }, svg, name);
+      el("text", { x: 90, y: y + 44, "text-anchor": "middle", "font-size": 11.5, fill: css("--ink-2") }, svg, "VCC · GND · AO");
+      ln([[110, y], [110, 20]], "--w5v", 2);
+      ln([[70, y + 70], [70, 408]], "--wgnd", 2);
+      const ay = y + 56, mid = 360, py = ep[pin];
+      ln([[150, ay], [240, ay]], col);
+      el("rect", { x: 240, y: ay - 9, width: 60, height: 18, rx: 4, fill: css("--amber-soft"), stroke: css("--amber"), "stroke-width": 2 }, svg);
+      el("text", { x: 270, y: ay - 14, "text-anchor": "middle", "font-size": 11.5, "font-weight": 600 }, svg, "10 kΩ");
+      ln([[300, ay], [mid, ay], [mid, py], [600, py]], col);
+      el("circle", { cx: mid, cy: ay, r: 5, fill: css(col) }, svg);
+      ln([[mid, ay], [mid - 40, ay], [mid - 40, ay + 14]], col, 2);
+      el("rect", { x: mid - 49, y: ay + 14, width: 18, height: 12, rx: 3, fill: css("--amber-soft"), stroke: css("--amber"), "stroke-width": 1.5 }, svg);
+      el("text", { x: mid - 54, y: ay + 24, "text-anchor": "end", "font-size": 11, "font-weight": 600 }, svg, "20 kΩ → GND");
+    });
+  }
+}
+
+drawAll();
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", drawAll);
+new MutationObserver(drawAll).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+
+// ---------- daftar isi + centang langkah ----------
+const toc = document.getElementById("toc");
+let lastGroup = "";
+const checks = [...document.querySelectorAll(".check input")];
+document.querySelectorAll("main > section").forEach((s) => {
+  if (s.dataset.group !== lastGroup) { lastGroup = s.dataset.group; const g = document.createElement("li"); g.className = "grp"; g.textContent = lastGroup; toc.appendChild(g); }
+  const li = document.createElement("li"), a = document.createElement("a");
+  a.href = "#" + s.id; const ck = s.querySelector(".check input");
+  a.innerHTML = `<span class="tick">${""}</span><span>${s.querySelector("h2").textContent.replace(/^\d+/, (m) => m + ". ")}</span>`;
+  a.dataset.ck = ck ? ck.id : ""; li.appendChild(a); toc.appendChild(li);
+});
+function store(k, v) { try { localStorage.setItem(k, v); } catch {} }
+function load(k) { try { return localStorage.getItem(k); } catch { return null; } }
+function refresh() {
+  const done = checks.filter((c) => c.checked).length;
+  document.getElementById("bar").style.width = `${(done / checks.length) * 100}%`;
+  document.getElementById("progress-text").textContent = `${done} dari ${checks.length} langkah selesai`;
+  toc.querySelectorAll("a").forEach((a) => { const c = a.dataset.ck && document.getElementById(a.dataset.ck); a.querySelector(".tick").textContent = c && c.checked ? "✓" : ""; });
+}
+checks.forEach((c) => { c.checked = load("airlens-beta4-" + c.id) === "1"; c.addEventListener("change", () => { store("airlens-beta4-" + c.id, c.checked ? "1" : "0"); refresh(); }); });
+refresh();
+const links = [...toc.querySelectorAll("a")];
+const io = new IntersectionObserver((es) => { es.forEach((e) => { if (e.isIntersecting) links.forEach((a) => a.classList.toggle("on", a.getAttribute("href") === "#" + e.target.id)); }); },
+  { rootMargin: "-20% 0px -70% 0px" });
+document.querySelectorAll("main > section").forEach((s) => io.observe(s));
+</script>
+
+</html>

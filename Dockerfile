@@ -11,6 +11,8 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PIP_RETRIES=10
 # UID 1000 = pengguna WSL, agar file di bind mount (./data, ./artifacts, ./results) tetap milik pengguna.
 RUN useradd --create-home --uid 1000 airlens
+# libgomp1 = OpenMP runtime yang dibutuhkan LightGBM (model gas Beta, api + trainer + dev).
+RUN apt-get update && apt-get install -y --no-install-recommends libgomp1 && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 
 FROM base AS api
@@ -65,6 +67,7 @@ COPY config/ /app/config/
 COPY api/ /app/api/
 COPY scheduler/ /app/scheduler/
 COPY trainer/ /app/trainer/
+COPY scripts/ /app/scripts/
 ENV PYTHONPATH=/app/src:/app/api:/app/scheduler:/app/trainer
 USER airlens
 CMD ["pytest", "/app/tests", "-q", "-p", "no:cacheprovider"]

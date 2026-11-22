@@ -159,3 +159,33 @@ Angka akhir diisi setelah `make data PROFILE=lab` dijalankan di lab.
 - Koordinat Biratnagar dan Dhaka adalah perkiraan pusat kota (dataset tidak memuat koordinat).
 - Filter "langit terlihat" bersifat heuristik.
 - Lisensi NC-SA (India–Nepal) dan BY-SA (Mapillary) membatasi penggunaan ulang. Proyek ini hanya untuk keperluan akademik.
+
+## 6. Data model gas Beta (revisi Beta SHAP): MultimodalGasData
+
+- **Sumber:** MultimodalGasData, Mendeley Data `zkwgkjkjn9` versi 2 (doi:10.17632/zkwgkjkjn9.2). Hanya berkas
+  `Gas_Sensors_Measurements.csv` (330 KB, sha256 `abe51aaa…3a30d`, diperiksa setiap kali dipakai); arsip gambar termal
+  (±2,6 GB) tidak diunduh. Unduhan langsung dari URL file Mendeley (`config/beta_gas.yaml`), jalur manual
+  `data/raw/multimodal_gas/`.
+- **Lisensi:** CC BY 4.0 (dibaca dari metadata API Mendeley). Sitasi:
+  Narkhede, P., Walambe, R., Chandel, P., Mandaokar, S., & Kotecha, K. (2022). *MultimodalGasData: Multimodal Dataset
+  for Gas Detection and Classification.* Data, 7(8), 112.
+- **Isi:** 6.400 baris, 1.600 per kelas (NoGas, Perfume, Smoke, Mixture), nilai ADC 10-bit MQ2, MQ3, MQ5, MQ6, MQ7,
+  MQ8, MQ135. Asap dari dupa, Perfume dari deodoran semprot. AirLens memakai MQ2, MQ3, MQ7, MQ135 saja.
+- **Kelas tampilan:** clean_air (NoGas), alcohol (Perfume), smoke (Smoke), smoke_alcohol (Mixture).
+
+### Temuan saat pemeriksaan (memengaruhi desain)
+
+1. **Satu sesi berurutan per kelas.** Serial Number 0..1599 per kelas (±2 s per baris, ±53 menit). Split acak per baris
+   akan bocor (bacaan berurutan nyaris identik). Dipakai **split per blok waktu**: tiap sesi dibagi 10 blok berurutan,
+   pola train/train/val/train/train/test/train/train/val/test, dan 15 baris (±30 s) di kiri-kanan setiap batas
+   antar-split dibuang. Hasil: train 885, val 260, test 275 per kelas (720 baris dibuang).
+2. **Drift di dalam sesi:** MQ-2 saat NoGas naik 660 → 784 tanpa gas (pemanasan). Penyebut rasio = median NoGas
+   seluruh sesi.
+3. **Arah nilai:** asap MENURUNKAN nilai MQ-2/MQ-3/MQ-135 ±20–35%. Itu searah dengan resistansi sensor (Rs turun saat
+   gas), bukan tegangan keluaran modul MQ (yang naik). Karena itu fitur di alat adalah **Rs/R0** yang dihitung dari mV
+   pin ADC, bukan rasio mV. Asumsi ini harus diperiksa dengan rekaman alat sendiri (`recorder.html`,
+   `make import-beta-recordings`).
+4. **MQ-3 hampir tidak bereaksi pada Perfume** (median 528 vs 530 NoGas). Pemisahan clean_air vs alcohol jadi lemah.
+5. **Batas evaluasi:** satu sesi per kelas berarti model bisa ikut mempelajari "ciri sesi" (drift, suhu hari itu),
+   bukan hanya gasnya. Split per blok mengurangi kebocoran baris berdekatan, tetapi tidak bisa menguji sesi baru.
+   Angka test adalah batas atas; uji sebenarnya adalah rekaman alat Beta di lab.

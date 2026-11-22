@@ -108,6 +108,8 @@ def download_india_nepal() -> Path:
     """
     out = RAW_DIR / "india_nepal"
     out.mkdir(parents=True, exist_ok=True)
+    if os.environ.get("INDIA_NEPAL_DIR"):   # Kaggle Notebook: input sudah diekstrak, dibaca langsung (sources.py)
+        return Path(os.environ["INDIA_NEPAL_DIR"])
     archive = out / INDIA_NEPAL_ZIP
     if not archive.exists():
         if not (os.environ.get("KAGGLE_USERNAME") and os.environ.get("KAGGLE_KEY")):

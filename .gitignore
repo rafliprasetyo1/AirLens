@@ -51,3 +51,7 @@ results/promotion_*
 results/airlens_results_*.tar.gz
 # Log lab-all: timings.tsv & RINGKASAN.txt boleh di-commit, log tahap lengkap tidak
 logs/**/*.log
+
+# Paket unduhan (isinya sudah ada di repo sebagai berkas biasa)
+/AirLens_*.zip
+build/

@@ -6,7 +6,7 @@ from urllib.parse import quote_plus
 
 import yaml
 
-PROFILES = ("laptop", "lab")
+PROFILES = ("laptop", "lab", "kaggle")
 CONFIG_DIR = Path(os.environ.get("AIRLENS_CONFIG_DIR", Path(__file__).resolve().parents[2] / "config"))
 
 

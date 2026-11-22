@@ -1,0 +1,616 @@
+<title>Merakit AirLens Node Lengkap</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Tata letak: daftar isi menempel di kiri (desktop), langkah-langkah perakitan di kanan seperti lembar kerja bengkel.
+   Warna kabel mengikuti kebiasaan elektronika: merah 5 V, oranye 3,3 V, hitam GND; warna lain untuk sinyal. */
+:root {
+  --bg: #F3F6F8; --paper: #FFFFFF; --ink: #10222E; --ink-2: #4A5E6B; --line: #D5DEE4; --soft: #E8F0F5;
+  --accent: #1C6FA8; --accent-ink: #FFFFFF; --amber: #B4610E; --amber-soft: #FDF1E3; --danger: #B3261E; --danger-soft: #FCE9E7;
+  --ok: #17794A; --ok-soft: #E3F4EA; --code-bg: #0F1E28; --code-ink: #E3EEF4; --code-dim: #6E8796;
+  --w5v: #D7263D; --w33: #F08A24; --wgnd: #1B1F24; --wsig1: #1F7AE0; --wsig2: #2BA84A; --wsig3: #8E44C9; --wsig4: #D1A10F;
+  --f-head: "Space Grotesk", "Segoe UI", sans-serif; --f-body: "Inter", system-ui, sans-serif; --f-mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0C161D; --paper: #13222C; --ink: #E6EFF4; --ink-2: #9DB3C1; --line: #24394A; --soft: #182C38;
+  --accent: #5CB4EC; --accent-ink: #06202E; --amber: #F2A65A; --amber-soft: #2E2214; --danger: #FF8A80; --danger-soft: #34181A;
+  --ok: #5DD39A; --ok-soft: #12291E; --code-bg: #08121A; --code-ink: #E3EEF4; --code-dim: #6E8796; --wgnd: #C9D3DA; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0C161D; --paper: #13222C; --ink: #E6EFF4; --ink-2: #9DB3C1; --line: #24394A; --soft: #182C38;
+  --accent: #5CB4EC; --accent-ink: #06202E; --amber: #F2A65A; --amber-soft: #2E2214; --danger: #FF8A80; --danger-soft: #34181A;
+  --ok: #5DD39A; --ok-soft: #12291E; --code-bg: #08121A; --code-ink: #E3EEF4; --code-dim: #6E8796; --wgnd: #C9D3DA; color-scheme: dark; }
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font: 400 16px/1.65 var(--f-body); }
+a { color: var(--accent); }
+.wrap { max-width: 1240px; margin: 0 auto; padding-block: 28px 80px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 40px; }
+header.intro { grid-column: 1 / -1; display: grid; gap: 14px; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
+header.intro h1 { margin: 0; font: 700 clamp(30px, 4.4vw, 46px)/1.1 var(--f-head); letter-spacing: -.5px; text-wrap: balance; }
+header.intro p { margin: 0; max-width: 68ch; color: var(--ink-2); font-size: 17px; }
+.progress { display: flex; align-items: center; gap: 12px; font-size: 14px; color: var(--ink-2); }
+.bar { flex: 0 1 320px; height: 8px; background: var(--soft); border-radius: 99px; overflow: hidden; }
+.bar i { display: block; height: 100%; width: 0; background: var(--ok); transition: width .3s; }
+nav.toc { position: sticky; top: calc(16px + env(safe-area-inset-top, 0px)); align-self: start; max-height: calc(100vh - 32px); overflow-y: auto; font-size: 14px; }
+nav.toc ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+nav.toc a { display: flex; gap: 8px; align-items: baseline; padding: 6px 10px; border-radius: 8px; color: var(--ink-2); text-decoration: none; }
+nav.toc a:hover, nav.toc a.on { background: var(--soft); color: var(--ink); }
+nav.toc a .tick { width: 14px; flex: none; color: var(--ok); font-weight: 700; }
+nav.toc .grp { margin: 14px 10px 4px; font: 600 12px var(--f-body); color: var(--ink-2); letter-spacing: .4px; }
+main { min-width: 0; display: grid; gap: 56px; }
+section { scroll-margin-top: 20px; display: grid; gap: 16px; }
+section > h2 { margin: 0; font: 700 28px/1.2 var(--f-head); text-wrap: balance; display: flex; gap: 12px; align-items: baseline; }
+section > h2 .num { font: 500 16px var(--f-mono); color: var(--accent); flex: none; }
+h3 { margin: 10px 0 0; font: 700 19px var(--f-head); }
+p, li { max-width: 72ch; }
+p { margin: 0; }
+ul, ol { margin: 0; padding-left: 22px; display: grid; gap: 6px; }
+.lead { font-size: 17px; color: var(--ink-2); }
+.card { background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; }
+.note, .warn, .danger, .tip { border-radius: 12px; padding: 14px 16px; display: grid; gap: 6px; font-size: 15px; }
+.note { background: var(--soft); }
+.tip { background: var(--ok-soft); }
+.warn { background: var(--amber-soft); }
+.danger { background: var(--danger-soft); }
+.note b:first-child, .warn b:first-child, .danger b:first-child, .tip b:first-child { font-family: var(--f-head); }
+.warn b:first-child { color: var(--amber); } .danger b:first-child { color: var(--danger); } .tip b:first-child { color: var(--ok); }
+.tbl { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--paper); }
+table { border-collapse: collapse; width: 100%; font-size: 14.5px; min-width: 560px; }
+th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-weight: 600; background: var(--soft); }
+tr:last-child td { border-bottom: 0; }
+td code, p code, li code { font: 500 13.5px var(--f-mono); background: var(--soft); padding: 1px 6px; border-radius: 5px; }
+.wire { display: inline-block; width: 22px; height: 6px; border-radius: 3px; vertical-align: middle; margin-right: 6px; }
+details { border: 1px solid var(--line); border-radius: 12px; background: var(--paper); }
+details > summary { cursor: pointer; padding: 12px 16px; font-weight: 600; list-style-position: inside; }
+details > .in { padding: 0 16px 16px; display: grid; gap: 10px; }
+details.math > summary { color: var(--amber); }
+.code { background: var(--code-bg); color: var(--code-ink); border-radius: 12px; overflow: hidden; }
+.code .head { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px 8px 16px; font: 500 13px var(--f-mono); color: var(--code-dim); border-bottom: 1px solid rgba(255,255,255,.08); }
+.code button { font: 600 13px var(--f-body); color: var(--code-ink); background: rgba(255,255,255,.08); border: 0; padding: 6px 12px; border-radius: 8px; cursor: pointer; }
+.code button:focus-visible, .check input:focus-visible, nav.toc a:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+.code pre { margin: 0; padding: 12px 0; overflow-x: auto; font: 400 13.5px/1.6 var(--f-mono); counter-reset: ln; }
+.code pre span { display: block; padding: 0 16px 0 0; white-space: pre; }
+.code pre span::before { counter-increment: ln; content: counter(ln); display: inline-block; width: 42px; padding-right: 14px; text-align: right; color: var(--code-dim); user-select: none; }
+.explain { list-style: none; padding: 0; gap: 8px; }
+.explain li { display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 10px; font-size: 15px; }
+.explain li > b { font: 500 13px var(--f-mono); color: var(--accent); padding-top: 2px; }
+.serial { font: 400 13.5px/1.6 var(--f-mono); background: var(--soft); border-radius: 10px; padding: 10px 14px; white-space: pre; overflow-x: auto; }
+.diagram { background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: 12px; overflow-x: auto; }
+.diagram svg { display: block; min-width: 640px; width: 100%; height: auto; }
+.diagram svg text { font-family: var(--f-body); fill: var(--ink); }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: 13.5px; color: var(--ink-2); padding: 6px 4px 0; }
+.steps { counter-reset: st; list-style: none; padding: 0; gap: 10px; }
+.steps > li { counter-increment: st; display: grid; grid-template-columns: 32px minmax(0, 1fr); gap: 10px; }
+.steps > li::before { content: counter(st); font: 700 14px var(--f-head); width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: var(--soft); color: var(--accent); }
+.check { display: inline-flex; align-items: center; gap: 10px; font-weight: 600; padding: 10px 14px; border-radius: 10px; border: 1px solid var(--line); background: var(--paper); cursor: pointer; justify-self: start; }
+.check input { width: 18px; height: 18px; accent-color: var(--ok); }
+.check:has(input:checked) { background: var(--ok-soft); border-color: transparent; color: var(--ok); }
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+.grid2 .card h3 { margin: 0 0 6px; }
+.pill { display: inline-block; font: 600 12px var(--f-body); padding: 2px 9px; border-radius: 99px; background: var(--soft); color: var(--ink-2); }
+.pill.need { background: var(--amber-soft); color: var(--amber); }
+@media (max-width: 900px) {
+  .wrap { grid-template-columns: 1fr; gap: 24px; }
+  nav.toc { position: static; max-height: none; border: 1px solid var(--line); border-radius: 12px; background: var(--paper); padding: 8px; }
+  .explain li { grid-template-columns: 1fr; gap: 2px; }
+}
+@media (prefers-reduced-motion: reduce) { .bar i { transition: none; } html { scroll-behavior: auto; } }
+</style>
+<div class="wrap">
+  <header class="intro">
+    <h1>Merakit AirLens Node Lengkap</h1>
+    <p>Panduan langkah demi langkah untuk versi lengkap AirLens: Raspberry Pi 5 dengan AI HAT+, kamera live Camera Module 3 Wide, sensor serba bisa Sensirion SEN66, dan sensor CO elektrokimia Alphasense CO-B4. Setiap komponen diuji sendiri dulu, baru digabung dan dipasang di casing.</p>
+    <div class="progress"><div class="bar" aria-hidden="true"><i id="bar"></i></div><span id="progress-text">0 dari 0 langkah selesai</span></div>
+  </header>
+  <nav class="toc" aria-label="Daftar isi"><ol id="toc"></ol></nav>
+  <main>
+<section id="gambaran" data-group="Persiapan"><h2><span class="num">0</span>Gambaran besar</h2>
+<div class="warn"><b>Ini versi lengkap (konsep)</b><p>Untuk pameran, AirLens memakai versi <b>Beta</b> (ESP32 + MQ-2, panduannya di <a href="merakit-node-lite.html">merakit-node-lite.html</a>). Kamera live + Grad-CAM++ didemokan di website memakai kamera HP atau webcam. Modul ini menjelaskan cara merakit versi lengkap bila perangkatnya tersedia nanti.</p></div>
+<p class="lead">Node lengkap punya dua "indra" yang sama-sama bisa memicu notifikasi: <b>mata</b> (kamera live yang mengenali asap) dan <b>hidung</b> (sensor gas yang merasakan gas tak terlihat seperti CO). Raspberry Pi 5 menjadi otaknya, dan AI HAT+ membantu menjalankan model AI langsung di alat.</p>
+<div class="diagram" id="dg-overview" role="img" aria-label="Diagram blok node lengkap: kamera dan sensor gas ke Raspberry Pi 5, lalu WiFi ke website AirLens"></div>
+<div class="tbl"><table><thead><tr><th>Kamera</th><th>Sensor gas</th><th>Notifikasi</th></tr></thead><tbody>
+<tr><td>melihat asap</td><td>naik</td><td><b>Asap terkonfirmasi</b> · prioritas tinggi</td></tr>
+<tr><td>tidak melihat apa-apa</td><td>naik</td><td><b>Gas tak terlihat</b> (misalnya CO) · segera bertindak</td></tr>
+<tr><td>melihat asap</td><td>normal</td><td><b>Asap terlihat</b> · cek ruangan</td></tr>
+</tbody></table></div>
+<div class="note"><b>Cara memakai modul ini</b><p>Kerjakan berurutan. Setiap komponen diuji sendiri dulu sebelum digabung, supaya kalau ada masalah, kamu tahu persis di mana. Centang langkah yang selesai; centangnya tersimpan di browser ini.</p></div></section>
+<section id="komponen" data-group="Persiapan"><h2><span class="num">1</span>Komponen dan alat</h2>
+<div class="tbl"><table><thead><tr><th>Komponen</th><th>Jumlah</th><th>Untuk apa</th><th>Catatan</th></tr></thead><tbody>
+<tr><td><b>Raspberry Pi 5</b> (8 GB)</td><td>1</td><td>Otak: membaca sensor, menjalankan kamera, mengirim data</td><td>Papan 85 × 56 mm</td></tr>
+<tr><td><b>Active Cooler</b> resmi Raspberry Pi 5</td><td>1</td><td>Pendingin prosesor (kipas + sirip)</td><td>Wajib karena Pi bekerja terus</td></tr>
+<tr><td><b>AI HAT+</b> (Hailo, 26 TOPS)</td><td>1</td><td>Mempercepat model AI di alat</td><td>Termasuk header susun dan penyangga 16 mm</td></tr>
+<tr><td><b>Camera Module 3 Wide</b></td><td>1</td><td>Kamera live, sudut pandang 120° diagonal</td><td>25 × 24 × 12,4 mm</td></tr>
+<tr><td>Kabel kamera <b>Raspberry Pi 5</b> (22 pin ke 15 pin)</td><td>1</td><td>Kamera ke port CAM/DISP Pi 5</td><td>Kabel bawaan kamera (15 pin) tidak cocok dengan Pi 5</td></tr>
+<tr><td><b>Sensirion SEN66</b></td><td>1</td><td>Satu modul: PM1–PM10, CO₂, indeks VOC, indeks NOx, suhu, kelembapan</td><td>55 × 26 × 21 mm, catu 3,3 V, I2C alamat 0x6B</td></tr>
+<tr><td>Papan breakout SEN6x (misalnya Adafruit SEN6x, STEMMA QT)</td><td>1</td><td>Menyambung SEN66 tanpa salah urutan pin</td><td>Plus kabel STEMMA QT ke jumper betina</td></tr>
+<tr><td><b>Alphasense CO-B4</b> + papan <b>ISB</b></td><td>1</td><td>Sensor CO elektrokimia (kelas jaringan pemantau udara)</td><td>Sensor datang dengan lembar kalibrasi; simpan baik-baik</td></tr>
+<tr><td><b>ADS1115</b> (ADC 16-bit, I2C)</td><td>1</td><td>Mengubah tegangan dari ISB menjadi angka</td><td>Raspberry Pi tidak punya pin analog. Alamat 0x48</td></tr>
+<tr><td>Adaptor resmi <b>USB-C 27 W</b> (5 V 5 A)</td><td>1</td><td>Daya seluruh node</td><td>Adaptor HP biasa sering kurang kuat untuk Pi 5</td></tr>
+<tr><td>microSD 64 GB (kelas A2)</td><td>1</td><td>Sistem operasi</td><td></td></tr>
+<tr><td>Kabel jumper betina-betina, sekrup M2.5 dan M2, heat-set insert M3 × 8, sekrup M3 × 10</td><td>1 set</td><td>Sambungan dan pemasangan di casing</td><td></td></tr>
+<tr><td>Busa EPDM tipis (3 mm), gasket busa 1 mm</td><td>sedikit</td><td>Sekat panas dan perapat corong SEN66</td><td></td></tr>
+</tbody></table></div>
+<p><b>Alat:</b> obeng kecil, solder (untuk heat-set insert), multimeter, laptop dengan Raspberry Pi Imager, printer 3D (PETG).</p>
+<label class="check"><input type="checkbox" id="ck-komponen"> Komponen dan alat lengkap</label></section>
+<section id="dasar" data-group="Persiapan"><h2><span class="num">2</span>Lima ide dasar</h2>
+<div class="grid2">
+<div class="card"><h3>I2C: satu jalur, banyak sensor</h3><p>SEN66 dan ADS1115 berbagi dua kabel data (SDA dan SCL). Masing-masing punya "nomor rumah" (alamat): SEN66 0x6B, ADS1115 0x48. Pi memanggil nomor itu untuk membaca.</p></div>
+<div class="card"><h3>Analog ke digital</h3><p>Sensor CO mengeluarkan tegangan kecil yang naik-turun halus. Pi hanya mengerti angka, jadi ADS1115 menerjemahkan tegangan itu menjadi angka yang sangat teliti.</p></div>
+<div class="card"><h3>Sensor elektrokimia</h3><p>Di dalam CO-B4, gas CO bereaksi dan menghasilkan arus listrik kecil, sebanding dengan banyaknya CO. Jauh lebih selektif daripada sensor MQ yang bereaksi ke banyak gas sekaligus.</p></div>
+<div class="card"><h3>Zona dingin dan zona panas</h3><p>Pi 5 menghasilkan panas. Kalau udara panasnya melewati sensor, suhu dan kelembapan terbaca salah. Karena itu sensor di bawah, Pi di atas, dipisah sekat.</p></div>
+<div class="card"><h3>Kamera + model AI</h3><p>Kamera mengirim gambar terus-menerus. Model AI menilai "ada asap atau tidak" beberapa kali per detik. Grad-CAM++ menunjukkan bagian gambar yang membuat model yakin.</p></div>
+</div>
+<label class="check"><input type="checkbox" id="ck-dasar"> Sudah paham lima ide dasar</label></section>
+<section id="aman" data-group="Persiapan"><h2><span class="num">3</span>Keselamatan</h2>
+<div class="danger"><b>Jangan pernah membuat gas CO untuk menguji</b><p>CO tidak berbau dan bisa mematikan. Uji pemicu gas memakai simulator di website, atau gas kalibrasi di laboratorium yang berwenang. Untuk uji asap dan VOC, cukup dupa atau cairan pembersih tangan di ruangan berventilasi.</p></div>
+<div class="warn"><b>Bukan alarm CO bersertifikat</b><p>AirLens adalah alat pemantau untuk proyek. Rumah yang memakai kompor gas atau genset tetap membutuhkan alarm CO bersertifikat.</p></div>
+<ul>
+<li>Cabut daya sebelum memasang atau melepas kabel apa pun.</li>
+<li>Sentuh benda logam yang ditanahkan sebelum memegang papan (listrik statis bisa merusak chip).</li>
+<li>SEN66 dan ADS1115 memakai <b>3,3 V</b>. Menyambung ke 5 V bisa merusaknya.</li>
+<li>Jangan menutup lubang udara Pi dan kisi casing saat menyala.</li>
+<li>Kamera live: pasang di ruangan sendiri, beri tahu penghuni lain, dan tutup penutup lensa geser saat tidak dipakai.</li>
+</ul>
+<label class="check"><input type="checkbox" id="ck-aman"> Sudah membaca aturan keselamatan</label></section>
+<section id="os" data-group="Persiapan"><h2><span class="num">4</span>Siapkan Raspberry Pi OS</h2>
+<ol class="steps">
+<li><span>Di laptop, buka <b>Raspberry Pi Imager</b>, pilih <i>Raspberry Pi 5</i> dan <i>Raspberry Pi OS (64-bit)</i>, lalu kartu microSD.</span></li>
+<li><span>Di pengaturan Imager: isi nama host <code>airlens-node</code>, nama pengguna <code>pi</code>, WiFi, dan aktifkan SSH. Tulis ke kartu.</span></li>
+<li><span>Pasang kartu ke Pi, nyalakan, tunggu 1–2 menit, lalu dari laptop: <code>ssh pi@airlens-node.local</code>.</span></li>
+<li><span>Jalankan perintah berikut di Pi.</span></li>
+</ol>
+<div class="code" data-src="c-os" data-name="persiapan.sh"></div>
+<ul class="explain"><li><b>1</b><span>Memperbarui semua paket agar driver kamera dan Hailo terbaru.</span></li><li><b>2</b><span>Menyalakan I2C tanpa membuka menu.</span></li><li><b>3</b><span><code>hailo-all</code> = driver AI HAT+; <code>python3-picamera2</code> = pustaka kamera; <code>i2c-tools</code> = alat cek sensor.</span></li><li><b>4</b><span>Membuat ruang Python sendiri lalu memasang driver SEN66, ADS1115, pengirim data, dan penjalan model ONNX.</span></li><li><b>5</b><span>Mulai ulang agar semua aktif.</span></li></ul>
+<label class="check"><input type="checkbox" id="ck-os"> Bisa masuk lewat SSH dan semua paket terpasang</label></section>
+<section id="pi" data-group="Uji per komponen"><h2><span class="num">5</span>Raspberry Pi 5 + Active Cooler</h2>
+<ol class="steps">
+<li><span>Matikan Pi. Lepas lapisan pelindung bantalan termal di bawah Active Cooler.</span></li>
+<li><span>Tekan dua pin pegas Active Cooler ke lubang di papan sampai berbunyi klik, lalu colokkan kabel kipas ke konektor <b>FAN</b>.</span></li>
+<li><span>Nyalakan dengan adaptor 27 W dan jalankan:</span></li>
+</ol>
+<div class="code" data-src="c-temp" data-name="uji_suhu.sh"></div>
+<div class="serial">temp=48.3'C
+throttled=0x0</div>
+<ul class="explain"><li><b>watch</b><span>Mengulang perintah setiap 2 detik, jadi suhu terlihat berubah.</span></li><li><b>throttled</b><span><code>0x0</code> berarti daya cukup dan Pi tidak pernah melambat karena panas.</span></li></ul>
+<div class="tip"><b>Wajar</b><p>Suhu 40–60 °C saat diam. Kipas baru berputar kencang di atas sekitar 60 °C.</p></div>
+<label class="check"><input type="checkbox" id="ck-pi"> Suhu wajar dan throttled=0x0</label></section>
+<section id="hat" data-group="Uji per komponen"><h2><span class="num">6</span>AI HAT+</h2>
+<ol class="steps">
+<li><span>Matikan Pi. Pasang header susun (stacking header) ke 40 pin GPIO Pi.</span></li>
+<li><span>Pasang 4 penyangga 16 mm di lubang sudut Pi.</span></li>
+<li><span>Masukkan ujung kabel pita PCIe ke konektor PCIe Pi (sisi kontak menghadap ke dalam), kunci tuasnya.</span></li>
+<li><span>Dudukkan AI HAT+ di atas header dan penyangga, sambungkan ujung lain kabel pita, lalu kencangkan sekrup.</span></li>
+<li><span>Nyalakan dan jalankan:</span></li>
+</ol>
+<div class="code" data-src="c-hailo" data-name="uji_hailo.sh"></div>
+<div class="serial">0001:01:00.0 Co-processor: Hailo Technologies Ltd. Hailo-8 AI Processor
+Identifying board ... Device Architecture: HAILO8</div>
+<div class="note"><b>Pin GPIO masih bisa dipakai</b><p>Header susun meneruskan semua pin ke atas AI HAT+. Kabel SEN66 dan ADS1115 nanti dicolok ke pin di atas HAT.</p></div>
+<label class="check"><input type="checkbox" id="ck-hat"> Hailo terdeteksi</label></section>
+<section id="kamera" data-group="Uji per komponen"><h2><span class="num">7</span>Camera Module 3 Wide</h2>
+<ol class="steps">
+<li><span>Matikan Pi. Buka kunci konektor <b>CAM/DISP 0</b> di Pi 5 (tarik pelan tuas plastiknya).</span></li>
+<li><span>Masukkan ujung kabel 22 pin (yang kecil) dengan kontak emas menghadap ke arah yang benar (lihat tanda di papan), lalu kunci.</span></li>
+<li><span>Ujung 15 pin ke kamera dengan cara yang sama. Lepas pelindung plastik lensa.</span></li>
+<li><span>Nyalakan dan jalankan:</span></li>
+</ol>
+<div class="code" data-src="c-cam" data-name="uji_kamera.sh"></div>
+<div class="serial">0 : imx708_wide [4608x2592 10-bit RGGB] (/base/axi/pcie@120000/rp1/i2c@88000/imx708@1a)</div>
+<div class="code" data-src="c-camfps" data-name="uji_kamera.py"></div>
+<ul class="explain"><li><b>3</b><span>Pustaka resmi kamera Raspberry Pi.</span></li><li><b>5–7</b><span>Mode video 640 × 360 piksel RGB, cukup untuk model asap dan ringan.</span></li><li><b>10–13</b><span>Mengambil frame sebanyak mungkin selama 10 detik.</span></li><li><b>14</b><span>Mencetak kecepatan rata-rata. Di atas 20 frame per detik sudah sangat cukup.</span></li></ul>
+<label class="check"><input type="checkbox" id="ck-kamera"> Kamera terdeteksi, tes.jpg tampil jelas, kecepatan frame tercetak</label></section>
+<section id="sen66" data-group="Uji per komponen"><h2><span class="num">8</span>Sensirion SEN66</h2>
+<p>Sambungkan SEN66 ke papan breakout SEN6x, lalu kabel STEMMA QT ke pin di atas AI HAT+:</p>
+<div class="diagram" id="dg-sen66" role="img" aria-label="Kabel SEN66 ke Raspberry Pi"></div>
+<div class="legend"><span><i class="wire" style="background:var(--w33)"></i>3,3 V</span><span><i class="wire" style="background:var(--wgnd)"></i>GND</span><span><i class="wire" style="background:var(--wsig1)"></i>SDA</span><span><i class="wire" style="background:var(--wsig4)"></i>SCL</span></div>
+<p>Cek alamatnya dulu: <code>i2cdetect -y 1</code> harus menampilkan <code>6b</code>.</p>
+<div class="code" data-src="c-sen66" data-name="uji_sen66.py"></div>
+<ul class="explain"><li><b>3–5</b><span>Driver resmi Sensirion. Kalau nama impor berbeda di versi terbaru, ikuti contoh di dokumentasi driver (tautan di bagian akhir).</span></li><li><b>7–9</b><span>Membuka jalur I2C nomor 1 dan menunjuk alamat 0x6B; CRC memeriksa data tidak rusak di jalan.</span></li><li><b>11–13</b><span>Mereset sensor dan membaca nomor seri: tanda komunikasi berhasil.</span></li><li><b>15</b><span>Mulai mengukur terus-menerus (kipas kecil di dalam SEN66 menyala).</span></li><li><b>18</b><span>Satu panggilan mengembalikan sembilan angka sekaligus.</span></li></ul>
+<div class="serial">PM2.5 6.2 µg/m³ | CO2 612 ppm | VOC 100 | NOx 1 | 27.9 °C | 61.0 %RH</div>
+<div class="tip"><b>Wajar</b><p>Indeks VOC 100 dan NOx 1 berarti "seperti biasa". Keduanya butuh sekitar satu jam untuk belajar kondisi normal ruangan. Nyalakan dupa di dekatnya: PM2.5 dan VOC naik dalam beberapa detik.</p></div>
+<label class="check"><input type="checkbox" id="ck-sen66"> SEN66 terbaca dan bereaksi terhadap asap dupa</label></section>
+<section id="co" data-group="Uji per komponen"><h2><span class="num">9</span>CO-B4 + ISB + ADS1115</h2>
+<p>CO-B4 dipasang di papan ISB (soketnya hanya cocok satu arah). ISB mengeluarkan dua tegangan: <b>WE</b> (elektroda kerja) dan <b>AE</b> (elektroda bantu, untuk membuang pengaruh suhu). ADS1115 membaca keduanya.</p>
+<div class="diagram" id="dg-co" role="img" aria-label="Kabel ISB ke ADS1115 ke Raspberry Pi"></div>
+<div class="warn"><b>Periksa dulu lembar data ISB</b><p>Ikuti tegangan catu ISB di lembar datanya. Pastikan dengan multimeter bahwa keluaran WE dan AE di bawah 3,3 V sebelum menyambung ke ADS1115, karena ADS1115 dicatu 3,3 V.</p></div>
+<p>Cek alamat: <code>i2cdetect -y 1</code> kini menampilkan <code>48</code> dan <code>6b</code>.</p>
+<div class="code" data-src="c-co" data-name="uji_co.py"></div>
+<ul class="explain"><li><b>9–11</b><span>Isi dari lembar kalibrasi sensor. Selama masih 0, program hanya menampilkan tegangan.</span></li><li><b>14–15</b><span>ADS1115 di alamat 0x48; gain 1 berarti bisa membaca sampai ±4,096 V.</span></li><li><b>16–17</b><span>A0 membaca WE, A1 membaca AE.</span></li><li><b>22–23</b><span>Selisih WE dan AE terhadap nilai nol, dibagi kepekaan, menjadi ppm CO.</span></li></ul>
+<details class="math"><summary>Kenapa WE dikurangi AE? (opsional)</summary><div class="in"><p>Kedua elektroda sama-sama terpengaruh suhu, tapi hanya WE yang bereaksi ke CO. Mengurangkan AE membuang bagian yang disebabkan suhu, sehingga sisanya murni karena CO. Contoh: WE naik 30 mV, AE naik 4 mV, kepekaan 0,5 mV/ppm → (30 − 4) ÷ 0,5 = 52 ppm.</p></div></details>
+<div class="tip"><b>Wajar</b><p>Setelah dinyalakan, sensor elektrokimia butuh waktu untuk stabil (lihat langkah 12). Di udara bersih, angka CO mendekati 0 ppm.</p></div>
+<label class="check"><input type="checkbox" id="ck-co"> Tegangan WE dan AE stabil di udara bersih</label></section>
+<section id="peta" data-group="Merakit"><h2><span class="num">10</span>Semua sambungan</h2>
+<div class="diagram" id="dg-all" role="img" aria-label="Peta semua sambungan node lengkap"></div>
+<div class="tbl"><table><thead><tr><th>Dari</th><th>Ke</th><th>Lewat</th></tr></thead><tbody>
+<tr><td>Camera Module 3 Wide</td><td>Pi 5 CAM/DISP 0</td><td>kabel pita 22 ke 15 pin</td></tr>
+<tr><td>AI HAT+</td><td>Pi 5 PCIe + GPIO</td><td>kabel pita PCIe + header susun</td></tr>
+<tr><td>SEN66 (breakout)</td><td>3V3 pin 1, SDA pin 3, SCL pin 5, GND pin 9</td><td>STEMMA QT ke jumper</td></tr>
+<tr><td>ADS1115</td><td>3V3 pin 17, SDA pin 3, SCL pin 5, GND pin 14</td><td>jumper betina (berbagi SDA/SCL)</td></tr>
+<tr><td>ISB WE / AE</td><td>ADS1115 A0 / A1</td><td>kabel pendek (&lt; 10 cm) agar derau rendah</td></tr>
+<tr><td>Daya</td><td>USB-C Pi 5</td><td>adaptor 27 W lewat soket panel di belakang casing</td></tr>
+</tbody></table></div>
+<label class="check"><input type="checkbox" id="ck-peta"> Semua komponen terbaca bersamaan</label></section>
+<section id="casing" data-group="Merakit"><h2><span class="num">11</span>Cetak dan pasang casing</h2>
+<p>File casing ada di <code>hardware/enclosure-concept/</code> (STL untuk dicetak, STEP untuk diubah, skrip CadQuery untuk menyesuaikan ukuran).</p>
+<div class="tbl"><table><thead><tr><th>Bagian</th><th>Fungsi</th><th>Saran cetak (PETG)</th></tr></thead><tbody>
+<tr><td>base</td><td>Alas, kaki karet, lubang sekrup dari bawah</td><td>0,2 mm, dinding 3, isi 25%</td></tr>
+<tr><td>spine</td><td>Rangka: dudukan SEN66, ISB, ADS1115, sekat ganda, dudukan Pi</td><td>0,2 mm, isi 30%, dengan support</td></tr>
+<tr><td>sleeve</td><td>Selubung berkisi; corong SEN66 di depan, kisi udara Pi di belakang</td><td>0,2 mm, dinding 3, tanpa support (kisi miring 35°)</td></tr>
+<tr><td>cap</td><td>Kepala kamera miring 15°, rel penutup lensa, kisi buang panas</td><td>0,2 mm, dengan support di kantong kamera</td></tr>
+<tr><td>shutter</td><td>Penutup lensa geser</td><td>0,2 mm, warna kontras</td></tr>
+<tr><td>wall_bracket</td><td>Gantungan dinding (opsional)</td><td>0,2 mm, isi 40%</td></tr>
+</tbody></table></div>
+<ol class="steps">
+<li><span>Tanam heat-set insert M3 ke 4 boss bawah selubung dengan ujung solder (sekitar 220 °C), tekan lurus pelan-pelan.</span></li>
+<li><span>Pasang SEN66 di dudukannya dengan lubang udara menghadap depan; tempel gasket busa 1 mm di sekeliling corong agar udara masuk dan keluar tidak bercampur.</span></li>
+<li><span>Pasang ISB di boss nampan dengan sel CO menggantung ke bawah melalui lubang (filter menghadap ke bawah supaya debu tidak mengendap). ADS1115 di sebelahnya.</span></li>
+<li><span>Isi rongga sekat ganda dengan busa EPDM 3 mm. Lewatkan kabel sensor lewat celah bergrommet, lalu tutup celahnya dengan busa.</span></li>
+<li><span>Pasang tumpukan Pi 5 + AI HAT+ di penyangga atas sekat (sekrup M2.5).</span></li>
+<li><span>Pasang kamera di boss M2 di belakang kantong kamera pada cap; kabel pita turun ke Pi.</span></li>
+<li><span>Turunkan selubung dari atas, kencangkan 4 sekrup M3 dari bawah alas, dudukkan cap, lalu geser penutup lensa ke rel.</span></li>
+</ol>
+<div class="note"><b>Kenapa begini</b><p>Udara ruangan masuk dari kisi bawah dan samping ke sensor (zona dingin). Udara pendingin Pi masuk dari kisi belakang-tengah dan keluar dari atas-belakang, jadi panasnya tidak lewat sensor dan tidak mengarah ke pengguna.</p></div>
+<label class="check"><input type="checkbox" id="ck-casing"> Node terpasang di casing dan semua uji masih lulus</label></section>
+<section id="kalibrasi" data-group="Merakit"><h2><span class="num">12</span>Pemanasan dan kalibrasi</h2>
+<ul>
+<li><b>CO-B4:</b> biarkan menyala terus minimal beberapa jam di udara bersih sebelum datanya dipakai. Catat nilai nol WE dan AE, bandingkan dengan lembar kalibrasi.</li>
+<li><b>SEN66:</b> indeks VOC dan NOx belajar kondisi normal ruangan selama sekitar satu jam pertama; CO₂ mengoreksi diri dari waktu ke waktu bila ruangan sesekali mendapat udara segar.</li>
+<li><b>Kamera:</b> arahkan ke area ruangan yang ingin dipantau; jangan langsung ke jendela terang karena bisa silau.</li>
+</ul>
+<label class="check"><input type="checkbox" id="ck-kalibrasi"> Nilai nol CO dicatat dan indeks VOC/NOx sudah stabil</label></section>
+<section id="program" data-group="Merakit"><h2><span class="num">13</span>Program utama dan kirim ke AirLens</h2>
+<p>Salin model asap hasil pelatihan (<code>smoke.onnx</code>) ke folder <code>~/airlens</code> di Pi, bersama program berikut.</p>
+<div class="code" data-src="c-main" data-name="airlens_node.py"></div>
+<ul class="explain"><li><b>21–24</b><span>Alamat API AirLens dan token diambil dari variabel lingkungan, jadi tidak tertulis di kode. Angka kalibrasi CO dari lembar kalibrasi.</span></li><li><b>27–31</b><span>Menyalakan kamera dan memuat model asap ONNX hasil pelatihan di lab.</span></li><li><b>32</b><span>Menyimpan 5 penilaian terakhir; median-nya dipakai agar satu frame aneh tidak memicu notifikasi.</span></li><li><b>35–45</b><span>Menyiapkan satu frame persis seperti saat pelatihan (RGB, 224 × 224, dinormalisasi), lalu mengubah keluaran model menjadi peluang asap 0..1.</span></li><li><b>55–59</b><span>Mengubah tegangan WE/AE menjadi ppm CO (kosong bila kalibrasi belum diisi).</span></li><li><b>67–75</b><span>Setiap putaran: nilai asap terbaru, sembilan angka SEN66, dan CO dikemas jadi satu pesan JSON.</span></li><li><b>76–79</b><span>Mengirim ke AirLens. Kalau jaringan putus, program tetap jalan dan mencoba lagi.</span></li></ul>
+<div class="note"><b>Model di AI HAT+ (opsional)</b><p>Program di atas menjalankan model di prosesor Pi (cukup untuk beberapa penilaian per detik). Untuk memakai AI HAT+, model ONNX dikonversi ke format HEF dengan Hailo Dataflow Compiler di komputer lain, lalu dijalankan dengan pustaka HailoRT.</p></div>
+<p>Supaya program berjalan otomatis saat Pi menyala:</p>
+<div class="code" data-src="c-svc" data-name="airlens-node.service"></div>
+<p>Lalu: <code>sudo systemctl enable --now airlens-node</code>, dan cek dengan <code>journalctl -u airlens-node -f</code>.</p>
+<label class="check"><input type="checkbox" id="ck-program"> Data node muncul di website AirLens</label></section>
+<section id="akhir" data-group="Merakit"><h2><span class="num">14</span>Uji akhir</h2>
+<ol class="steps">
+<li><span><b>Asap dupa di depan kamera</b> → kamera melihat asap dan SEN66 (VOC, PM2.5) naik → notifikasi <i>Asap terkonfirmasi</i>.</span></li>
+<li><span><b>Gas tak terlihat</b> → jangan membuat CO. Uji lewat simulator node di website (data diberi label "Simulated") → notifikasi <i>Gas tak terlihat</i>.</span></li>
+<li><span><b>Asap terlihat saja</b> → tunjukkan video asap di layar HP ke kamera → notifikasi <i>Asap terlihat</i>.</span></li>
+<li><span><b>Penutup lensa ditutup</b> → website menampilkan kamera "tertutup", sensor gas tetap bekerja.</span></li>
+<li><span><b>Cabut WiFi 1 menit</b> → website menandai node offline, lalu kembali online sendiri.</span></li>
+</ol>
+<label class="check"><input type="checkbox" id="ck-akhir"> Semua uji akhir lulus</label></section>
+<section id="masalah" data-group="Lampiran"><h2><span class="num">15</span>Masalah umum</h2>
+<div class="tbl"><table><thead><tr><th>Gejala</th><th>Penyebab umum</th><th>Solusi</th></tr></thead><tbody>
+<tr><td><code>i2cdetect</code> kosong</td><td>I2C belum aktif, SDA/SCL tertukar</td><td>Ulangi <code>raspi-config nonint do_i2c 0</code>; cek pin 3 = SDA, pin 5 = SCL</td></tr>
+<tr><td>Kamera tidak terdeteksi</td><td>Kabel pita terbalik atau memakai kabel 15 pin bawaan</td><td>Pakai kabel Pi 5 (22 ke 15 pin), cek arah kontak</td></tr>
+<tr><td>Hailo tidak muncul di <code>lspci</code></td><td>Kabel pita PCIe longgar</td><td>Pasang ulang, kunci tuas di kedua sisi</td></tr>
+<tr><td><code>throttled</code> bukan 0x0</td><td>Adaptor kurang kuat atau terlalu panas</td><td>Pakai adaptor 27 W resmi; cek kipas dan kisi udara</td></tr>
+<tr><td>Suhu SEN66 lebih tinggi dari termometer ruangan</td><td>Panas Pi bocor ke zona sensor</td><td>Cek busa sekat dan celah kabel; pastikan kisi belakang-atas tidak tertutup</td></tr>
+<tr><td>CO negatif atau melompat-lompat</td><td>Belum stabil, kabel analog panjang</td><td>Tunggu pemanasan; pendekkan kabel ISB ke ADS1115</td></tr>
+</tbody></table></div>
+<p><b>Rujukan:</b> <a href="https://sensirion.github.io/python-i2c-sen66">driver Python SEN66</a> · <a href="https://www.alphasense.com/products/view-by-target-gas/co-b4">Alphasense CO-B4</a> · <a href="https://www.raspberrypi.com/documentation/">dokumentasi Raspberry Pi</a></p></section>
+  </main>
+</div>
+<script type="text/plain" id="c-os"># 1) Perbarui sistem
+sudo apt update && sudo apt full-upgrade -y
+
+# 2) Nyalakan antarmuka I2C (untuk SEN66 dan ADS1115)
+sudo raspi-config nonint do_i2c 0
+
+# 3) Pasang alat yang dibutuhkan
+sudo apt install -y hailo-all python3-picamera2 i2c-tools python3-venv
+
+# 4) Lingkungan Python khusus AirLens (boleh memakai paket sistem seperti picamera2)
+python3 -m venv --system-site-packages ~/airlens-venv
+source ~/airlens-venv/bin/activate
+pip install sensirion_i2c_sen66 adafruit-circuitpython-ads1x15 requests onnxruntime numpy
+
+# 5) Mulai ulang agar I2C dan driver Hailo aktif
+sudo reboot</script>
+<script type="text/plain" id="c-temp"># Suhu prosesor setiap 2 detik (Ctrl+C untuk berhenti)
+watch -n 2 vcgencmd measure_temp
+
+# Cek kipas Active Cooler berputar dan tidak ada peringatan daya kurang
+vcgencmd get_throttled</script>
+<script type="text/plain" id="c-hailo"># Pastikan AI HAT+ terdeteksi lewat PCIe
+lspci | grep -i hailo
+
+# Tanya identitas chip Hailo
+hailortcli fw-control identify</script>
+<script type="text/plain" id="c-cam"># Daftar kamera yang terdeteksi
+rpicam-hello --list-cameras
+
+# Ambil satu foto uji (disimpan sebagai tes.jpg di folder saat ini)
+rpicam-still -o tes.jpg --width 1536 --height 864</script>
+<script type="text/plain" id="c-camfps"># uji_kamera.py: ambil frame terus-menerus dan hitung berapa frame per detik
+import time
+from picamera2 import Picamera2
+
+cam = Picamera2()
+cam.configure(cam.create_video_configuration(main={"size": (640, 360), "format": "RGB888"}))
+cam.start()
+time.sleep(1)
+
+t0, n = time.time(), 0
+while time.time() - t0 < 10:
+    frame = cam.capture_array()
+    n += 1
+print(f"{n / 10:.1f} frame per detik, ukuran frame {frame.shape}")
+cam.stop()</script>
+<script type="text/plain" id="c-sen66"># uji_sen66.py: baca SEN66 setiap detik (mengikuti contoh resmi driver Sensirion)
+import time
+from sensirion_i2c_driver import LinuxI2cTransceiver, I2cConnection, CrcCalculator
+from sensirion_driver_adapters.i2c_adapter.i2c_channel import I2cChannel
+from sensirion_i2c_sen66.device import Sen66Device
+
+with LinuxI2cTransceiver("/dev/i2c-1") as bus:
+    channel = I2cChannel(I2cConnection(bus), slave_address=0x6B,
+                         crc=CrcCalculator(8, 0x31, 0xFF, 0x0))
+    sensor = Sen66Device(channel)
+    sensor.device_reset()
+    time.sleep(1.2)
+    print("Nomor seri:", sensor.get_serial_number())
+
+    sensor.start_continuous_measurement()
+    time.sleep(1.5)
+    for _ in range(30):
+        pm1, pm25, pm4, pm10, rh, temp, voc, nox, co2 = sensor.read_measured_values()
+        print(f"PM2.5 {pm25} µg/m³ | CO2 {co2} ppm | VOC {voc} | NOx {nox} | {temp} °C | {rh} %RH")
+        time.sleep(1)
+    sensor.stop_measurement()</script>
+<script type="text/plain" id="c-co"># uji_co.py: baca CO-B4 lewat papan ISB dan ADC ADS1115
+import time
+import board
+import busio
+import adafruit_ads1x15.ads1115 as ADS
+from adafruit_ads1x15.analog_in import AnalogIn
+
+# Angka di bawah ini ADA DI LEMBAR KALIBRASI yang ikut dengan sensor dan papan ISB-mu.
+WE_ZERO_MV = 0.0      # tegangan WE saat udara bersih (mV)
+AE_ZERO_MV = 0.0      # tegangan AE saat udara bersih (mV)
+SENS_MV_PPM = 0.0     # kepekaan: berapa mV per 1 ppm CO
+
+i2c = busio.I2C(board.SCL, board.SDA)
+ads = ADS.ADS1115(i2c, address=0x48)
+ads.gain = 1                          # rentang ±4,096 V, cukup untuk keluaran ISB
+we = AnalogIn(ads, ADS.P0)            # kanal A0 = elektroda kerja (WE)
+ae = AnalogIn(ads, ADS.P1)            # kanal A1 = elektroda bantu (AE)
+
+for _ in range(60):
+    we_mv, ae_mv = we.voltage * 1000, ae.voltage * 1000
+    line = f"WE {we_mv:7.1f} mV | AE {ae_mv:7.1f} mV"
+    if SENS_MV_PPM > 0:
+        ppm = ((we_mv - WE_ZERO_MV) - (ae_mv - AE_ZERO_MV)) / SENS_MV_PPM
+        line += f" | CO {max(ppm, 0):5.1f} ppm"
+    print(line)
+    time.sleep(1)</script>
+<script type="text/plain" id="c-main"># airlens_node.py: program utama node lengkap
+# Membaca SEN66 dan CO-B4 setiap 2 detik, menilai asap dari kamera, lalu mengirim semuanya ke AirLens.
+# Keputusan "perlu notifikasi atau tidak" diambil di server (satu aturan untuk semua sumber data).
+import os
+import time
+from collections import deque
+
+import numpy as np
+import onnxruntime as ort
+import requests
+from PIL import Image
+from picamera2 import Picamera2
+
+import board, busio
+import adafruit_ads1x15.ads1115 as ADS
+from adafruit_ads1x15.analog_in import AnalogIn
+from sensirion_i2c_driver import LinuxI2cTransceiver, I2cConnection, CrcCalculator
+from sensirion_driver_adapters.i2c_adapter.i2c_channel import I2cChannel
+from sensirion_i2c_sen66.device import Sen66Device
+
+API = os.environ.get("AIRLENS_API", "http://192.168.1.10:8080/api/node/readings")
+TOKEN = os.environ.get("AIRLENS_NODE_TOKEN", "")
+NODE_ID = "full-01"
+WE_ZERO_MV, AE_ZERO_MV, SENS_MV_PPM = 0.0, 0.0, 0.0   # dari lembar kalibrasi CO-B4/ISB
+
+# --- kamera + model asap (ONNX hasil pelatihan di lab, keluaran: peluang asap 0..1)
+cam = Picamera2()
+cam.configure(cam.create_video_configuration(main={"size": (640, 360), "format": "RGB888"}))
+cam.start()
+model = ort.InferenceSession("smoke.onnx", providers=["CPUExecutionProvider"])
+inp = model.get_inputs()[0].name
+recent = deque(maxlen=5)                 # 5 penilaian terakhir, untuk meredam kedipan
+
+
+MEAN = np.array([0.485, 0.456, 0.406], np.float32)   # normalisasi yang sama dengan saat pelatihan
+STD = np.array([0.229, 0.224, 0.225], np.float32)
+
+
+def smoke_prob(frame):
+    img = Image.fromarray(frame[:, :, ::-1]).resize((224, 224))     # BGR -> RGB, ukuran input model
+    x = (np.asarray(img, np.float32) / 255.0 - MEAN) / STD
+    x = np.ascontiguousarray(np.transpose(x, (2, 0, 1))[None])     # bentuk 1×3×224×224
+    logits = model.run(None, {inp: x})[0][0]                        # [tidak_asap, asap]
+    e = np.exp(logits - logits.max())
+    return float(e[1] / e.sum())                                    # peluang asap 0..1
+
+
+# --- sensor gas
+i2c = busio.I2C(board.SCL, board.SDA)
+ads = ADS.ADS1115(i2c, address=0x48)
+ads.gain = 1
+we, ae = AnalogIn(ads, ADS.P0), AnalogIn(ads, ADS.P1)
+
+
+def co_ppm():
+    if SENS_MV_PPM <= 0:
+        return None
+    d = (we.voltage * 1000 - WE_ZERO_MV) - (ae.voltage * 1000 - AE_ZERO_MV)
+    return max(d / SENS_MV_PPM, 0.0)
+
+
+with LinuxI2cTransceiver("/dev/i2c-1") as bus:
+    sen = Sen66Device(I2cChannel(I2cConnection(bus), slave_address=0x6B, crc=CrcCalculator(8, 0x31, 0xFF, 0x0)))
+    sen.start_continuous_measurement()
+    time.sleep(1.5)
+    t0 = time.time()
+    while True:
+        recent.append(smoke_prob(cam.capture_array()))
+        pm1, pm25, pm4, pm10, rh, temp, voc, nox, co2 = sen.read_measured_values()
+        body = {
+            "node_id": NODE_ID, "uptime_s": int(time.time() - t0),
+            "smoke_prob": round(float(np.median(recent)), 3),
+            "co_ppm": co_ppm(), "pm25": pm25, "pm10": pm10, "co2_ppm": co2,
+            "voc_index": voc, "nox_index": nox, "temp_c": temp, "rh": rh,
+        }
+        try:
+            requests.post(API, json=body, timeout=3, headers={"X-Node-Token": TOKEN} if TOKEN else {})
+        except requests.RequestException as e:
+            print("gagal kirim:", e)
+        time.sleep(2)</script>
+<script type="text/plain" id="c-svc"># /etc/systemd/system/airlens-node.service: jalankan program otomatis saat Pi menyala
+[Unit]
+Description=AirLens node lengkap
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=pi
+WorkingDirectory=/home/pi/airlens
+Environment=AIRLENS_API=http://192.168.1.10:8080/api/node/readings
+ExecStart=/home/pi/airlens-venv/bin/python airlens_node.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target</script>
+<script>
+// ---------- blok kode bernomor + tombol salin ----------
+document.querySelectorAll(".code[data-src]").forEach((box) => {
+  const src = document.getElementById(box.dataset.src).textContent.replace(/^\n/, "");
+  const head = document.createElement("div"); head.className = "head";
+  const name = document.createElement("span"); name.textContent = box.dataset.name;
+  const btn = document.createElement("button"); btn.type = "button"; btn.textContent = "Salin";
+  head.append(name, btn);
+  const pre = document.createElement("pre");
+  for (const line of src.split("\n")) { const s = document.createElement("span"); s.textContent = line || " "; pre.appendChild(s); }
+  box.append(head, pre);
+  btn.addEventListener("click", async () => {
+    try { await navigator.clipboard.writeText(src); btn.textContent = "Tersalin"; }
+    catch { const r = document.createRange(); r.selectNodeContents(pre); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r); btn.textContent = "Teks dipilih, tekan Ctrl+C"; }
+    setTimeout(() => (btn.textContent = "Salin"), 2200);
+  });
+});
+
+// ---------- diagram kabel (SVG) ----------
+const NS = "http://www.w3.org/2000/svg";
+const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+function el(tag, attrs, parent, text) {
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (text != null) e.textContent = text;
+  parent && parent.appendChild(e); return e;
+}
+function board(svg, x, y, w, title, pins, side, fill) {
+  const h = 44 + pins.length * 26;
+  el("rect", { x, y, width: w, height: h, rx: 12, fill, stroke: css("--line"), "stroke-width": 1.5 }, svg);
+  el("text", { x: x + w / 2, y: y + 26, "text-anchor": "middle", "font-weight": 700, "font-size": 15 }, svg, title);
+  const pos = {};
+  pins.forEach((p, i) => {
+    const py = y + 50 + i * 26, px = side === "r" ? x + w : x;
+    el("circle", { cx: px, cy: py, r: 5, fill: css("--paper"), stroke: css("--ink-2"), "stroke-width": 1.5 }, svg);
+    el("text", { x: side === "r" ? px - 12 : px + 12, y: py + 4.5, "text-anchor": side === "r" ? "end" : "start", "font-size": 13 }, svg, p);
+    pos[p] = [px, py];
+  });
+  return { pos, h };
+}
+function wire(svg, a, b, color, label) {
+  const mx = (a[0] + b[0]) / 2;
+  el("path", { d: `M${a[0]} ${a[1]} C ${mx} ${a[1]}, ${mx} ${b[1]}, ${b[0]} ${b[1]}`, fill: "none", stroke: color, "stroke-width": 3.2, "stroke-linecap": "round" }, svg);
+  if (label) el("text", { x: mx, y: (a[1] + b[1]) / 2 - 6, "text-anchor": "middle", "font-size": 12, fill: css("--ink-2") }, svg, label);
+}
+function simple(id, left, right, wires, height) {
+  const host = document.getElementById(id); host.innerHTML = "";
+  const svg = el("svg", { viewBox: `0 0 760 ${height}` }, host);
+  const L = board(svg, 30, 20, 230, left.title, left.pins, "r", css("--soft"));
+  const R = board(svg, 500, 20, 230, right.title, right.pins, "l", css("--paper"));
+  for (const [lp, rp, col, lab] of wires) wire(svg, L.pos[lp], R.pos[rp], css(col), lab);
+}
+
+function drawAll() {
+  {
+    const host = document.getElementById("dg-overview"); host.innerHTML = "";
+    const svg = el("svg", { viewBox: "0 0 760 300" }, host);
+    const box = (x, y, w, h, t, s, fill) => { el("rect", { x, y, width: w, height: h, rx: 12, fill: fill || css("--paper"), stroke: css("--line"), "stroke-width": 1.5 }, svg);
+      el("text", { x: x + w / 2, y: y + h / 2 - 4, "text-anchor": "middle", "font-weight": 700, "font-size": 14 }, svg, t);
+      el("text", { x: x + w / 2, y: y + h / 2 + 15, "text-anchor": "middle", "font-size": 12, fill: css("--ink-2") }, svg, s); };
+    box(20, 30, 190, 64, "Camera Module 3 Wide", "mata: melihat asap");
+    box(20, 118, 190, 64, "Sensirion SEN66", "PM, CO₂, VOC, NOx, T, RH");
+    box(20, 206, 190, 64, "CO-B4 → ISB → ADS1115", "hidung: gas tak terlihat");
+    box(300, 90, 180, 120, "Raspberry Pi 5", "+ AI HAT+ · model asap", css("--soft"));
+    box(570, 90, 170, 120, "Website AirLens", "aturan pemicu → notifikasi");
+    wire(svg, [210, 62], [300, 120], css("--wsig1"), "CSI");
+    wire(svg, [210, 150], [300, 150], css("--wsig2"), "I2C");
+    wire(svg, [210, 238], [300, 180], css("--wsig4"), "I2C");
+    wire(svg, [480, 150], [570, 150], css("--accent"), "WiFi");
+  }
+  simple("dg-sen66", { title: "Raspberry Pi 5 (di atas HAT)", pins: ["3V3 · pin 1", "SDA · pin 3", "SCL · pin 5", "GND · pin 9"] },
+    { title: "SEN66 (breakout)", pins: ["VIN 3,3 V", "SDA", "SCL", "GND"] },
+    [["3V3 · pin 1", "VIN 3,3 V", "--w33"], ["SDA · pin 3", "SDA", "--wsig1"], ["SCL · pin 5", "SCL", "--wsig4"], ["GND · pin 9", "GND", "--wgnd"]], 170);
+  {
+    const host = document.getElementById("dg-co"); host.innerHTML = "";
+    const svg = el("svg", { viewBox: "0 0 760 230" }, host);
+    const L = board(svg, 20, 20, 190, "Papan ISB", ["WE", "AE", "GND", "V+"], "r", css("--paper"));
+    const M = board(svg, 285, 20, 190, "ADS1115", ["A0", "A1", "GND", "VDD", "SDA", "SCL"], "l", css("--soft"));
+    wire(svg, L.pos["WE"], M.pos["A0"], css("--wsig2"), "WE");
+    wire(svg, L.pos["AE"], M.pos["A1"], css("--wsig3"), "AE");
+    wire(svg, L.pos["GND"], M.pos["GND"], css("--wgnd"));
+    const R = board(svg, 550, 20, 190, "Raspberry Pi 5", ["GND · pin 14", "3V3 · pin 17", "SDA · pin 3", "SCL · pin 5"], "l", css("--paper"));
+    el("text", { x: 115, y: 192, "text-anchor": "middle", "font-size": 12, fill: css("--ink-2") }, svg, "V+ ISB: ikuti lembar data ISB");
+    wire(svg, [475, M.pos["VDD"][1]], R.pos["3V3 · pin 17"], css("--w33"));
+    wire(svg, [475, M.pos["GND"][1]], R.pos["GND · pin 14"], css("--wgnd"));
+    wire(svg, [475, M.pos["SDA"][1]], R.pos["SDA · pin 3"], css("--wsig1"));
+    wire(svg, [475, M.pos["SCL"][1]], R.pos["SCL · pin 5"], css("--wsig4"));
+  }
+  {
+    const host = document.getElementById("dg-all"); host.innerHTML = "";
+    const svg = el("svg", { viewBox: "0 0 760 360" }, host);
+    const P = board(svg, 280, 20, 200, "Raspberry Pi 5", ["CAM/DISP 0", "PCIe", "3V3", "SDA (GPIO2)", "SCL (GPIO3)", "GND", "USB-C"], "r", css("--soft")).pos;
+    const dev = (y, t, s, h = 46) => { el("rect", { x: 560, y, width: 180, height: h, rx: 10, fill: css("--paper"), stroke: css("--line") }, svg);
+      el("text", { x: 650, y: y + 20, "text-anchor": "middle", "font-weight": 700, "font-size": 13.5 }, svg, t);
+      el("text", { x: 650, y: y + 37, "text-anchor": "middle", "font-size": 11.5, fill: css("--ink-2") }, svg, s); return [560, y + h / 2]; };
+    const cam = dev(30, "Camera Module 3", "kabel pita 22→15"); const hat = dev(86, "AI HAT+", "PCIe + header susun");
+    const i2c = dev(150, "SEN66 + ADS1115", "berbagi I2C, 3,3 V", 70); const pw = dev(270, "Adaptor 27 W", "5 V 5 A");
+    wire(svg, P["CAM/DISP 0"], cam, css("--wsig3")); wire(svg, P["PCIe"], hat, css("--wsig2"));
+    for (const p of ["SDA (GPIO2)", "SCL (GPIO3)"]) wire(svg, P[p], i2c, css("--wsig1"));
+    wire(svg, P["3V3"], i2c, css("--w33")); wire(svg, P["GND"], i2c, css("--wgnd")); wire(svg, P["USB-C"], pw, css("--w5v"));
+    el("rect", { x: 20, y: 140, width: 200, height: 90, rx: 10, fill: css("--paper"), stroke: css("--line") }, svg);
+    el("text", { x: 120, y: 166, "text-anchor": "middle", "font-weight": 700, "font-size": 13.5 }, svg, "CO-B4 → ISB");
+    el("text", { x: 120, y: 186, "text-anchor": "middle", "font-size": 12, fill: css("--ink-2") }, svg, "WE → A0, AE → A1");
+    el("text", { x: 120, y: 204, "text-anchor": "middle", "font-size": 12, fill: css("--ink-2") }, svg, "lewat ADS1115 (langkah 9)");
+  }
+}
+drawAll();
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", drawAll);
+new MutationObserver(drawAll).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+
+// ---------- daftar isi + centang langkah ----------
+const toc = document.getElementById("toc");
+let lastGroup = "";
+const checks = [...document.querySelectorAll(".check input")];
+document.querySelectorAll("main > section").forEach((s) => {
+  if (s.dataset.group !== lastGroup) { lastGroup = s.dataset.group; const g = document.createElement("li"); g.className = "grp"; g.textContent = lastGroup; toc.appendChild(g); }
+  const li = document.createElement("li"), a = document.createElement("a");
+  a.href = "#" + s.id; const ck = s.querySelector(".check input");
+  a.innerHTML = `<span class="tick">${""}</span><span>${s.querySelector("h2").textContent.replace(/^\d+/, (m) => m + ". ")}</span>`;
+  a.dataset.ck = ck ? ck.id : ""; li.appendChild(a); toc.appendChild(li);
+});
+function store(k, v) { try { localStorage.setItem(k, v); } catch {} }
+function load(k) { try { return localStorage.getItem(k); } catch { return null; } }
+function refresh() {
+  const done = checks.filter((c) => c.checked).length;
+  document.getElementById("bar").style.width = `${(done / checks.length) * 100}%`;
+  document.getElementById("progress-text").textContent = `${done} dari ${checks.length} langkah selesai`;
+  toc.querySelectorAll("a").forEach((a) => { const c = a.dataset.ck && document.getElementById(a.dataset.ck); a.querySelector(".tick").textContent = c && c.checked ? "✓" : ""; });
+}
+checks.forEach((c) => { c.checked = load("airlens-full-v3-" + c.id) === "1"; c.addEventListener("change", () => { store("airlens-full-v3-" + c.id, c.checked ? "1" : "0"); refresh(); }); });
+refresh();
+const links = [...toc.querySelectorAll("a")];
+const io = new IntersectionObserver((es) => { es.forEach((e) => { if (e.isIntersecting) links.forEach((a) => a.classList.toggle("on", a.getAttribute("href") === "#" + e.target.id)); }); },
+  { rootMargin: "-20% 0px -70% 0px" });
+document.querySelectorAll("main > section").forEach((s) => io.observe(s));
+</script>

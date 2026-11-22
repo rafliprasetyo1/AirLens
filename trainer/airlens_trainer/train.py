@@ -19,6 +19,7 @@ import mlflow
 import numpy as np
 import torch
 
+from airlens.tiers import SCHEME, TIER_MERGE
 from airlens.config import load_profile
 from airlens.features.haze import HINTS, hint_values
 from airlens.models import baseline, cnn
@@ -97,13 +98,21 @@ def load_metadata_of(bundle_dir: str) -> dict:
 
 def run(profile_name: str | None = None) -> dict:
     cfg = load_profile(profile_name)
+    # Model referensi 5 kelas untuk compare_merge (lab-all): skema EPA asli kecuali hazardous -> very_unhealthy,
+    # disimpan terpisah dan tidak pernah menjadi production. Butuh kolom label_epa (make data versi Tahap 4).
+    reference = os.environ.get("TRAIN_CLASS_SCHEME", "") == "epa5"
+    if reference:
+        cfg["data"]["class_merge"] = {"hazardous": "very_unhealthy"}
+    if os.environ.get("TRAIN_MODELS"):
+        cfg["training"]["models"] = [m.strip() for m in os.environ["TRAIN_MODELS"].split(",") if m.strip()]
     profile, tcfg, cal_cfg, seed = cfg["profile"], apply_smoke(cfg["training"]), cfg["calibration"], cfg["data"]["seed"]
     ds: Dataset = load_dataset(profile, cfg["data"]["class_merge"])
     tr, va = ds.split("train"), ds.split("val")
     n_classes = len(ds.classes)
-    out_root = models_dir(ds.data_version)
+    out_root = models_dir(ds.data_version) / "reference_epa5" if reference else models_dir(ds.data_version)
     common = {"data_version": ds.data_version, "code_version": code_version(), "git_commit": git_commit(),
-              "profile": profile, "classes": ds.classes, "class_merge": cfg["data"]["class_merge"], "seed": seed, "smoke": is_smoke()}
+              "profile": profile, "classes": ds.classes, "class_merge": cfg["data"]["class_merge"], "seed": seed, "smoke": is_smoke(),
+              "class_scheme": SCHEME if cfg["data"]["class_merge"] == TIER_MERGE else "custom"}
     logger.info("data %s: train %d, val %d, kelas %s", ds.data_version[:12], len(tr), len(va), ds.classes)
     mlflow.set_experiment("airlens-train")
     candidates: dict = {"data_version": ds.data_version, "models": {}}
@@ -154,7 +163,6 @@ def run(profile_name: str | None = None) -> dict:
             logits = cnn.val_logits(model, va_paths, list(va["y"]), tcfg, seed)
             cal = calibrate_and_score(logits, va["y"].to_numpy(), n_classes, cal_cfg)
             onnx_diff = cnn.export_onnx(model, bundle_dir / "model.onnx", va_paths[0])
-            torch.save(model.state_dict(), bundle_dir / "model.pt")
             mon_ref = monitoring_reference(bundle_dir / "model.onnx", tr_paths, seed, tcfg["num_workers"])
             meta = {**common, "name": arch, "kind": "onnx", "deployable": True, "params": {**hp, "arch": arch},
                     "device": device, "temperature": cal["temperature"], "threshold": cal["threshold"],
@@ -183,15 +191,21 @@ def run(profile_name: str | None = None) -> dict:
     deployable = {n: c for n, c in candidates["models"].items() if c["kind"] == "onnx"}
     best = max(deployable, key=lambda n: deployable[n]["val_macro_f1"])
     overall = max(candidates["models"], key=lambda n: candidates["models"][n]["val_macro_f1"])
-    alias = os.environ.get("REGISTER_ALIAS", "production")
+    alias = "none" if reference else os.environ.get("REGISTER_ALIAS", "production")
     mv = mlflow.register_model(deployable[best]["model_uri"], REGISTERED_MODEL,
-                               tags={"data_version": ds.data_version, "bundle": best, "smoke": str(is_smoke()).lower()})
+                               tags={"data_version": ds.data_version, "bundle": best, "smoke": str(is_smoke()).lower(),
+                                     **({"reference": "epa5"} if reference else {})})
     engine = get_engine()
     registry.record_registration(engine, mv.version, "candidate", load_metadata_of(deployable[best]["dir"]))
     if alias == "challenger":
         registry.set_challenger(engine, mv.version)
-    else:
+    elif alias == "production":
         registry.set_production(engine, mv.version)
+    if reference:   # jangan menimpa candidates.json model utama; cukup catat letak bundle referensi
+        (out_root / "reference.json").write_text(json.dumps({"bundle": deployable[best]["dir"], "version": mv.version,
+                                                             "classes": ds.classes}, indent=2, default=str))
+        logger.info("referensi 5 kelas: %s (registry %s v%s, tanpa alias)", best, REGISTERED_MODEL, mv.version)
+        return {**candidates, "production": best, "production_registry_version": mv.version, "alias": alias}
     candidates.update({"smoke": is_smoke(), "production": best, "production_registry_version": mv.version, "alias": alias,
                        "best_overall_on_val": overall, "registered_model": REGISTERED_MODEL})
     write_candidates(ds.data_version, candidates)

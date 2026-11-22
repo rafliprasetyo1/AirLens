@@ -201,6 +201,17 @@ Buka http://localhost:8080 di browser Windows untuk website, http://localhost:50
 Website memakai model `production` dari MLflow; bila belum ada model terlatih, jalankan dulu `make train SMOKE=1`
 (model uji, ditandai "Model uji" di website). API memuat ulang model otomatis saat alias `production` berpindah.
 
+Halaman lain: `/beta.html` (AirLens Beta: 4 MQ + model gas + SHAP + notifikasi), `/tools/flash.html` dan
+`/tools/recorder.html` (alat operator: flash firmware dan rekam kalibrasi lewat Web Serial; hanya dari komputer ini),
+`/product.html`. Simulator (stdlib, jalankan langsung di WSL; token dibaca dari `.env`):
+
+```bash
+python3 scripts/sensor_sim.py --replay dataset   # Beta 4 MQ: putar ulang MultimodalGasData, model + SHAP berganti kelas
+python3 scripts/sensor_sim.py                    # Beta format lama (satu MQ-2)
+```
+
+Semua data simulator berlabel "Simulated" di website dan di tabel `events`.
+
 Saat memulai sesi Claude Code baru, kirim prompt **"melanjutkan sesi baru"** dari `PROMPTS.md`.
 
 Setiap akhir hari:
@@ -354,13 +365,30 @@ AirLens/
 | `make docs-check` | Validasi diagram Mermaid di `ARCHITECTURE.md` (render di Chrome headless) | Fase 5 |
 | `make lock` | Kunci ulang dependency Python setelah mengubah `requirements/*.in` | Fase 1 |
 | `make data PROFILE=...` | Unduh, bersihkan, dedup, split, manifest (laptop: subset 10% lokasi; lab: penuh + Dhaka 4,5 GB). Lihat `DATA_CARD.md` | Fase 2 |
-| `make train PROFILE=...` | Latih baseline dan CNN, kalibrasi + ambang di validasi, daftarkan model `production` di MLflow. `SMOKE=1` = uji asap singkat | Fase 3 |
+| `make train PROFILE=...` | Latih baseline dan CNN, kalibrasi + ambang di validasi, daftarkan model `production` di MLflow. `SMOKE=1` = uji alur singkat (bukan model asap) | Fase 3 |
 | `make eval PROFILE=...` | Evaluasi di test lewat ONNX, buat `results/eval_<tanggal>.csv` dan grafik | Fase 3 |
 | `make monitor [SINCE=… UNTIL=…]` | Jalankan job monitoring mingguan sekarang (drift, keyakinan, IQAir, shadow); laporan di `results/monitoring/` | Fase 5 |
 | `make retrain` | Latih ulang, daftarkan sebagai `challenger` (API menjalankannya dalam shadow mode) | Fase 5 |
 | `make promote` | Bandingkan challenger vs production (test tetap + shadow); promosi hanya bila kriteria config terpenuhi | Fase 5 |
 | `make rollback [VERSION=n]` | Kembalikan alias production ke versi sebelumnya tanpa build ulang | Fase 5 |
 | `make drift-sim` | Simulasi drift lewat API: membuktikan peringatan menyala (data bergeser) dan tidak (data normal) | Fase 5 |
-| `make lab-all PROFILE=lab` | Seluruh alur di lab: cek → migrasi → data → latih → evaluasi → kemas; durasi tiap tahap di `logs/` | Fase 6 |
+| `make lab-all PROFILE=lab` | Cadangan bila Kaggle tidak bisa dipakai: cek → data → model foto AQI tiga tingkat → model gas Beta → evaluasi → **kemas** → referensi 5 kelas + compare_merge → kemas ulang. Saklar darurat `SKIP_BETA=1`, `SKIP_COMPARE=1`; ringkasan di `logs/lab_*/RINGKASAN.txt` | Fase 6 / Tahap 4 |
 | `make export-results PROFILE=…` | Arsip bertanggal: results, model, log, volume MLflow, dump database mlflow + airlens | Fase 6 |
 | `make migrate` | Buat/perbarui skema database (otomatis sebelum train/retrain/promote/rollback) | Fase 6 |
+| `make sync-modules` | Salin modul perakitan dari `docs/modules/` (sumber) ke `web/static/modules/` (menu Build guides), tanpa tautan Google Fonts | Tahap 2 |
+| `make data-beta` | Data model gas Beta: MultimodalGasData (CC BY 4.0, CSV 330 KB) → fitur rasio + split per blok waktu. Juga dijalankan oleh `make data` | Beta SHAP |
+| `make train-beta` | Latih model gas Beta `airlens-beta-gas` (LightGBM) + plot SHAP global. Normalnya dijalankan kernel Kaggle; target ini cadangan | Beta SHAP |
+| `make promote-beta` / `rollback-beta` | Promosi challenger model gas Beta (macro-F1 tidak turun, recall asap turun ≤ 0,02) / kembalikan versi sebelumnya | Beta SHAP |
+| `make import-beta-recordings CSV=…` | Rekaman alat dari `tools/recorder.html`: ukur domain shift (evaluasi saja, tanpa pelatihan) |
+| `make beta-recordings-push CSV=…` | Unggah rekaman alat ke dataset Kaggle privat; `make kaggle-push` lalu melatih ulang model Beta dengan dataset publik + rekaman | Beta SHAP |
+| `make firmware-beta` | Kompilasi firmware Beta (arduino-cli di laptop) ke `web/static/tools/firmware/`. Lihat `firmware/README.md` | Beta SHAP |
+| `make import-results ARCHIVE=… [ALIAS=production] [CONFIRM=1]` | Arsip hasil Kaggle/lab → MLflow laptop (`airlens-aqi`, `airlens-beta-gas`); bawaan challenger, production setelah metrik disetujui; aman diulang | Tahap 4 |
+| `make compare-merge` | Perbandingan adil 5 kelas (referensi `make train TRAIN_CLASS_SCHEME=epa5`) vs 3 tingkat pada test yang sama → `results/compare_merge_3class.{json,md}` | Tahap 4 |
+| `make vapid-keys` | Buat kunci VAPID Web Push ke `.env` (sekali, tidak dicetak); notifikasi kejadian saat website tertutup | Tahap 4 |
+| `make kaggle-push` / `kaggle-status` / `kaggle-pull` | Pelatihan di Kaggle Notebook (GPU): unggah kode + kernel, pantau, unduh arsip hasil (format sama dengan lab) | Prompt 7 |
+| `make models-publish [MODELS_APPROVED=1]` | Kemas model production (foto AQI, gas Beta) + manifest sha256; unggah ke dataset Kaggle privat `airlens-models` hanya setelah disetujui | Prompt 7 |
+| `make models-pull [VERSION=n]` | Ambil paket model, periksa sha256, impor ke MLflow mesin ini, pasang alias (aman diulang) | Prompt 7 |
+| `make doctor` | Laporan kesiapan yang sama di laptop dan lab (Docker, .env tanpa nilai, ngrok, Kaggle, model aktif, uji cepat) | Prompt 7 |
+| `make expo-setup` | Satu perintah hari pameran: doctor → models-pull → layanan mode expo → ngrok → QR. Lihat `docs/EXPO.md`, `docs/EXPO_HARI_H.txt` | Prompt 7 |
+| `make expo-public` / `expo-public-stop` | ngrok di latar; alamat sesi (acak, akun free) disimpan ke `NGROK_DOMAIN` di `.env` | Prompt 7 |
+| `make tokens` | SENSOR_TOKEN dan NODE_TOKEN acak ke `.env` bila kosong (wajib di mode expo) | Prompt 7 |

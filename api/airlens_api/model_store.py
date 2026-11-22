@@ -30,8 +30,12 @@ class AliasMissing(Exception):
 
 
 class ModelStore:
-    def __init__(self, cache_dir: Path, alias: str = "production", retry_seconds: float = 30.0):
-        self.cache_dir, self.alias, self.retry_seconds = cache_dir, alias, retry_seconds
+    def __init__(self, cache_dir: Path, alias: str = "production", retry_seconds: float = 30.0,
+                 model: str = REGISTERED_MODEL, local_env: str | None = None):
+        """model: nama di registry (airlens-aqi atau airlens-smoke). local_env: nama env bundle lokal; bawaan
+        MODEL_BUNDLE_DIR / CHALLENGER_BUNDLE_DIR untuk model AQI."""
+        self.cache_dir, self.alias, self.retry_seconds, self.model = cache_dir, alias, retry_seconds, model
+        self.local_env = local_env if local_env is not None else (LOCAL_ENV.get(alias, "") if model == REGISTERED_MODEL else "")
         self.status = "loading"
         self.error: str | None = None
         self.meta: dict | None = None
@@ -43,7 +47,7 @@ class ModelStore:
 
     @property
     def _local(self) -> str | None:
-        return os.environ.get(LOCAL_ENV.get(self.alias, ""), "") or None
+        return os.environ.get(self.local_env, "") if self.local_env else None
 
     # ------------------------------------------------------------------ pemuatan
     def _activate(self, onnx_path: Path, meta: dict, version: str) -> None:
@@ -54,7 +58,7 @@ class ModelStore:
             self._session, self.meta, self.version = session, meta, version
             self._outputs = [o.name for o in session.get_outputs()]
             self.status, self.error = "ok", None
-        logger.info("model %s aktif: %s versi %s (%s)", self.alias, meta.get("name"), version,
+        logger.info("model %s/%s aktif: %s versi %s (%s)", self.model, self.alias, meta.get("name"), version,
                     meta.get("data_version", "")[:12])
 
     def _deactivate(self, status: str, reason: str | None) -> None:
@@ -73,7 +77,7 @@ class ModelStore:
         from mlflow.exceptions import MlflowException
 
         try:
-            mv = MlflowClient().get_model_version_by_alias(REGISTERED_MODEL, self.alias)
+            mv = MlflowClient().get_model_version_by_alias(self.model, self.alias)
         except MlflowException as exc:
             if "RESOURCE_DOES_NOT_EXIST" in str(getattr(exc, "error_code", "")) or "not found" in str(exc).lower():
                 raise AliasMissing(f"alias {self.alias} belum ada") from None
@@ -88,7 +92,7 @@ class ModelStore:
         if not (dest / "metadata.json").exists():
             tmp = self.cache_dir / f"v{version}.{self.alias}.tmp"
             tmp.mkdir(parents=True, exist_ok=True)
-            mlflow.artifacts.download_artifacts(artifact_uri=f"models:/{REGISTERED_MODEL}/{version}",
+            mlflow.artifacts.download_artifacts(artifact_uri=f"models:/{self.model}/{version}",
                                                 dst_path=str(tmp / "model"))
             meta_path = Path(mlflow.artifacts.download_artifacts(run_id=run_id, artifact_path="bundle/metadata.json",
                                                                  dst_path=str(tmp / "meta")))
@@ -99,12 +103,12 @@ class ModelStore:
                 shutil.rmtree(tmp, ignore_errors=True)
             else:
                 tmp.rename(dest)
-        self._from_dir(dest, f"{REGISTERED_MODEL}/{version}")
+        self._from_dir(dest, f"{self.model}/{version}")
 
     def _latest_cached(self) -> tuple[Path, str] | None:
         versions = sorted((p for p in self.cache_dir.glob("v*") if p.is_dir() and p.name[1:].isdigit()),
                           key=lambda p: int(p.name[1:]))
-        return (versions[-1], f"{REGISTERED_MODEL}/{versions[-1].name[1:]} (cache)") if versions else None
+        return (versions[-1], f"{self.model}/{versions[-1].name[1:]} (cache)") if versions else None
 
     def load(self) -> None:
         try:
@@ -148,7 +152,7 @@ class ModelStore:
             return self.status == "ok"
         except Exception:
             return False  # MLflow sedang mati: tetap pakai model aktif
-        return f"{REGISTERED_MODEL}/{version}" != self.version
+        return f"{self.model}/{version}" != self.version
 
     def start_background(self) -> None:
         def loop():
@@ -158,10 +162,15 @@ class ModelStore:
                     self.load()
                 self._stop.wait(self.retry_seconds)
 
-        threading.Thread(target=loop, name=f"model-loader-{self.alias}", daemon=True).start()
+        self._thread = threading.Thread(target=loop, name=f"model-loader-{self.model}-{self.alias}", daemon=True)
+        self._thread.start()
 
-    def stop(self) -> None:
+    def stop(self, timeout: float = 60.0) -> None:
+        """Hentikan thread pemuat dan tunggu ia selesai (shutdown API yang rapi)."""
         self._stop.set()
+        thread = getattr(self, "_thread", None)
+        if thread is not None and thread.is_alive() and thread is not threading.current_thread():
+            thread.join(timeout)
 
     # ------------------------------------------------------------------ inferensi
     def infer(self, x: np.ndarray) -> tuple[np.ndarray, np.ndarray | None]:
@@ -180,5 +189,6 @@ class ModelStore:
     def info(self) -> dict:
         with self._lock:
             meta = self.meta or {}
-            return {"alias": self.alias, "status": self.status, "error": self.error, "version": self.version,
-                    "name": meta.get("name"), "data_version": meta.get("data_version"), "smoke": meta.get("smoke", False)}
+            return {"model": self.model, "alias": self.alias, "status": self.status, "error": self.error, "version": self.version,
+                    "name": meta.get("name"), "data_version": meta.get("data_version"), "smoke": meta.get("smoke", False),
+                    "dev_model": meta.get("dev_model", False)}

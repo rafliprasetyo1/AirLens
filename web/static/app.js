@@ -167,6 +167,7 @@ async function analyze() {
 
 function follow(jobId) {
   if (source) source.close();
+  currentJob = jobId;
   source = new EventSource(`${API}/jobs/${jobId}/events`);
   source.addEventListener("tahap", (e) => {
     const ev = JSON.parse(e.data);
@@ -284,7 +285,9 @@ function renderIqair(iq) {
     node("span", { class: "iq-aqi" }, iq.aqi_us),
     node("div", {},
       node("p", {}, node("strong", {}, "AQI US"), ` · ${iq.city}${iq.state ? `, ${iq.state}` : ""}`),
-      node("p", { class: "muted small" }, `Diperbarui ${fmtTime(iq.observed_at)}${iq.cached ? " (dari cache)" : ""}`)));
+      node("p", { class: "muted small" }, iq.stale
+        ? `Internet tidak tersedia: memakai data IQAir terakhir yang tersimpan (diambil ${fmtTime(iq.fetched_at)}).`
+        : `Diperbarui ${fmtTime(iq.observed_at)}${iq.cached ? " (dari cache)" : ""}`)));
   const chip = node("p", { class: "chip", style: { background: iq.category.color, color: iq.category.text_color, marginTop: ".5rem" } },
     iq.category.label);
   el.iq.append(grid, chip);
@@ -346,6 +349,8 @@ function renderHistory(items) {
       node("span", {}, `${fmtTime(it.at)} · ${it.label} · ${it.detail}`)));
   }
 }
+
+let currentJob = null;
 
 el.analyze.addEventListener("click", analyze);
 el.retry.addEventListener("click", () => { hideAlert(); el.placeholder.hidden = false; if (selected) analyze(); else el.dz.focus(); });

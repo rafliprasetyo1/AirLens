@@ -15,3 +15,8 @@ scikit-learn
 matplotlib
 onnx
 onnxruntime
+# Revisi Beta SHAP: model gas Beta + plot SHAP global (shap hanya di trainer).
+lightgbm
+shap
+# prompt 7: QR alamat publik (terminal + docs/assets/qr_expo.png)
+qrcode

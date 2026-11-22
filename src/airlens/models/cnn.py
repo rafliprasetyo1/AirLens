@@ -13,7 +13,6 @@ from pathlib import Path
 
 import numpy as np
 import torch
-from sklearn.metrics import f1_score
 from torch import nn
 from torch.utils.data import DataLoader, Dataset
 from torchvision import models, transforms
@@ -49,10 +48,12 @@ def head_parameters(model: nn.Module):
 
 
 class ImageDataset(Dataset):
-    def __init__(self, paths: list[str], labels: list[int], train: bool):
+    def __init__(self, paths: list[str], labels: list[int], train: bool, train_tf=None):
         self.paths, self.labels, self.train = paths, labels, train
         norm = transforms.Normalize(MEAN.tolist(), STD.tolist())
-        if train:
+        if train and train_tf is not None:  # augmentasi khusus (mis. model asap dalam ruangan); normalisasi tetap sama
+            self.tf = transforms.Compose([train_tf, transforms.ToTensor(), norm])
+        elif train:
             self.tf = transforms.Compose([
                 transforms.RandomResizedCrop(IMAGE_SIZE, scale=(0.7, 1.0), ratio=(3 / 4, 4 / 3)),
                 transforms.RandomHorizontalFlip(),
@@ -74,10 +75,10 @@ def _worker_init(worker_id: int) -> None:
     random.seed(seed)
 
 
-def _loader(paths, labels, train: bool, batch_size: int, workers: int, seed: int) -> DataLoader:
+def _loader(paths, labels, train: bool, batch_size: int, workers: int, seed: int, train_tf=None) -> DataLoader:
     g = torch.Generator()
     g.manual_seed(seed)
-    return DataLoader(ImageDataset(paths, labels, train), batch_size=batch_size, shuffle=train, num_workers=workers,
+    return DataLoader(ImageDataset(paths, labels, train, train_tf), batch_size=batch_size, shuffle=train, num_workers=workers,
                       worker_init_fn=_worker_init, generator=g, persistent_workers=workers > 0)
 
 
@@ -92,14 +93,14 @@ def predict_logits(model: nn.Module, loader: DataLoader, device: str) -> tuple[n
 
 
 def train_cnn(arch: str, tr_paths, tr_y, val_paths, val_y, n_classes: int, cfg: dict, seed: int, device: str,
-              on_epoch=None) -> tuple[nn.Module, dict]:
+              on_epoch=None, train_tf=None) -> tuple[nn.Module, dict]:
     """Latih dan kembalikan model dengan macro-F1 validasi terbaik serta riwayat per epoch."""
     seed_everything(seed)
     model = build_model(arch, n_classes).to(device)
     counts = np.bincount(tr_y, minlength=n_classes).astype(float)
     weights = np.where(counts > 0, counts.sum() / (n_classes * np.maximum(counts, 1)), 0.0)
     loss_fn = nn.CrossEntropyLoss(weight=torch.tensor(weights, dtype=torch.float32, device=device))
-    train_dl = _loader(tr_paths, tr_y, True, cfg["batch_size"], cfg["num_workers"], seed)
+    train_dl = _loader(tr_paths, tr_y, True, cfg["batch_size"], cfg["num_workers"], seed, train_tf)
     val_dl = _loader(val_paths, val_y, False, cfg["batch_size"], cfg["num_workers"], seed)
 
     stages = [("head", cfg["epochs_head"], cfg["lr_head"]), ("full", cfg["epochs_full"], cfg["lr_full"])]
@@ -126,6 +127,8 @@ def train_cnn(arch: str, tr_paths, tr_y, val_paths, val_y, n_classes: int, cfg: 
                 n += len(y)
             sched.step()
             logits, ys = predict_logits(model, val_dl, device)
+            from sklearn.metrics import f1_score  # di sini, agar API (tanpa scikit-learn) bisa memakai build_model
+
             f1 = f1_score(ys, logits.argmax(1), labels=list(range(n_classes)), average="macro", zero_division=0)
             history.append({"epoch": epoch, "stage": stage, "train_loss": total / max(n, 1), "val_macro_f1": float(f1)})
             logger.info("%s epoch %d (%s): loss %.4f, val macro-F1 %.4f", arch, epoch, stage, total / max(n, 1), f1)

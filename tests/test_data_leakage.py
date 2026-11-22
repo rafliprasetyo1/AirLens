@@ -58,6 +58,13 @@ def test_forced_test_city_only_in_test(dataset):
 
 
 def test_labels_are_epa_2024_categories(dataset):
+    """Label asal = kategori AQI US EPA 2024. Sejak Tahap 4 dataset juga menyimpan label_epa, dan label = tingkatnya."""
     from airlens.aqi import CATEGORIES
+    from airlens.tiers import TIER_IDS, TIER_MERGE
 
-    assert set(dataset["label"]) <= set(CATEGORIES)
+    if "label_epa" in dataset:
+        assert set(dataset["label_epa"]) <= set(CATEGORIES)
+        assert set(dataset["label"]) <= set(TIER_IDS)
+        assert (dataset["label"] == dataset["label_epa"].map(TIER_MERGE)).all()
+    else:   # dataset lama: label gabungan EPA
+        assert set(dataset["label"]) <= set(CATEGORIES)

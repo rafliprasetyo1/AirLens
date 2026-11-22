@@ -9,3 +9,7 @@ scipy
 pillow
 requests
 mlflow-skinny>=3,<4
+# Revisi Beta SHAP: model gas Beta (LightGBM) + TreeSHAP persis lewat pred_contrib, tanpa pustaka shap/numba.
+lightgbm
+# Tahap 4: Web Push (notifikasi saat website tertutup), kunci VAPID dari .env
+pywebpush

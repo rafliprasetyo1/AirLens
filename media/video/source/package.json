@@ -1,0 +1,17 @@
+{
+  "name": "airlens-booth-video",
+  "version": "1.0.0",
+  "description": "Sumber video booth AirLens (Three.js + Playwright + ffmpeg)",
+  "scripts": {
+    "render": "node record.js",
+    "peek": "node peek.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "three": "0.160.0",
+    "playwright": "1.49.1"
+  },
+  "private": true
+}

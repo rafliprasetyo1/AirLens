@@ -5,6 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>AirLens — perkiraan kualitas udara dari foto</title>
   <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="/shared/nav.css">
+  <link rel="stylesheet" href="/shared/alerts.css">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="apple-touch-icon" href="/icons/airlens-192.png">
+  <meta name="theme-color" content="#08121c">
 </head>
 <body>
   <a class="skip" href="#hasil">Lewati ke hasil</a>
@@ -16,6 +21,14 @@
         <p class="tagline">Perkiraan kategori AQI dari foto luar ruangan</p>
       </div>
     </div>
+    <nav class="site-nav" aria-label="Halaman AirLens" style="--nav-ink: var(--ink-2); --nav-strong: var(--ink); --nav-accent: var(--accent);">
+      <ul>
+        <li><a href="/" aria-current="page">Photo demo</a></li>
+        <li><a href="/beta.html">Beta sensor</a></li>
+        <li><a href="/product.html">Product</a></li>
+        <li><a href="/modules/">Build guides</a></li>
+      </ul>
+    </nav>
     <p class="disclaimer" role="note"><strong>Perkiraan dari foto, bukan pengukuran resmi.</strong></p>
   </header>
 
@@ -101,13 +114,13 @@
             <div id="iq-body"></div>
           </article>
 
-          <article class="card" style="--i:2" aria-labelledby="hint-title">
+          <article class="card" style="--i:3" aria-labelledby="hint-title">
             <h3 id="hint-title">Petunjuk visual dari foto</h3>
             <p class="muted small">Bar penuh = lebih berkabut dibanding foto-foto data latih.</p>
             <ul class="hints" id="hints"></ul>
           </article>
 
-          <article class="card" style="--i:3" aria-labelledby="prob-title">
+          <article class="card" style="--i:4" aria-labelledby="prob-title">
             <h3 id="prob-title">Probabilitas tiap kategori</h3>
             <ul class="probs" id="probs"></ul>
             <p class="muted small" id="model-info"></p>
@@ -126,5 +139,6 @@
     <p>Kategori mengikuti AQI US EPA (revisi 2024). Perkiraan dari foto, bukan pengukuran resmi; untuk keputusan kesehatan gunakan data stasiun resmi.</p>
   </footer>
   <script src="app.js"></script>
+  <script src="/shared/alerts.js"></script>
 </body>
 </html>

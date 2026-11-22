@@ -1,0 +1,52 @@
+# Aturan dua pemicu: satu sumber kebenaran untuk node lengkap, simulator node, Beta, kamera Beta, dan kamera live.
+# Nilai awal dari docs/AIRLENS_KONSEP_UTAMA.md bagian 5. Keputusan diambil di server (api/airlens_api/triggers.py).
+#
+# Sumber: beta:<id> (AirLens Beta, ESP32 + 4 MQ) dan node:<id> (node lengkap konsep / simulatornya).
+# "Gas naik"  = salah satu pemicu CO, VOC, NOx, atau Beta aktif.
+# "Kamera"    = salah satu pemicu kamera (node, kamera Beta, kamera live) aktif.
+# Kejadian per ruangan: kamera + gas -> smoke_confirmed; gas saja -> invisible_gas; kamera saja -> visible_smoke;
+# semua pemicu keluar -> back_to_normal (sekali).
+
+rooms:
+  default: booth              # ruangan untuk sumber yang tidak cocok dengan pola mana pun
+  booth:
+    sources: ["node:*", "beta:*"]
+
+camera:
+  enter_prob: 0.70            # masuk: >= enter_count dari window penilaian terakhir di atas ambang (median >= 0,70)
+  window: 5
+  enter_count: 3
+  exit_prob: 0.40             # keluar: median window terakhir < 0,40 selama exit_seconds (meredam kedipan satu frame)
+  exit_seconds: 30
+
+co:                           # Alphasense CO-B4, ppm setelah kalibrasi. 30 ppm ~ pedoman WHO paparan 1 jam
+  enter: 30
+  consecutive: 2
+  exit: 20
+  exit_seconds: 60
+voc:                          # Sensirion SEN66, INDEKS VOC (100 = kondisi biasa ruangan), bukan ppm
+  enter: 250
+  consecutive: 2
+  exit: 180
+  exit_seconds: 60
+nox:                          # Sensirion SEN66, INDEKS NOx, bukan ppm
+  enter: 150
+  consecutive: 2
+  exit: 100
+  exit_seconds: 60
+beta:                         # Beta (ESP32 + 4 MQ). Dipakai api/sensor.py
+  # Cadangan bila model airlens-beta-gas belum ada (dan untuk format lama mq2_rs_kohm): aturan rasio MQ-2,
+  # Rs/baseline (makin kecil = makin banyak gas).
+  enter_ratio: 0.6
+  consecutive: 2              # juga dipakai model: jumlah bacaan berturut-turut di atas enter_prob
+  exit_ratio: 0.8
+  model:                      # revisi Beta SHAP: keputusan dari model gas Beta
+    enter_prob: 0.70          # peluang asap (smoke + smoke_alcohol) >= 0,70 sebanyak `consecutive` kali -> peringatan
+    exit_clean_prob: 0.60     # keluar bila peluang clean_air >= 0,60
+    smoke_classes: [smoke, smoke_alcohol]
+    # Kelas alcohol hanya DITAMPILKAN (tidak memicu peringatan): di dataset latih MQ-3 hampir tidak bereaksi pada
+    # parfum sehingga alkohol sering tertebak pada udara bersih (peringatan palsu). Isi [alcohol] untuk mengaktifkan.
+    alcohol_classes: []
+
+cooldown_seconds: 60          # jeda anti-spam per jenis kejadian per ruangan
+source_timeout_seconds: 60    # sumber tanpa data selama ini dianggap pergi (sesi kamera ditutup, node mati)

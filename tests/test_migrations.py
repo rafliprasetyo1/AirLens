@@ -9,7 +9,8 @@ import airlens
 from airlens.db.session import get_engine
 
 ALEMBIC_INI = Path(airlens.__file__).parent / "db" / "alembic.ini"
-TABLES = {"predictions", "iqair_readings", "model_versions", "monitoring_reports", "iqair_requests"}
+TABLES = {"predictions", "iqair_readings", "model_versions", "monitoring_reports", "iqair_requests",
+          "sensor_nodes", "sensor_readings", "events", "node_readings", "push_subscriptions"}
 
 
 @pytest.fixture

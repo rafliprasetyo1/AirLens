@@ -44,7 +44,9 @@ data:
   # Disetujui 2026-10-25: hazardous terlalu sedikit lokasi (36 stasiun) untuk val/test bermakna.
   # Disetujui 2026-11-20: 3 kelas (good->moderate, usg->unhealthy); 85% salah prediksi 5 kelas hanya meleset 1 kelas.
   # Digabung ke kelas yang LEBIH BURUK agar saran kesehatan konservatif. Lihat DECISIONS.md.
-  class_merge: {good: moderate, usg: unhealthy, hazardous: very_unhealthy}
+  # Skema tiga tingkat (src/airlens/tiers.py): Low 0–100, Elevated 101–200, High 201+. Model lama bernama
+  # moderate/unhealthy/very_unhealthy tetap ditampilkan benar (penggabungan sama).
+  class_merge: {good: low, moderate: low, usg: elevated, unhealthy: elevated, very_unhealthy: high, hazardous: high}
 
 # Fase 5: monitoring tanpa label + promosi model. Jadwal dalam UTC.
 monitoring:
@@ -65,3 +67,12 @@ promotion:
   max_ece_increase: 0.02
   min_shadow_samples: 5
   max_uncertain_rate_increase: 0.10   # pada data shadow
+
+# Tahap 2 (Beta): ESP32 + MQ-2 mengirim POST /sensor/readings tiap 5 detik. Rasio = Rs / baseline.
+# Baseline = median N bacaan valid pertama setelah pemanasan. Ambang alert/pulih ada di config/triggers.yaml
+# (bagian beta), satu sumber kebenaran untuk semua pemicu. Lihat DECISIONS.md (Tahap 2 dan 3).
+sensor:
+  warmup_seconds: 180
+  baseline_samples: 24
+  offline_seconds: 20
+  history_max_minutes: 120

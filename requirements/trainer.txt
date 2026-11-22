@@ -346,6 +346,7 @@ cloudpickle==3.1.2 \
     #   -c dev.txt
     #   joblib
     #   mlflow-skinny
+    #   shap
 contourpy==1.4.0 \
     --hash=sha256:018227e134b73090b06f911e773a526c77c9af426be29065500ce096a5accd4c \
     --hash=sha256:072a702e2e178f4fcf96f04775d0c059e4c917925abf0d3208ebb6865df3c23d \
@@ -946,6 +947,16 @@ kiwisolver==1.5.1 \
     # via
     #   -c dev.txt
     #   matplotlib
+lightgbm==4.7.0 \
+    --hash=sha256:129535462686f274df179133643118c5c5c5667167fe6c3a28d955f0b3c8e868 \
+    --hash=sha256:d23e922acd891e77212e4d0fbcee9ba973c96dee479491341d05ba595357ebb7 \
+    --hash=sha256:d4529acec5c6fefe4768302a529707d0ead90f6a6f42df694b856212e09695b8 \
+    --hash=sha256:dfc1cfe8e760387be1e7ba7a214688be21fdff96e4ed9749188f83e1877c2477 \
+    --hash=sha256:f42d1e5b32b6f170e606d7c689c6165671da98d7bf37f1addec2623efc8740c9 \
+    --hash=sha256:f8e20f682c9aabd000bcf4a7ed8aa6f473c1adfecccae34ec24e823d156f4af0
+    # via
+    #   -c dev.txt
+    #   -r trainer.in
 mako==1.4.3 \
     --hash=sha256:723296007c870bfd6b3f0c3230dba7198096e5269297ebf5e4eff9e7ffa39d4f \
     --hash=sha256:cd6537fe88d5fec315c55c2f8529bc4ce7a9a352ad7db3eeaa6a66e2dd4ec37a
@@ -1238,6 +1249,7 @@ narwhals==2.26.0 \
     --hash=sha256:6b9cadca82f375c7e4cf584fdc86ca25da54827307a9c58f94547ee6104b82dd
     # via
     #   -c dev.txt
+    #   lightgbm
     #   scikit-learn
 nbformat==5.11.1 \
     --hash=sha256:32d4521c68c6e7d5b29c76defaeed9f42ea733142b9b19f88277ce10390b9c4d \
@@ -1317,6 +1329,7 @@ numpy==2.5.3 \
     #   -r trainer.in
     #   contourpy
     #   imagehash
+    #   lightgbm
     #   matplotlib
     #   ml-dtypes
     #   onnx
@@ -1325,6 +1338,7 @@ numpy==2.5.3 \
     #   pywavelets
     #   scikit-learn
     #   scipy
+    #   shap
 onnx==1.23.2 \
     --hash=sha256:008cb0467b2bbee41448acc7da8b6f4e704624cb0d327a2d5adafc7ce19bc5b8 \
     --hash=sha256:0100e6c3f30db8ff10876d8cfd0cb27296166d5a612ab37c3998e07e83b3fde8 \
@@ -1425,6 +1439,7 @@ packaging==26.3 \
     #   matplotlib
     #   mlflow-skinny
     #   onnxruntime
+    #   shap
 pandas==3.0.6 \
     --hash=sha256:0704044b676496b8350e023b09f174a26772456c974a2b11c36bebb558c9490d \
     --hash=sha256:085e3786ae6b2e82b406266bce36690f72b9dc1421903ba9296b2981a9fcf586 \
@@ -1487,6 +1502,7 @@ pandas==3.0.6 \
     # via
     #   -c dev.txt
     #   -r trainer.in
+    #   shap
 pillow==12.3.0 \
     --hash=sha256:00808c5e14ef63ac5161091d242999076604ff74b883423a11e5d7bbb38bf756 \
     --hash=sha256:04f01d28a6aaff387bf842a13be313df23ba0597a44f1a976c9feb3c6ff4711a \
@@ -2068,6 +2084,12 @@ pyyaml==6.0.3 \
     #   huggingface-hub
     #   jupytext
     #   mlflow-skinny
+qrcode==8.2 \
+    --hash=sha256:16e64e0716c14960108e85d853062c9e8bba5ca8252c0b4d0231b9df4060ff4f \
+    --hash=sha256:35c3f2a4172b33136ab9f6b3ef1c00260dd2f66f858f24d88418a015f446506c
+    # via
+    #   -c dev.txt
+    #   -r trainer.in
 referencing==0.37.0 \
     --hash=sha256:381329a9f99628c9069361716891d34ad94af76e461dcb0335825aecc7692231 \
     --hash=sha256:44aefc3142c5b842538163acb373e24cce6632bd54bdb01b21ad5863489f50d8
@@ -2265,6 +2287,7 @@ scikit-learn==1.9.1 \
     # via
     #   -c dev.txt
     #   -r trainer.in
+    #   shap
 scipy==1.18.1 \
     --hash=sha256:011413b7426b75012840e35649e00fe0a2c3bae89fed433876e3a99251572efc \
     --hash=sha256:0ac49ea97594532dd44b7136094d35f5440fa06e6d9c6384a74c01764df388c5 \
@@ -2330,13 +2353,51 @@ scipy==1.18.1 \
     # via
     #   -c dev.txt
     #   imagehash
+    #   lightgbm
     #   scikit-learn
+    #   shap
+shap==0.53.0 \
+    --hash=sha256:10c2588b0d46a1b5c02b4f4b1e83cac4ef0a0472077b908e99846221f0651739 \
+    --hash=sha256:11fd0b7705cef0c767ae84c99cd13b77d9c28c56d3445f1bc6332e0ded48e62b \
+    --hash=sha256:14a33b9a8e1c65e05f3313091eaf298b16c3859d405a238a4862550376b3b070 \
+    --hash=sha256:2cd06b5d6d3da9cf51fdac889b3a375a1fc7e9c8f735e139be2bb87d0612f457 \
+    --hash=sha256:3b020ec262b0c18f9739465e1b696bca742360a64a1bb07e21d0b3a3c53d2ea7 \
+    --hash=sha256:491404b2fcd8661a3ebc6d260bea5c6ace5e8b8ff0962196c2d543d5e31c9408 \
+    --hash=sha256:4919a23ac86feecfd3c039fb771633bface15e4444dccb4970e2c90610d53524 \
+    --hash=sha256:4b1b804c2798d16a6db0a34c2634a54f1385d65bf0075be86cd444e56019d4b7 \
+    --hash=sha256:4c59dc3eed156cdf9ebb06954909f15145b57f2a07ab9e39373b43d7d9f99c4d \
+    --hash=sha256:4ec6e3e7facfae25b9b8e834c62f5c140417ef16e867040f4d6ac95918267f1f \
+    --hash=sha256:543b136a826a368eb16145a6637224be6fa5f7aacb3b1558e4174d7ee80b4dae \
+    --hash=sha256:5bd1922e309376f3644b3dda8d38a29436b3cba743d4247d0207a38e0705a2cc \
+    --hash=sha256:5beadf6e78d3d761462ebdcbe574a4c663d4ee6368226a4edcd18ad45f294862 \
+    --hash=sha256:5d35da9c49aef8e431476d02fe84481c90264aae715c2b110002eaf1ece40b8b \
+    --hash=sha256:73264a5ee7c8da85dde8cbf361cf1d1a6f2e622670a1c0a4378dd03ad3b68a47 \
+    --hash=sha256:95c18c3f6b123fbc764cf35ecf5704b9239bec0dae0fe6e1ea01e5e58c265159 \
+    --hash=sha256:983d86a62e09769b6cbba3d280977b8c542271eb8e92a9c553d69f0845df8f88 \
+    --hash=sha256:a125f1fdcf8cdc9d669898c4ec385470ff07834f82777d54a9917a280831d906 \
+    --hash=sha256:a55625b36814a961410786880a25ff07d26f8872ed60784f5ac9b410f6c31f83 \
+    --hash=sha256:a84e6f30123ff76f596310a0b00d4cac769e7eaeaeb5f21f5086ff72590601b3 \
+    --hash=sha256:adebe5538f0815a0923e074174ad87a7039a61638146f1375113643a34197840 \
+    --hash=sha256:c3caea0200e7505ffd2d3bdbf2db56fbe9129da6edda202305751f1c3329e009 \
+    --hash=sha256:cdcf5c063f12c8778831982fa45ee30818141a4bfe023b699fdf1620a0fce2b6 \
+    --hash=sha256:de517a46fa5ac8b72cc7c65eed4bd2fc891e319494aa884077420acbbe1beb8c \
+    --hash=sha256:e232100d63d851e7226573f479b5e6fe5c510dd7fa62a58562eeeb02cdc6a350 \
+    --hash=sha256:f5823e8c2d2a28c65348471d0baee5a3750d2f3853100f426e8ce5163f508f6b
+    # via
+    #   -c dev.txt
+    #   -r trainer.in
 six==1.17.0 \
     --hash=sha256:4721f391ed90541fddacab5acf947aa0d3dc7d27b2e1e8eda2be8970586c3274 \
     --hash=sha256:ff70335d468e7eb6ec65b95b99d3a2836546063f63acc5171de367e834932a81
     # via
     #   -c dev.txt
     #   python-dateutil
+slicer==0.0.8 \
+    --hash=sha256:2e7553af73f0c0c2d355f4afcc3ecf97c6f2156fcf4593955c3f56cf6c4d6eb7 \
+    --hash=sha256:6c206258543aecd010d497dc2eca9d2805860a0b3758673903456b7df7934dc3
+    # via
+    #   -c dev.txt
+    #   shap
 smmap==5.0.3 \
     --hash=sha256:4d9debb8b99007ae47165abc08670bd74cb74b5227dda7f643eccc4e9eb5642c \
     --hash=sha256:c106e05d5a61449cf6ba9a1e650227ecfb141590d2a98412103ff35d89fc7b2f
@@ -2438,6 +2499,7 @@ tqdm==4.70.1 \
     #   -c dev.txt
     #   huggingface-hub
     #   kaggle
+    #   shap
 traitlets==5.16.1 \
     --hash=sha256:ed900c2b631aa3a112811139fa97b8d2c3bad5e989656bba4b7e52c7852c18c1 \
     --hash=sha256:f775618166caa0396c8e337099240f2bd3e5e917d203b2e6fbe21a58d3cb1f6b

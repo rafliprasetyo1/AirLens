@@ -1,0 +1,81 @@
+=====================================================================
+ AIRLENS - HARI PAMERAN (KOMPUTER LAB)
+ Salin satu blok, tunggu selesai, lanjut. Detail: docs/EXPO.md
+=====================================================================
+
+---------------------------------------------------------------------
+1. Nyalakan komputer, buka Ubuntu (PowerShell Windows)
+---------------------------------------------------------------------
+wsl -d Ubuntu-24.04
+
+---------------------------------------------------------------------
+2. Ambil kode terbaru dan cek kesiapan
+---------------------------------------------------------------------
+cd ~/AirLens
+git pull
+export PATH="$HOME/.local/bin:$PATH"
+make doctor
+# Ulangi sampai "HASIL: siap". .env dan authtoken ngrok sudah disiapkan saat sesi lab
+# (kalau .env sudah dihapus: ulangi LANGKAH 1 di AirLens_perintah_lab.txt).
+
+---------------------------------------------------------------------
+3. Nyalakan AirLens + ngrok + QR
+---------------------------------------------------------------------
+make expo-setup PROFILE=lab
+# Catat alamat publik dan URL sensor. QR: docs/assets/qr_expo.png (tampilkan / cetak).
+
+---------------------------------------------------------------------
+4. Perbarui URL di ESP32 (alamat ngrok free baru setiap sesi)
+---------------------------------------------------------------------
+# Chrome komputer lab: http://localhost:8080/tools/flash.html
+#   Connect a device -> Read device settings -> isi Server URL baru
+#   (https://<alamat-sesi>.ngrok-free.app/api/sensor/readings), Seconds between readings = 10
+#   -> Save to device. (Tidak perlu flash ulang.)
+
+---------------------------------------------------------------------
+5. Layar booth
+---------------------------------------------------------------------
+# Chrome komputer lab (tidak memakai kuota ngrok):
+#   http://localhost:8080/beta.html   (sensor + SHAP)
+#   http://localhost:8080/          (foto -> tingkat kualitas udara + pembanding IQAir)
+#   http://localhost:8080/product.html (model 3D: hanya di layar booth)
+# Pemanasan sensor +-30 menit sebelum pengunjung datang.
+
+---------------------------------------------------------------------
+6. Selama pameran
+---------------------------------------------------------------------
+make doctor
+# Cek berkala. Pantau kuota ngrok di dashboard.ngrok.com (paket gratis: +-20.000 permintaan/bulan).
+
+---------------------------------------------------------------------
+DARURAT
+---------------------------------------------------------------------
+# Internet putus:
+#   layar booth tetap http://localhost:8080; jalankan simulator (berlabel "Simulated"):
+python3 scripts/sensor_sim.py --replay dataset
+#   (Ctrl+C untuk berhenti.) ESP32 terus mencoba; setelah internet kembali:
+make expo-public
+#   lalu perbarui URL ESP32 (langkah 4) dan QR.
+
+# Alamat ngrok berubah / ngrok mati:
+make expo-public
+
+# Sensor rusak / ESP32 bermasalah:
+python3 scripts/sensor_sim.py --replay dataset
+
+# Layanan mati / halaman error:
+make expo-setup PROFILE=lab
+make logs
+
+# Model salah / hilang:
+make models-pull
+
+---------------------------------------------------------------------
+7. Selesai pameran: bereskan
+---------------------------------------------------------------------
+cd ~/AirLens
+make expo-public-stop
+docker compose -f compose.yaml down
+# Bila komputer lab dipakai orang lain setelah ini:
+rm -f .env
+rm -f ~/.config/ngrok/ngrok.yml

@@ -14,3 +14,11 @@
 *.onnx binary
 *.pkl  binary
 *.parquet binary
+
+# Media dan model 3D
+*.mp4 binary
+*.stl binary
+*.glb binary
+*.mp3 binary
+*.woff2 binary
+*.step binary

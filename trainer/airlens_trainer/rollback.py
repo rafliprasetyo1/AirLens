@@ -1,4 +1,5 @@
-"""`make rollback [VERSION=n]`: pindahkan alias production ke versi sebelumnya (atau VERSION) TANPA build ulang.
+"""`make rollback [VERSION=n]` / `make rollback-smoke`: pindahkan alias production ke versi sebelumnya (atau VERSION)
+TANPA build ulang. MODEL=airlens-beta-gas memilih model gas Beta; default model AQI (perilaku lama).
 
 API memeriksa alias secara berkala dan memuat versi tersebut sendiri (≤ 30 detik).
 """
@@ -14,15 +15,16 @@ from airlens.models import registry
 
 def main() -> int:
     engine = get_engine()
-    current = registry.alias_version("production")
-    target = os.environ.get("VERSION") or (registry.previous_production(engine, current) if current else None)
+    model = os.environ.get("MODEL") or registry.REGISTERED_MODEL
+    current = registry.alias_version("production", model=model)
+    target = os.environ.get("VERSION") or (registry.previous_production(engine, current, model) if current else None)
     if not target:
         print(f"Tidak ada versi sebelumnya untuk rollback (production sekarang: v{current}). Pakai VERSION=n.")
         return 1
-    MlflowClient().get_model_version(registry.REGISTERED_MODEL, str(target))  # gagal jelas bila versi tidak ada
-    registry.set_production(engine, target)
-    registry.mark_rolled_back(engine, current)
-    print(f"Rollback: production v{current} → v{target}. API memuat ulang otomatis dalam ≤ 30 detik.")
+    MlflowClient().get_model_version(model, str(target))  # gagal jelas bila versi tidak ada
+    registry.set_production(engine, target, model=model)
+    registry.mark_rolled_back(engine, current, model)
+    print(f"Rollback {model}: production v{current} → v{target}. API memuat ulang otomatis dalam ≤ 30 detik.")
     return 0
 
 

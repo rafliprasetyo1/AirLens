@@ -1,13 +1,17 @@
 import asyncio
 import json
 import logging
+import math
 import os
+import time
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import asynccontextmanager
 from pathlib import Path
 
 import yaml
 from fastapi import Depends, FastAPI, File, Form, HTTPException, Request, UploadFile
+from fastapi.encoders import jsonable_encoder
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse, StreamingResponse
 from sqlalchemy import Engine
 from sqlalchemy.exc import SQLAlchemyError
@@ -20,12 +24,24 @@ from airlens_api.jobs import JobStore
 from airlens_api.model_store import ModelStore
 from airlens_api.pipeline import PredictionPipeline
 from airlens_api.pipeline import Request as PredictRequest
+from airlens_api.events import EventHub, tick_forever
+from airlens_api.events import router as events_router
+from airlens_api.node_routes import router as node_router
+from airlens_api.sensor import SensorConfig
+from airlens_api.beta_model import BetaModelStore
+from airlens_api.push import PushSender
+from airlens_api.push import router as push_router
+from airlens_api.sensor_routes import beta_router
+from airlens_api.sensor_routes import router as sensor_router
+from airlens_api.triggers import TriggerEngine, load_config
 
 logger = logging.getLogger("airlens.api")
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s [%(name)s] %(message)s")
 PROFILE = load_profile()
 # Daftar kota diverifikasi langsung ke API IQAir (lihat config/cities_id.yaml).
 CITIES = yaml.safe_load((CONFIG_DIR / "cities_id.yaml").read_text(encoding="utf-8"))["cities"]
+# Aturan dua pemicu: satu sumber kebenaran untuk semua sumber (config/triggers.yaml).
+TRIGGERS = load_config(CONFIG_DIR / "triggers.yaml")
 
 
 @asynccontextmanager
@@ -36,6 +52,11 @@ async def lifespan(app: FastAPI):
     challenger = ModelStore(cache, alias="challenger")  # shadow mode bila alias challenger ada
     models.start_background()
     challenger.start_background()
+    # Model gas Beta (revisi Beta SHAP): production untuk keputusan + SHAP, challenger diam-diam (shadow).
+    beta_model, beta_challenger = BetaModelStore(cache / "beta"), BetaModelStore(cache / "beta", alias="challenger")
+    beta_model.start_background()
+    beta_challenger.start_background()
+    app.state.beta_model, app.state.beta_challenger = beta_model, beta_challenger
     iqair = IQAirClient(os.environ.get("IQAIR_API_KEY", ""), engine, ttl_seconds=PROFILE["iqair"]["cache_ttl_seconds"],
                         base_url=os.environ.get("IQAIR_BASE_URL", "https://api.airvisual.com/v2"))
     jobs = JobStore()
@@ -43,13 +64,46 @@ async def lifespan(app: FastAPI):
     app.state.pipeline = PredictionPipeline(models, iqair, jobs, engine, PROFILE,
                                             Path(os.environ.get("UPLOADS_DIR", "/app/uploads")), challenger=challenger)
     app.state.executor = ThreadPoolExecutor(max_workers=2, thread_name_prefix="predict")
+    app.state.event_hub.attach_loop(asyncio.get_running_loop())
+    ticker = asyncio.create_task(tick_forever(app))
     yield
+    ticker.cancel()
     models.stop()
     challenger.stop()
+    beta_model.stop()
+    beta_challenger.stop()
     app.state.executor.shutdown(wait=False, cancel_futures=True)
 
 
 app = FastAPI(title="AirLens API", version=__version__, lifespan=lifespan)
+app.state.sensor_cfg = SensorConfig.from_profile(PROFILE, TRIGGERS)
+app.state.push = PushSender()
+app.state.event_hub = EventHub(push=app.state.push)
+app.state.triggers = TriggerEngine(TRIGGERS, sink=app.state.event_hub.sink)
+
+
+def _finite(value):
+    """NaN/Infinity tidak sah di JSON: ganti dengan teks agar respons 422 tetap bisa dikirim."""
+    if isinstance(value, float) and not math.isfinite(value):
+        return str(value)
+    if isinstance(value, dict):
+        return {k: _finite(v) for k, v in value.items()}
+    if isinstance(value, list):
+        return [_finite(v) for v in value]
+    return value
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_error(request: Request, exc: RequestValidationError):
+    # Sama dengan handler bawaan FastAPI, kecuali angka tak hingga/NaN di "input" (dulu menyebabkan galat 500).
+    return JSONResponse(status_code=422, content={"detail": _finite(jsonable_encoder(exc.errors()))})
+
+
+app.include_router(push_router)  # Web Push: /push/public-key, /push/subscribe, /push/unsubscribe
+app.include_router(beta_router)  # alias /beta/explain/latest, /beta/model
+app.include_router(sensor_router)  # Beta: /sensor/readings, /sensor/latest, /sensor/history, ...
+app.include_router(events_router)  # kejadian dua pemicu: /events/latest, /events, /events/stream
+app.include_router(node_router)  # node lengkap (konsep) + simulator: /node/readings, /node/latest, /node/history
 
 
 def engine_dep() -> Engine:

@@ -1,0 +1,80 @@
+{
+  "sen66": {
+    "label": "Sensirion SEN66",
+    "pull_dir": [
+      0,
+      0,
+      1
+    ],
+    "position_mm": [
+      -22.0,
+      43.8,
+      25.0
+    ]
+  },
+  "co_b4_isb": {
+    "label": "Alphasense CO-B4 + ISB",
+    "pull_dir": [
+      1,
+      0,
+      0
+    ],
+    "position_mm": [
+      24.0,
+      47.5,
+      -8.0
+    ]
+  },
+  "ads1115": {
+    "label": "ADS1115 16-bit ADC",
+    "pull_dir": [
+      -1,
+      0,
+      0
+    ],
+    "position_mm": [
+      -20.0,
+      50.5,
+      -22.0
+    ]
+  },
+  "rpi5": {
+    "label": "Raspberry Pi 5",
+    "pull_dir": [
+      -1,
+      0,
+      0
+    ],
+    "position_mm": [
+      -8.0,
+      96.0,
+      4.0
+    ]
+  },
+  "ai_hat_plus": {
+    "label": "AI HAT+ (Hailo)",
+    "pull_dir": [
+      0,
+      1,
+      0
+    ],
+    "position_mm": [
+      2.0,
+      113.6,
+      4.0
+    ]
+  },
+  "cam3_wide": {
+    "label": "Camera Module 3 Wide",
+    "pull_dir": [
+      0,
+      0.3,
+      1
+    ],
+    "position_mm": [
+      0.0,
+      177.75,
+      27.65
+    ]
+  }
+}

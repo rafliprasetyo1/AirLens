@@ -17,6 +17,7 @@ from sqlalchemy import Engine
 from sqlalchemy.orm import Session
 
 from airlens.aqi import BREAKPOINTS, aqi_to_category, class_label, merge_for_classes
+from airlens.tiers import tier_of, tier_view
 from airlens.data.quality import image_stats, reject_reason
 from airlens.monitoring.signature import input_signature, project
 from airlens.db.models import Prediction
@@ -90,17 +91,29 @@ class PredictionPipeline:
 
     # ------------------------------------------------------------------ util
     def _category_view(self, cat: str, classes: list[str], merge: dict[str, str]) -> dict:
+        """Tampilan kelas: skema tiga tingkat (Low/Elevated/High, termasuk model 3 kelas bernama lama) memakai
+        airlens.tiers; model lain (mis. 5 kelas) tetap memakai kategori EPA aslinya. `key` = nama kelas MODEL,
+        agar cocok dengan daftar probabilitas."""
         lo, hi = class_ranges(classes, merge)[cat]
+        tier = tier_of(cat, classes, merge)
+        if tier:
+            return {**tier_view(tier), "key": cat, "tier": tier, "aqi_range": [lo, hi]}
         bg, fg = COLORS[cat]
         return {"key": cat, "label": class_label(cat, merge), "aqi_range": [lo, hi], "color": bg,
-                "text_color": fg, "advice": ADVICE[cat]}
+                "text_color": fg, "advice": ADVICE[cat], "tier": None}
+
+    @staticmethod
+    def _label(cat: str, classes: list[str], merge: dict[str, str]) -> str:
+        tier = tier_of(cat, classes, merge)
+        return tier_view(tier)["label"] if tier else class_label(cat, merge)
 
     def _iqair_view(self, reading: Reading, pred_cat: str | None, classes: list[str], merge: dict[str, str]) -> dict:
         cat = merge.get(aqi_to_category(reading.aqi_us), aqi_to_category(reading.aqi_us))
         view = {"status": "ok", "aqi_us": reading.aqi_us, "city": reading.city, "state": reading.state,
                 "country": reading.country, "main_pollutant": reading.main_pollutant,
                 "observed_at": reading.observed_at.isoformat() if reading.observed_at else None,
-                "cached": reading.cached, "category": self._category_view(cat, classes, merge)}
+                "cached": reading.cached, "stale": reading.stale, "fetched_at": reading.fetched_at.isoformat(),
+                "category": self._category_view(cat, classes, merge)}
         if pred_cat:
             lo, hi = class_ranges(classes, merge)[pred_cat]
             view["selisih_kategori"] = classes.index(pred_cat) - classes.index(cat)
@@ -248,7 +261,7 @@ class PredictionPipeline:
             "runner_up": {**self._category_view(classes[k2], classes, merge), "p": round(float(probs[k2]), 4)},
             "confidence": round(float(probs[k]), 4),
             "threshold": round(threshold, 4),
-            "probabilities": [{"key": c, "label": class_label(c, merge), "p": round(float(p), 4)}
+            "probabilities": [{"key": c, "label": self._label(c, classes, merge), "p": round(float(p), 4)}
                               for c, p in zip(classes, probs)],
             "hints": hints,
             "iqair": iq_view,

@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AirLens tools: calibration recorder</title>
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="/product/airlens-icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/product/product.css">
+  <link rel="stylesheet" href="/tools/tools.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header class="bar">
+    <a class="brand" href="/modules/">
+      <img src="/product/airlens-icon.svg" alt="" width="28" height="28">
+      <span>AirLens tools</span>
+    </a>
+    <a class="bar-link" href="/tools/flash.html">Flash</a>
+  </header>
+
+  <main id="main" class="tools">
+    <p class="tag">Operator tool</p>
+    <h1>Calibration recorder</h1>
+    <p>Record readings from the AirLens Beta over USB, label each scenario, then download a CSV. The CSV shows how far the model, trained on another team's sensors, drifts on this device (<code>make import-beta-recordings</code>).</p>
+
+    <div class="notice-box warn">
+      <p><strong>Safety.</strong> Use only incense smoke and hand sanitizer, in a ventilated room, with the sensor at arm's length. Never create carbon monoxide (no engines, charcoal or gas burners indoors). Keep flames away from the sanitizer.</p>
+    </div>
+    <div class="notice-box warn" id="no-serial" hidden>
+      <p>This browser can't talk to USB devices. Open this page in Chrome or Edge through <code>http://localhost:8080</code>.</p>
+    </div>
+
+    <section aria-labelledby="h-conn">
+      <h2 id="h-conn">1. Connect</h2>
+      <p>Warm the sensors for at least 15 minutes after power-on before recording (30 minutes is better).</p>
+      <div class="row">
+        <button type="button" class="btn primary" id="connect">Connect a device</button>
+        <button type="button" class="btn" id="disconnect" disabled>Disconnect</button>
+      </div>
+      <p class="status-line" id="status" role="status">No device connected.</p>
+    </section>
+
+    <section aria-labelledby="h-label">
+      <h2 id="h-label">2. Label the scenario</h2>
+      <p>Pick the scenario that matches the air around the sensor right now. Every reading gets the active label. Record about 10 minutes per label.</p>
+      <div class="row" role="group" aria-label="Scenario label" id="labels">
+        <button type="button" class="btn" data-label="none" aria-pressed="true">No label</button>
+        <button type="button" class="btn" data-label="clean_air" aria-pressed="false">Clean air</button>
+        <button type="button" class="btn" data-label="smoke" aria-pressed="false">Incense smoke</button>
+        <button type="button" class="btn" data-label="alcohol" aria-pressed="false">Hand sanitizer</button>
+        <button type="button" class="btn" data-label="smoke_alcohol" aria-pressed="false">Smoke + sanitizer</button>
+      </div>
+      <dl class="counts" id="counts">
+        <div><dt>Clean air</dt><dd data-count="clean_air">0:00</dd></div>
+        <div><dt>Incense smoke</dt><dd data-count="smoke">0:00</dd></div>
+        <div><dt>Hand sanitizer</dt><dd data-count="alcohol">0:00</dd></div>
+        <div><dt>Smoke + sanitizer</dt><dd data-count="smoke_alcohol">0:00</dd></div>
+      </dl>
+    </section>
+
+    <section aria-labelledby="h-chart">
+      <h2 id="h-chart">3. Readings</h2>
+      <div class="legend" id="legend"></div>
+      <figure class="chart-box" style="margin:0">
+        <svg id="chart" viewBox="0 0 640 240" role="img" aria-labelledby="chart-desc"><desc id="chart-desc">Pin voltage of the four MQ sensors over the last 10 minutes.</desc></svg>
+      </figure>
+      <p class="status-line" id="latest"></p>
+    </section>
+
+    <section aria-labelledby="h-save">
+      <h2 id="h-save">4. Save</h2>
+      <div class="row">
+        <button type="button" class="btn primary" id="download" disabled>Download CSV</button>
+        <button type="button" class="btn" id="clear" disabled>Clear recording</button>
+      </div>
+      <p id="rows">0 readings recorded.</p>
+      <p>Then upload the CSV to the team's Google Drive folder.</p>
+    </section>
+  </main>
+  <script src="/tools/recorder.js"></script>
+</body>
+</html>

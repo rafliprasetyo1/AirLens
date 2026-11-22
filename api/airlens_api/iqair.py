@@ -41,6 +41,7 @@ class Reading:
     observed_at: datetime | None
     fetched_at: datetime
     cached: bool
+    stale: bool = False   # internet putus: bacaan terakhir yang tersimpan, berapa pun umurnya
 
 
 class IQAirClient:
@@ -109,6 +110,28 @@ class IQAirClient:
             s.refresh(row)
             return self._to_reading(row, cached=False)
 
+    def _last_reading(self, city: str, state: str | None, country: str | None) -> Reading | None:
+        with Session(self.engine) as s:
+            q = select(IqairReading).where(IqairReading.city == city)
+            if state:
+                q = q.where(IqairReading.state == state)
+            row = s.scalars(q.order_by(IqairReading.fetched_at.desc()).limit(1)).first()
+            if row is None:
+                return None
+            reading = self._to_reading(row, cached=True)
+            reading.stale = True
+            return reading
+
+    def _offline(self, exc: "IQAirUnavailable", place: tuple[str, str | None, str | None] | None) -> Reading:
+        """Internet putus (booth offline): pakai bacaan terakhir yang tersimpan; galat lain diteruskan apa adanya."""
+        if exc.code != "jaringan":
+            raise exc
+        last = self._last_reading(*place) if place else None
+        if last is None:
+            raise IQAirUnavailable("jaringan_tanpa_cache",
+                                   "IQAir tidak terjangkau dan belum ada data tersimpan untuk lokasi ini.") from None
+        return last
+
     @staticmethod
     def _to_reading(row: IqairReading, cached: bool) -> Reading:
         return Reading(id=row.id, city=row.city, state=row.state, country=row.country, aqi_us=row.aqi_us,
@@ -121,7 +144,10 @@ class IQAirClient:
             fresh = self._fresh_reading(city, state, country)
             if fresh:
                 return fresh
-            return self._store(self._call("city", {"city": city, "state": state, "country": country}))
+            try:
+                return self._store(self._call("city", {"city": city, "state": state, "country": country}))
+            except IQAirUnavailable as exc:
+                return self._offline(exc, (city, state, country))
 
     def by_coords(self, lat: float, lon: float) -> Reading:
         key = (round(lat / 0.05) * 0.05, round(lon / 0.05) * 0.05)
@@ -131,6 +157,9 @@ class IQAirClient:
                 fresh = self._fresh_reading(*hit[1])
                 if fresh:
                     return fresh
-            reading = self._store(self._call("nearest_city", {"lat": lat, "lon": lon}))
+            try:
+                reading = self._store(self._call("nearest_city", {"lat": lat, "lon": lon}))
+            except IQAirUnavailable as exc:
+                return self._offline(exc, hit[1] if hit else None)
             self._coord_cache[key] = (time.monotonic(), (reading.city, reading.state, reading.country))
             return reading

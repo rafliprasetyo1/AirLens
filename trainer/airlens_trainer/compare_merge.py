@@ -14,6 +14,7 @@ from pathlib import Path
 import numpy as np
 
 from airlens.aqi import merge_for_classes
+from airlens.tiers import TIER_IDS, TIER_MERGE
 from airlens.config import load_profile
 from airlens.data.paths import RESULTS_DIR
 from airlens.models.bundle import onnx_logits
@@ -27,7 +28,8 @@ def probs_on(bundle: Path, frame, classes: list[str]) -> np.ndarray:
     meta = json.loads((bundle / "metadata.json").read_text())
     p = calibrated_probs(onnx_logits(bundle / "model.onnx", [Dataset.abs_path(x) for x in frame["image_path"]]),
                          meta["temperature"])
-    target = merge_for_classes(classes)
+    # skema tiga tingkat: nama EPA dan nama lama 3 kelas sama-sama dipetakan lewat TIER_MERGE
+    target = TIER_MERGE if set(classes) <= set(TIER_IDS) else merge_for_classes(classes)
     out = np.zeros((len(p), len(classes)))
     for j, c in enumerate(meta["classes"]):
         out[:, classes.index(target.get(c, c))] += p[:, j]
@@ -53,10 +55,17 @@ def main() -> int:
                          "balanced_accuracy": round(m["balanced_accuracy"], 4), "macro_f1": round(m["macro_f1"], 4),
                          "ece": round(expected_calibration_error(p, y), 4), "threshold_val": round(th["threshold"], 4),
                          "target_tercapai_val": th["target_tercapai"], "coverage": round(1 - sel["rejected_fraction"], 4),
-                         "accepted_accuracy": None if np.isnan(sel["accepted_accuracy"]) else round(sel["accepted_accuracy"], 4)})
+                         "accepted_accuracy": None if np.isnan(sel["accepted_accuracy"]) else round(sel["accepted_accuracy"], 4),
+                         "uncertain_share": round(sel["rejected_fraction"], 4),
+                         # recall kelas terburuk (High / very_unhealthy): paling penting untuk saran kesehatan
+                         "recall_worst_class": round(m["recall_per_class"][-1], 4) if len(y) else None})
     out = RESULTS_DIR / "compare_merge_3class.json"
-    out.write_text(json.dumps({"data_version": ds.data_version, "classes": ds.classes, "rows": rows}, indent=2,
-                              ensure_ascii=False))
+    out.write_text(json.dumps({"data_version": ds.data_version, "classes": ds.classes, "old_bundle": str(old),
+                               "new_bundle": str(new), "rows": rows}, indent=2, ensure_ascii=False))
+    table = ["| Model | Split | n | macro-F1 | Belum pasti | Recall kelas terburuk |", "|---|---|---|---|---|---|"]
+    table += [f"| {r['model']} | {r['split']} | {r['n']} | {r['macro_f1']} | {r['uncertain_share']} | {r['recall_worst_class']} |"
+              for r in rows]
+    (RESULTS_DIR / "compare_merge_3class.md").write_text("\n".join(table) + "\n")
     for r in rows:
         print(r)
     print(f"Laporan: {out}")

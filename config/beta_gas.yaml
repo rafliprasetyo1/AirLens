@@ -1,0 +1,56 @@
+# Model gas Beta (revisi Beta SHAP, docs/prompts/6_beta_shap.md): empat MQ -> 4 kelas, dijelaskan dengan SHAP.
+# Sama untuk semua profil: dataset kecil (6.400 baris), pelatihan CPU hitungan detik.
+
+registered_model: airlens-beta-gas
+
+data:
+  # MultimodalGasData (Narkhede dkk., Data 2022, 7(8):112), Mendeley Data zkwgkjkjn9 versi 2, CC BY 4.0.
+  # Hanya CSV sensor gas (330 KB). Arsip gambar termal (±2,6 GB) tidak diunduh.
+  url: https://data.mendeley.com/public-files/datasets/zkwgkjkjn9/files/717d82f4-2c24-4ad5-8f11-cc73ba405cd0/file_downloaded
+  sha256: abe51aaaebb95e0bb733b517f2a594cf320033803be7da1ee611da5588b3a30d
+  filename: Gas_Sensors_Measurements.csv
+  manual_dir: data/raw/multimodal_gas   # jalur manual: taruh CSV di sini, unduhan dilewati
+  doi: 10.17632/zkwgkjkjn9.2
+  license: CC BY 4.0
+
+# Kolom dataset -> kelas tampilan (urutan = indeks kelas model)
+classes:
+  clean_air: NoGas
+  alcohol: Perfume
+  smoke: Smoke
+  smoke_alcohol: Mixture
+
+# Hanya sensor yang ada di Beta. Fitur = rasio terhadap udara bersih (penyebut: median NoGas di dataset,
+# baseline setelah pemanasan di alat), plus satu fitur turunan MQ-3/MQ-2 (alkohol relatif terhadap asap).
+sensors: [MQ2, MQ3, MQ7, MQ135]
+derived: [mq3_over_mq2]
+
+# Setiap kelas direkam sebagai SATU sesi berurutan (Serial Number 0..1599, ±2 s per baris). Split per blok waktu:
+# tiap sesi dibagi 10 blok berurutan; blok -> split mengikuti pola di bawah sehingga train/val/test sama-sama
+# mencakup awal, tengah, dan akhir sesi. Baris dalam `purge_rows` dari batas antar-split dibuang (bacaan berdekatan
+# sangat mirip, jadi tidak boleh ada di dua split).
+split:
+  blocks: 10
+  pattern: [train, train, val, train, train, test, train, train, val, test]
+  purge_rows: 15          # ±30 detik di kiri-kanan setiap batas antar-split
+
+model:
+  # LightGBM multikelas kecil: TreeSHAP persis (pred_contrib) tanpa pustaka shap di API.
+  num_leaves: 15
+  max_depth: 4
+  learning_rate: 0.05
+  n_estimators: 400        # batas atas; berhenti dini di validasi
+  early_stopping_rounds: 30
+  min_child_samples: 40
+  subsample: 0.8
+  subsample_freq: 1
+  colsample_bytree: 1.0
+  reg_lambda: 1.0
+  seed: 42
+
+# Baseline: aturan Beta lama (hanya MQ-2): rasio < 0,6 -> smoke, selain itu clean_air.
+baseline_rule:
+  mq2_alert_ratio: 0.6
+
+promote:
+  max_smoke_recall_drop: 0.02   # macro-F1 test tidak boleh turun; recall asap turun paling banyak 0,02

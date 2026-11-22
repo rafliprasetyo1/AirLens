@@ -1,0 +1,912 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Merakit Node AirLens</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Tata letak: daftar isi menempel di kiri (desktop), langkah-langkah perakitan di kanan seperti lembar kerja bengkel.
+   Warna kabel mengikuti kebiasaan elektronika: merah 5 V, oranye 3,3 V, hitam GND; warna lain untuk sinyal. */
+:root {
+  --bg: #F3F6F8; --paper: #FFFFFF; --ink: #10222E; --ink-2: #4A5E6B; --line: #D5DEE4; --soft: #E8F0F5;
+  --accent: #1C6FA8; --accent-ink: #FFFFFF; --amber: #B4610E; --amber-soft: #FDF1E3; --danger: #B3261E; --danger-soft: #FCE9E7;
+  --ok: #17794A; --ok-soft: #E3F4EA; --code-bg: #0F1E28; --code-ink: #E3EEF4; --code-dim: #6E8796;
+  --w5v: #D7263D; --w33: #F08A24; --wgnd: #1B1F24; --wsig1: #1F7AE0; --wsig2: #2BA84A; --wsig3: #8E44C9; --wsig4: #D1A10F;
+  --f-head: "Space Grotesk", "Segoe UI", sans-serif; --f-body: "Inter", system-ui, sans-serif; --f-mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0C161D; --paper: #13222C; --ink: #E6EFF4; --ink-2: #9DB3C1; --line: #24394A; --soft: #182C38;
+  --accent: #5CB4EC; --accent-ink: #06202E; --amber: #F2A65A; --amber-soft: #2E2214; --danger: #FF8A80; --danger-soft: #34181A;
+  --ok: #5DD39A; --ok-soft: #12291E; --code-bg: #08121A; --code-ink: #E3EEF4; --code-dim: #6E8796; --wgnd: #C9D3DA; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0C161D; --paper: #13222C; --ink: #E6EFF4; --ink-2: #9DB3C1; --line: #24394A; --soft: #182C38;
+  --accent: #5CB4EC; --accent-ink: #06202E; --amber: #F2A65A; --amber-soft: #2E2214; --danger: #FF8A80; --danger-soft: #34181A;
+  --ok: #5DD39A; --ok-soft: #12291E; --code-bg: #08121A; --code-ink: #E3EEF4; --code-dim: #6E8796; --wgnd: #C9D3DA; color-scheme: dark; }
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font: 400 16px/1.65 var(--f-body); }
+a { color: var(--accent); }
+.wrap { max-width: 1240px; margin: 0 auto; padding-block: 28px 80px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 40px; }
+header.intro { grid-column: 1 / -1; display: grid; gap: 14px; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
+header.intro h1 { margin: 0; font: 700 clamp(30px, 4.4vw, 46px)/1.1 var(--f-head); letter-spacing: -.5px; text-wrap: balance; }
+header.intro p { margin: 0; max-width: 68ch; color: var(--ink-2); font-size: 17px; }
+.progress { display: flex; align-items: center; gap: 12px; font-size: 14px; color: var(--ink-2); }
+.bar { flex: 0 1 320px; height: 8px; background: var(--soft); border-radius: 99px; overflow: hidden; }
+.bar i { display: block; height: 100%; width: 0; background: var(--ok); transition: width .3s; }
+nav.toc { position: sticky; top: calc(16px + env(safe-area-inset-top, 0px)); align-self: start; max-height: calc(100vh - 32px); overflow-y: auto; font-size: 14px; }
+nav.toc ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+nav.toc a { display: flex; gap: 8px; align-items: baseline; padding: 6px 10px; border-radius: 8px; color: var(--ink-2); text-decoration: none; }
+nav.toc a:hover, nav.toc a.on { background: var(--soft); color: var(--ink); }
+nav.toc a .tick { width: 14px; flex: none; color: var(--ok); font-weight: 700; }
+nav.toc .grp { margin: 14px 10px 4px; font: 600 12px var(--f-body); color: var(--ink-2); letter-spacing: .4px; }
+main { min-width: 0; display: grid; gap: 56px; }
+section { scroll-margin-top: 20px; display: grid; gap: 16px; }
+section > h2 { margin: 0; font: 700 28px/1.2 var(--f-head); text-wrap: balance; display: flex; gap: 12px; align-items: baseline; }
+section > h2 .num { font: 500 16px var(--f-mono); color: var(--accent); flex: none; }
+h3 { margin: 10px 0 0; font: 700 19px var(--f-head); }
+p, li { max-width: 72ch; }
+p { margin: 0; }
+ul, ol { margin: 0; padding-left: 22px; display: grid; gap: 6px; }
+.lead { font-size: 17px; color: var(--ink-2); }
+.card { background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; }
+.note, .warn, .danger, .tip { border-radius: 12px; padding: 14px 16px; display: grid; gap: 6px; font-size: 15px; }
+.note { background: var(--soft); }
+.tip { background: var(--ok-soft); }
+.warn { background: var(--amber-soft); }
+.danger { background: var(--danger-soft); }
+.note b:first-child, .warn b:first-child, .danger b:first-child, .tip b:first-child { font-family: var(--f-head); }
+.warn b:first-child { color: var(--amber); } .danger b:first-child { color: var(--danger); } .tip b:first-child { color: var(--ok); }
+.tbl { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--paper); }
+table { border-collapse: collapse; width: 100%; font-size: 14.5px; min-width: 560px; }
+th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-weight: 600; background: var(--soft); }
+tr:last-child td { border-bottom: 0; }
+td code, p code, li code { font: 500 13.5px var(--f-mono); background: var(--soft); padding: 1px 6px; border-radius: 5px; }
+.wire { display: inline-block; width: 22px; height: 6px; border-radius: 3px; vertical-align: middle; margin-right: 6px; }
+details { border: 1px solid var(--line); border-radius: 12px; background: var(--paper); }
+details > summary { cursor: pointer; padding: 12px 16px; font-weight: 600; list-style-position: inside; }
+details > .in { padding: 0 16px 16px; display: grid; gap: 10px; }
+details.math > summary { color: var(--amber); }
+.code { background: var(--code-bg); color: var(--code-ink); border-radius: 12px; overflow: hidden; }
+.code .head { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px 8px 16px; font: 500 13px var(--f-mono); color: var(--code-dim); border-bottom: 1px solid rgba(255,255,255,.08); }
+.code button { font: 600 13px var(--f-body); color: var(--code-ink); background: rgba(255,255,255,.08); border: 0; padding: 6px 12px; border-radius: 8px; cursor: pointer; }
+.code button:focus-visible, .check input:focus-visible, nav.toc a:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+.code pre { margin: 0; padding: 12px 0; overflow-x: auto; font: 400 13.5px/1.6 var(--f-mono); counter-reset: ln; }
+.code pre span { display: block; padding: 0 16px 0 0; white-space: pre; }
+.code pre span::before { counter-increment: ln; content: counter(ln); display: inline-block; width: 42px; padding-right: 14px; text-align: right; color: var(--code-dim); user-select: none; }
+.explain { list-style: none; padding: 0; gap: 8px; }
+.explain li { display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 10px; font-size: 15px; }
+.explain li > b { font: 500 13px var(--f-mono); color: var(--accent); padding-top: 2px; }
+.serial { font: 400 13.5px/1.6 var(--f-mono); background: var(--soft); border-radius: 10px; padding: 10px 14px; white-space: pre; overflow-x: auto; }
+.diagram { background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: 12px; overflow-x: auto; }
+.diagram svg { display: block; min-width: 640px; width: 100%; height: auto; }
+.diagram svg text { font-family: var(--f-body); fill: var(--ink); }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: 13.5px; color: var(--ink-2); padding: 6px 4px 0; }
+.steps { counter-reset: st; list-style: none; padding: 0; gap: 10px; }
+.steps > li { counter-increment: st; display: grid; grid-template-columns: 32px minmax(0, 1fr); gap: 10px; }
+.steps > li::before { content: counter(st); font: 700 14px var(--f-head); width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: var(--soft); color: var(--accent); }
+.check { display: inline-flex; align-items: center; gap: 10px; font-weight: 600; padding: 10px 14px; border-radius: 10px; border: 1px solid var(--line); background: var(--paper); cursor: pointer; justify-self: start; }
+.check input { width: 18px; height: 18px; accent-color: var(--ok); }
+.check:has(input:checked) { background: var(--ok-soft); border-color: transparent; color: var(--ok); }
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+.grid2 .card h3 { margin: 0 0 6px; }
+.pill { display: inline-block; font: 600 12px var(--f-body); padding: 2px 9px; border-radius: 99px; background: var(--soft); color: var(--ink-2); }
+.pill.need { background: var(--amber-soft); color: var(--amber); }
+@media (max-width: 900px) {
+  .wrap { grid-template-columns: 1fr; gap: 24px; }
+  nav.toc { position: static; max-height: none; border: 1px solid var(--line); border-radius: 12px; background: var(--paper); padding: 8px; }
+  .explain li { grid-template-columns: 1fr; gap: 2px; }
+}
+@media (prefers-reduced-motion: reduce) { .bar i { transition: none; } html { scroll-behavior: auto; } }
+</style>
+
+<div class="wrap">
+  <header class="intro">
+    <h1>Merakit Node AirLens</h1>
+    <p>Panduan langkah demi langkah dari nol untuk merakit node sensor AirLens: ESP32, sensor debu, tiga sensor gas, sensor suhu dan kelembapan, kartu microSD, dan kamera kejadian. Setiap komponen dirakit dan diuji satu per satu dulu, baru digabung. Tidak perlu pengalaman IoT.</p>
+    <div class="progress"><div class="bar" aria-hidden="true"><i id="bar"></i></div><span id="progress-text">0 dari 0 langkah selesai</span></div>
+  </header>
+
+  <nav class="toc" aria-label="Daftar isi">
+    <ol id="toc"></ol>
+  </nav>
+
+  <main>
+    <!-- ================================================================ -->
+    <section id="gambaran" data-group="Persiapan">
+      <h2><span class="num">0</span>Gambaran besar</h2>
+      <p class="lead">Node AirLens adalah kotak kecil berisi beberapa sensor yang dibaca oleh satu "otak", yaitu papan ESP32. ESP32 mengumpulkan angka dari semua sensor setiap menit, menyimpannya, dan saat ada kejadian (misalnya asap), membangunkan kamera untuk mengambil satu foto.</p>
+      <div class="diagram" id="dg-overview" role="img" aria-label="Diagram blok node AirLens"></div>
+      <div class="note"><b>Cara memakai modul ini</b><p>Kerjakan berurutan. Setiap langkah punya diagram kabel, kode uji, contoh keluaran yang benar, dan daftar masalah umum. Centang <em>Selesai</em> di akhir langkah; centangnya tersimpan di browser ini. Bagian berlabel <em>Hitungan (opsional)</em> boleh dilewati.</p></div>
+    </section>
+
+    <!-- ================================================================ -->
+    <section id="komponen" data-group="Persiapan">
+      <h2><span class="num">1</span>Komponen dan alat</h2>
+      <p>Daftar ini mengikuti rancangan v2. Perangkat dari kampus belum pasti, jadi beri tanda pada yang sudah ada. Label <span class="pill need">wajib bagus</span> berarti komponen itu tidak boleh diganti versi asal-asalan.</p>
+      <div class="tbl"><table>
+        <thead><tr><th>Komponen</th><th>Jumlah</th><th>Untuk apa</th><th>Catatan</th></tr></thead>
+        <tbody>
+          <tr><td><b>ESP32 DevKit V1</b> (30 pin)</td><td>1</td><td>Otak + WiFi: membaca semua sensor</td><td>Ada yang memakai chip USB CP2102, ada yang CH340; driver-nya berbeda</td></tr>
+          <tr><td><b>ESP32-CAM</b> (AI-Thinker, kamera OV2640)</td><td>1</td><td>Kamera kejadian, menyimpan foto ke kartu microSD-nya sendiri</td><td>Beli sepaket dengan <b>ESP32-CAM-MB</b> (papan kecil USB untuk memprogram)</td></tr>
+          <tr><td><b>PMS5003</b> <span class="pill need">wajib bagus</span></td><td>1</td><td>Sensor debu PM2.5, sumber label model</td><td>Pastikan dapat kabel/adaptor konektornya (8 pin, kecil)</td></tr>
+          <tr><td><b>Modul MQ-2</b></td><td>1</td><td>Asap, LPG, metana</td><td>Papan biru kecil dengan 4 pin: VCC, GND, DO, AO</td></tr>
+          <tr><td><b>Modul MQ-7</b></td><td>1</td><td>Karbon monoksida (CO)</td><td>Sama bentuknya dengan MQ-2</td></tr>
+          <tr><td><b>Modul MQ-135</b></td><td>1</td><td>NH₃, NOx, benzena, CO₂</td><td>Sama bentuknya dengan MQ-2</td></tr>
+          <tr><td><b>BME280</b> (atau DHT22)</td><td>1</td><td>Suhu dan kelembapan</td><td>Hati-hati, banyak yang dijual sebagai BME280 ternyata BMP280 (tanpa kelembapan); cara mengecek ada di langkah 3</td></tr>
+          <tr><td><b>Modul microSD</b> (SPI) + kartu 8–32 GB</td><td>1 + 2 kartu</td><td>Menyimpan data sensor (satu kartu lagi untuk ESP32-CAM)</td><td>Format FAT32</td></tr>
+          <tr><td><b>Adaptor 5 V 3 A</b> + modul colokan USB-C ke pin</td><td>1</td><td>Sumber daya seluruh node</td><td>Port USB laptop tidak cukup kuat untuk pemanas tiga MQ</td></tr>
+          <tr><td>Resistor <b>10 kΩ</b> dan <b>20 kΩ</b></td><td>3 + 3</td><td>Pembagi tegangan untuk sinyal MQ</td><td>Kalau tidak ada 20 kΩ, pakai dua 10 kΩ diseri</td></tr>
+          <tr><td>Resistor <b>1 kΩ</b></td><td>1</td><td>Pengaman kabel pemicu kamera</td><td></td></tr>
+          <tr><td>Kapasitor elektrolit <b>470–1000 µF</b> (≥10 V)</td><td>1</td><td>Penahan lonjakan arus saat kamera menyala</td><td>Kaki panjang = plus (+)</td></tr>
+          <tr><td>Breadboard besar (830 lubang) + kabel jumper (male-male, male-female)</td><td>1 + 1 set</td><td>Merakit tanpa solder</td><td></td></tr>
+          <tr><td>Kabel data micro-USB / USB-C (sesuai papan)</td><td>2</td><td>Memprogram ESP32 dan ESP32-CAM-MB</td><td>Harus kabel <b>data</b>, bukan kabel cas saja</td></tr>
+        </tbody>
+      </table></div>
+      <h3>Alat</h3>
+      <ul>
+        <li><b>Multimeter</b> digital (wajib): untuk mengecek tegangan sebelum menyambung sensor.</li>
+        <li>Laptop dengan Arduino IDE 2 (langkah 4).</li>
+        <li>Untuk tahap akhir (opsional): solder, timah, perfboard, obeng kecil, jangka sorong.</li>
+      </ul>
+      <label class="check"><input type="checkbox" id="ck-komponen"> Komponen dan alat sudah lengkap</label>
+    </section>
+
+    <!-- ================================================================ -->
+    <section id="dasar" data-group="Persiapan">
+      <h2><span class="num">2</span>Dasar listrik yang perlu kamu tahu</h2>
+      <p class="lead">Lima ide ini cukup untuk seluruh modul.</p>
+      <div class="grid2">
+        <div class="card"><h3>5 V dan 3,3 V</h3><p>Bayangkan tegangan seperti tekanan air. Sensor MQ, PMS5003, dan ESP32-CAM butuh "tekanan" 5 V. Tapi pin-pin ESP32 hanya tahan 3,3 V. <b>Sinyal 5 V yang masuk langsung ke pin ESP32 bisa merusaknya.</b></p></div>
+        <div class="card"><h3>GND bersama</h3><p>GND adalah titik nol, "lantai" tempat semua tegangan diukur. Semua komponen harus berbagi GND yang sama. Kalau tidak, angka sensor akan kacau walaupun kabel lain benar.</p></div>
+        <div class="card"><h3>Arus dan daya</h3><p>Setiap komponen "minum" arus. Pemanas tiga sensor MQ saja sekitar 0,45 A. Ditambah komponen lain bisa melebihi 1 A saat kamera menyala, jadi kita pakai adaptor 5 V 3 A.</p></div>
+        <div class="card"><h3>Pin analog (ADC)</h3><p>Sensor MQ mengeluarkan tegangan yang naik turun mengikuti kadar gas. ESP32 mengubah tegangan itu menjadi angka lewat pin ADC. Kita pakai pin GPIO32, 34, dan 35 karena pin ADC lain tidak bisa dipakai saat WiFi menyala.</p></div>
+        <div class="card"><h3>Tiga "bahasa" sensor</h3><p><b>I2C</b> (2 kabel: SDA, SCL) untuk BME280. <b>UART</b> (TX ke RX) untuk PMS5003. <b>SPI</b> (4 kabel) untuk modul microSD. Kamu tidak perlu paham isinya; cukup sambungkan pin yang tepat.</p></div>
+        <div class="card"><h3>Pembagi tegangan</h3><p>Dua resistor yang disusun seri "mengecilkan" tegangan. Dengan 10 kΩ di atas dan 20 kΩ di bawah, tegangan 5 V menjadi 3,33 V, aman untuk ESP32. Ini dipakai untuk ketiga sensor MQ.</p></div>
+      </div>
+      <details class="math"><summary>Hitungan (opsional): pembagi tegangan dan kebutuhan daya</summary><div class="in">
+        <p><b>Pembagi tegangan.</b> Tegangan keluar = tegangan masuk × R bawah ÷ (R atas + R bawah).</p>
+        <p>Contoh: 5 V × 20 kΩ ÷ (10 kΩ + 20 kΩ) = 5 × 20 ÷ 30 = <b>3,33 V</b>. Kalau sensor MQ mengeluarkan 2,4 V, yang sampai ke ESP32 adalah 2,4 × 0,667 = 1,6 V. Di kode, kita membalik hitungannya: 1,6 ÷ 0,667 = 2,4 V.</p>
+        <p><b>Kebutuhan daya (perkiraan puncak).</b></p>
+        <div class="tbl"><table><thead><tr><th>Komponen</th><th>Arus</th></tr></thead><tbody>
+          <tr><td>3 pemanas MQ (±150 mA masing-masing)</td><td>450 mA</td></tr>
+          <tr><td>ESP32 saat WiFi mengirim</td><td>±250 mA</td></tr>
+          <tr><td>ESP32-CAM saat memotret</td><td>±300 mA</td></tr>
+          <tr><td>PMS5003 (kipas)</td><td>±100 mA</td></tr>
+          <tr><td>BME280 + modul microSD</td><td>±50 mA</td></tr>
+          <tr><td><b>Total</b></td><td><b>±1,15 A</b>, jadi adaptor 3 A punya cadangan yang lega</td></tr>
+        </tbody></table></div>
+      </div></details>
+      <label class="check"><input type="checkbox" id="ck-dasar"> Sudah paham lima ide dasar</label>
+    </section>
+
+    <!-- ================================================================ -->
+    <section id="aman" data-group="Persiapan">
+      <h2><span class="num">3</span>Keselamatan</h2>
+      <div class="danger"><b>Aturan wajib</b>
+        <ul>
+          <li><b>Cabut daya setiap kali memindah kabel.</b> Sambung dulu, cek, baru nyalakan.</li>
+          <li><b>Jangan pernah</b> menyambung 5 V ke pin GPIO ESP32 atau ke pin 3V3.</li>
+          <li>Sensor MQ <b>menjadi hangat</b> (bisa ±50 °C) karena pemanas di dalamnya. Itu normal. Jangan diletakkan menempel di plastik tipis.</li>
+          <li>Periksa arah kapasitor elektrolit: kaki panjang (+) ke 5 V, sisi bergaris ke GND. Terbalik bisa meletus.</li>
+          <li>Kalau ada bau terbakar atau komponen sangat panas: <b>cabut daya segera</b>.</li>
+          <li><b>Jangan pernah membuat CO dengan sengaja</b> untuk menguji MQ-7. Untuk menguji, cukup uap alkohol dari hand sanitizer.</li>
+        </ul>
+      </div>
+      <label class="check"><input type="checkbox" id="ck-aman"> Sudah membaca aturan keselamatan</label>
+    </section>
+
+    <!-- ================================================================ -->
+    <section id="software" data-group="Persiapan">
+      <h2><span class="num">4</span>Siapkan software di laptop</h2>
+      <ol class="steps">
+        <li><div>Unduh dan pasang <b>Arduino IDE 2</b> dari <a href="https://www.arduino.cc/en/software" target="_blank" rel="noopener">arduino.cc/en/software</a> (versi Windows).</div></li>
+        <li><div>Buka <b>File → Preferences</b>. Di kolom <em>Additional boards manager URLs</em>, tempel:<div class="serial">https://espressif.github.io/arduino-esp32/package_esp32_index.json</div></div></li>
+        <li><div>Buka <b>Tools → Board → Boards Manager</b>, cari <code>esp32</code>, pasang paket <b>esp32 by Espressif Systems</b>.</div></li>
+        <li><div>Buka <b>Tools → Manage Libraries</b>, cari dan pasang <b>Adafruit BME280 Library</b>. Saat ditanya, pilih <em>Install all</em> agar library pendukungnya ikut terpasang.</div></li>
+        <li><div>Colokkan ESP32 ke laptop. Kalau di <b>Tools → Port</b> tidak muncul port baru (misalnya COM3), pasang driver sesuai chip USB di papanmu: <b>CP210x</b> (Silicon Labs) atau <b>CH340</b> (WCH). Tulisan kecil di chip dekat colokan USB memberi tahu jenisnya.</div></li>
+      </ol>
+      <div class="note"><b>Kenapa Arduino (C++), bukan Python?</b><p>ESP32 bisa menjalankan MicroPython, tetapi dukungan kamera ESP32-CAM masih terbatas dan tutorial untuk pemula jauh lebih banyak dalam Arduino. Python tetap dipakai, yaitu di Raspberry Pi sebagai penampung data (bagian 17).</p></div>
+      <label class="check"><input type="checkbox" id="ck-software"> Arduino IDE siap dan ESP32 muncul di Port</label>
+    </section>
+
+    <!-- ================================================================ -->
+    <section id="l1" data-group="Rakit dan uji">
+      <h2><span class="num">5</span>Langkah 1 · ESP32 hidup dan bisa "bicara"</h2>
+      <p>Belum ada kabel. Kita hanya memastikan ESP32, kabel USB, driver, dan Arduino IDE bekerja.</p>
+      <ol class="steps">
+        <li><div>Tancapkan ESP32 di tengah breadboard sehingga kedua baris pinnya berada di sisi berbeda dari celah tengah breadboard.</div></li>
+        <li><div>Colokkan USB ke laptop. Di Arduino IDE pilih <b>Tools → Board → esp32 → ESP32 Dev Module</b>, lalu pilih port-nya.</div></li>
+        <li><div>Tempel kode di bawah, klik <b>Upload</b> (panah kanan). Setelah selesai, buka <b>Tools → Serial Monitor</b> dan atur kecepatan ke <b>115200 baud</b>.</div></li>
+      </ol>
+      <div class="code" data-src="c1" data-name="uji_1_esp32.ino"></div>
+      <details><summary>Arti setiap baris</summary><div class="in"><ul class="explain">
+        <li><b>Baris 1</b><span>Komentar (diawali <code>//</code>), hanya catatan, tidak dijalankan.</span></li>
+        <li><b>Baris 2</b><span>Memberi nama <code>LED</code> untuk angka 2, karena LED biru bawaan DevKit V1 tersambung ke GPIO2.</span></li>
+        <li><b>Baris 4–9</b><span><code>setup()</code> dijalankan sekali saat ESP32 menyala: pin LED dijadikan keluaran, Serial dibuka pada 115200 baud (kecepatan yang sama harus dipilih di Serial Monitor), lalu mencetak "ESP32 siap!".</span></li>
+        <li><b>Baris 11–18</b><span><code>loop()</code> diulang terus: LED dinyalakan (<code>HIGH</code>), tunggu 0,5 detik, dimatikan (<code>LOW</code>), tunggu lagi. Setiap perubahan dicetak ke Serial Monitor.</span></li>
+      </ul></div></details>
+      <h3>Keluaran yang benar</h3>
+      <div class="serial">ESP32 siap!
+LED nyala
+LED mati
+LED nyala</div>
+      <details><summary>Kalau bermasalah</summary><div class="in"><ul>
+        <li><b>Port tidak muncul:</b> kabel hanya untuk mengecas (ganti kabel data), atau driver belum terpasang.</li>
+        <li><b>"Failed to connect to ESP32":</b> tahan tombol <b>BOOT</b> di papan saat tulisan <em>Connecting…</em> muncul, lepas setelah upload mulai.</li>
+        <li><b>Tulisan acak di Serial Monitor:</b> kecepatan belum 115200 baud.</li>
+      </ul></div></details>
+      <label class="check"><input type="checkbox" id="ck-l1"> LED berkedip dan Serial Monitor menampilkan teks</label>
+    </section>
+
+    <!-- ================================================================ -->
+    <section id="l2" data-group="Rakit dan uji">
+      <h2><span class="num">6</span>Langkah 2 · Jalur daya breadboard</h2>
+      <p>Breadboard punya dua pasang jalur panjang di tepinya (bertanda merah + dan biru −). Kita jadikan satu jalur <b>5 V</b> dan satu jalur <b>3,3 V</b>, dengan GND bersama.</p>
+      <div class="diagram" id="dg-power" role="img" aria-label="Diagram jalur daya breadboard"></div>
+      <div class="legend"><span><i class="wire" style="background:var(--w5v)"></i>5 V</span><span><i class="wire" style="background:var(--w33)"></i>3,3 V</span><span><i class="wire" style="background:var(--wgnd)"></i>GND</span></div>
+      <ol class="steps">
+        <li><div>Hubungkan modul USB-C (dari adaptor 5 V 3 A) ke jalur atas: <b>VBUS/5V → +</b> dan <b>GND → −</b>.</div></li>
+        <li><div>Pasang kapasitor 470–1000 µF di jalur atas: kaki panjang ke +, kaki bergaris ke −.</div></li>
+        <li><div>Sambungkan pin <b>3V3</b> ESP32 ke + jalur bawah, dan pin <b>GND</b> ESP32 ke − jalur bawah.</div></li>
+        <li><div>Sambungkan <b>− jalur atas ke − jalur bawah</b> dengan kabel hitam. Ini yang membuat GND bersama.</div></li>
+        <li><div>Sambungkan pin <b>VIN</b> ESP32 ke + jalur atas (5 V). Sekarang ESP32 bisa hidup dari adaptor tanpa laptop.</div></li>
+        <li><div>Nyalakan adaptor. Dengan multimeter (mode DC V), ukur jalur atas: harus <b>4,8–5,2 V</b>. Jalur bawah: <b>3,2–3,4 V</b>.</div></li>
+      </ol>
+      <div class="warn"><b>Saat meng-upload kode lewat USB laptop</b><p>Cabut kabel <b>VIN</b> dari jalur 5 V selama ESP32 tersambung ke laptop, supaya dua sumber 5 V tidak saling bertabrakan. Kabel GND tetap tersambung. Pasang lagi VIN setelah USB laptop dicabut.</p></div>
+      <label class="check"><input type="checkbox" id="ck-l2"> Jalur 5 V dan 3,3 V terukur benar</label>
+    </section>
+
+    <!-- ================================================================ -->
+    <section id="l3" data-group="Rakit dan uji">
+      <h2><span class="num">7</span>Langkah 3 · Sensor suhu dan kelembapan BME280</h2>
+      <p>BME280 memakai "bahasa" I2C: dua kabel sinyal (SDA untuk data, SCL untuk detak), ditambah daya 3,3 V.</p>
+      <div class="diagram" id="dg-bme" role="img" aria-label="Kabel BME280 ke ESP32"></div>
+      <div class="code" data-src="c2" data-name="uji_3_bme280.ino"></div>
+      <details><summary>Arti setiap baris</summary><div class="in"><ul class="explain">
+        <li><b>Baris 1–2</b><span>Memakai library <code>Wire</code> (I2C bawaan) dan <code>Adafruit_BME280</code> (yang dipasang di langkah 4).</span></li>
+        <li><b>Baris 4</b><span>Membuat objek <code>bme</code> yang mewakili sensor.</span></li>
+        <li><b>Baris 8</b><span>Memulai I2C pada GPIO21 (SDA) dan GPIO22 (SCL).</span></li>
+        <li><b>Baris 9–15</b><span>Pemindai I2C: mencoba setiap alamat 1–126 dan mencetak alamat yang menjawab. BME280 biasanya di <code>0x76</code> atau <code>0x77</code>.</span></li>
+        <li><b>Baris 16–19</b><span>Mencoba menyalakan sensor di dua alamat itu. Kalau keduanya gagal, cetak pesan lalu berhenti di sini.</span></li>
+        <li><b>Baris 20</b><span>Mencetak ID chip. BME280 asli = <code>0x60</code>.</span></li>
+        <li><b>Baris 24–26</b><span>Setiap 2 detik membaca suhu (°C), kelembapan (%), dan tekanan (Pa, dibagi 100 menjadi hPa). <code>%.1f</code> berarti satu angka di belakang koma.</span></li>
+      </ul></div></details>
+      <h3>Keluaran yang benar</h3>
+      <div class="serial">Mencari perangkat I2C...
+Ditemukan di 0x76
+Chip ID: 0x60
+Suhu 29.4 C | Kelembapan 71.2 % | Tekanan 1008.6 hPa</div>
+      <details><summary>Kalau bermasalah</summary><div class="in"><ul>
+        <li><b>Tidak ada alamat yang ditemukan:</b> SDA dan SCL tertukar, atau VCC/GND belum tersambung.</li>
+        <li><b>Ditemukan 0x76 tetapi "BME280 tidak ditemukan":</b> kemungkinan besar sensormu <b>BMP280</b> (tanpa kelembapan). Laporkan ke tim; sebagai ganti bisa pakai DHT22.</li>
+        <li><b>Kelembapan 0 atau 100 terus:</b> sensor rusak atau palsu.</li>
+      </ul></div></details>
+      <label class="check"><input type="checkbox" id="ck-l3"> BME280 menampilkan suhu dan kelembapan yang masuk akal</label>
+    </section>
+
+    <!-- ================================================================ -->
+    <section id="l4" data-group="Rakit dan uji">
+      <h2><span class="num">8</span>Langkah 4 · Sensor debu PMS5003</h2>
+      <p>PMS5003 butuh daya 5 V untuk kipasnya, tetapi sinyal datanya 3,3 V, jadi aman langsung ke ESP32. Ia mengirim angka lewat UART: kaki <b>TX</b> sensor ke kaki <b>RX</b> ESP32.</p>
+      <div class="diagram" id="dg-pms" role="img" aria-label="Kabel PMS5003 ke ESP32"></div>
+      <div class="note"><b>Urutan pin konektor PMS5003</b><p>Konektornya kecil (8 pin). Lihat tulisan di adaptor atau datasheet; urutan yang umum: 1 VCC (5 V), 2 GND, 3 SET, 4 RX, 5 TX, 6 RESET, 7–8 tidak dipakai. SET dan RESET boleh dibiarkan tidak tersambung.</p></div>
+      <div class="code" data-src="c3" data-name="uji_4_pms5003.ino"></div>
+      <details><summary>Arti setiap baris</summary><div class="in"><ul class="explain">
+        <li><b>Baris 1–2</b><span>Memakai port UART ke-2 ESP32 dan menyiapkan wadah 32 byte, karena PMS5003 mengirim paket data sepanjang 32 byte.</span></li>
+        <li><b>Baris 6</b><span>Membuka UART pada 9600 baud, RX di GPIO16 dan TX di GPIO17.</span></li>
+        <li><b>Baris 10–21</b><span>Fungsi <code>bacaFrame</code>: mencari awal paket (byte <code>0x42</code> lalu <code>0x4D</code>), membaca sisanya, lalu menjumlah 30 byte pertama dan membandingkannya dengan angka pemeriksa di 2 byte terakhir. Kalau sama, data utuh.</span></li>
+        <li><b>Baris 24–28</b><span>Mengambil PM1.0, PM2.5, PM10 versi "atmosfer" dari byte 10–15. Setiap angka disimpan dalam 2 byte, digabung dengan <code>(byte_tinggi &lt;&lt; 8) | byte_rendah</code>.</span></li>
+      </ul></div></details>
+      <h3>Keluaran yang benar</h3>
+      <div class="serial">Menunggu PMS5003... (kipas harus berputar)
+PM1.0 9 | PM2.5 14 | PM10 17 ug/m3</div>
+      <div class="tip"><b>Coba</b><p>Dekatkan dupa yang menyala atau tepuk debu di dekat lubang sensor. Angka PM2.5 harus naik dalam beberapa detik, lalu turun lagi.</p></div>
+      <details><summary>Kalau bermasalah</summary><div class="in"><ul>
+        <li><b>Kipas tidak berputar:</b> VCC belum 5 V, atau GND lepas.</li>
+        <li><b>Kipas berputar tapi tidak ada angka:</b> TX dan RX tertukar. TX sensor harus ke GPIO16 (RX2).</li>
+        <li><b>Angka 0 terus:</b> tunggu 30 detik; sensor butuh waktu pemanasan.</li>
+      </ul></div></details>
+      <label class="check"><input type="checkbox" id="ck-l4"> PMS5003 menampilkan angka PM2.5 yang naik saat ada asap</label>
+    </section>
+
+    <!-- ================================================================ -->
+    <section id="l5" data-group="Rakit dan uji">
+      <h2><span class="num">9</span>Langkah 5 · Tiga sensor gas MQ</h2>
+      <p>Setiap modul MQ punya 4 pin: <b>VCC</b> (5 V), <b>GND</b>, <b>AO</b> (keluaran analog, yang kita pakai), dan <b>DO</b> (keluaran digital ambang batas, tidak dipakai). Karena AO bisa sampai 5 V, setiap AO melewati pembagi tegangan dulu sebelum masuk ESP32.</p>
+      <div class="diagram" id="dg-mq" role="img" aria-label="Pembagi tegangan sensor MQ"></div>
+      <div class="tbl"><table>
+        <thead><tr><th>Sensor</th><th>AO lewat pembagi ke</th><th>Mendeteksi</th></tr></thead>
+        <tbody>
+          <tr><td>MQ-2</td><td><code>GPIO34</code></td><td>Asap, LPG, metana, H₂</td></tr>
+          <tr><td>MQ-7</td><td><code>GPIO35</code></td><td>Karbon monoksida (CO)</td></tr>
+          <tr><td>MQ-135</td><td><code>GPIO32</code></td><td>NH₃, NOx, benzena, CO₂</td></tr>
+        </tbody>
+      </table></div>
+      <div class="warn"><b>Cek dulu dengan multimeter</b><p>Sebelum kabel ke GPIO dipasang, nyalakan daya dan ukur titik tengah pembagi tegangan (antara 10 kΩ dan 20 kΩ). Tegangannya harus <b>di bawah 3,3 V</b>. Kalau lebih, resistornya tertukar.</p></div>
+      <div class="code" data-src="c4" data-name="uji_5_mq.ino"></div>
+      <details><summary>Arti setiap baris</summary><div class="in"><ul class="explain">
+        <li><b>Baris 1</b><span>Nomor pin untuk ketiga sensor.</span></li>
+        <li><b>Baris 2</b><span>Faktor pembagi tegangan: 20 ÷ (10 + 20) = 0,667.</span></li>
+        <li><b>Baris 3</b><span>Resistor beban di modul MQ. Umumnya 1 kΩ (tertulis <code>102</code> di resistor kecil dekat pin). Kalau tertulis <code>103</code>, isi 10.</span></li>
+        <li><b>Baris 6–13</b><span>Fungsi <code>bacaRs</code>: membaca tegangan 20 kali lalu dirata-rata agar stabil, mengembalikan ke tegangan asli modul (dibagi 0,667), lalu menghitung <b>Rs</b>, hambatan sensor. Makin banyak gas, makin kecil Rs.</span></li>
+        <li><b>Baris 15–18</b><span>Mengatur pin analog membaca rentang hingga ±3,1 V (ini juga bawaan ESP32).</span></li>
+        <li><b>Baris 19–23</b><span>Setiap 2 detik mencetak Rs ketiga sensor dalam kΩ.</span></li>
+      </ul></div></details>
+      <h3>Keluaran yang benar</h3>
+      <div class="serial">Rs MQ-2 18.3 kOhm | MQ-7 9.7 kOhm | MQ-135 24.1 kOhm</div>
+      <p>Angka persisnya berbeda-beda di setiap sensor. Yang penting: angkanya stabil di udara bersih, dan <b>turun</b> saat ada gas.</p>
+      <div class="tip"><b>Coba</b><p>Teteskan hand sanitizer di tisu dan dekatkan (jangan menempel) ke sensor. Rs MQ-135 dan MQ-2 harus turun cepat, lalu naik lagi setelah tisu dijauhkan.</p></div>
+      <details class="math"><summary>Hitungan (opsional): dari tegangan ke Rs</summary><div class="in">
+        <p>Rs = RL × (5 V − Vout) ÷ Vout.</p>
+        <p>Contoh: ESP32 membaca 1,20 V. Tegangan asli modul = 1,20 ÷ 0,667 = 1,80 V. Rs = 1 kΩ × (5 − 1,8) ÷ 1,8 = <b>1,78 kΩ</b>.</p>
+        <p>Kita tidak mengubah Rs menjadi ppm, karena kurva ppm di datasheet hanya akurat untuk gas murni di laboratorium. Yang dipakai model adalah <b>Rs ÷ R0</b> (R0 = Rs di udara bersih, bagian 14).</p>
+      </div></details>
+      <div class="note"><b>Batasan yang perlu diketahui</b><p>Sensor MQ bereaksi terhadap banyak gas sekaligus, jadi tidak bisa memastikan gas mana yang paling banyak. MQ-7 idealnya dipanaskan bergantian (5 V lalu 1,4 V); modul biasa memanaskannya terus di 5 V, sehingga bacaan CO-nya bersifat indikatif saja.</p></div>
+      <details><summary>Kalau bermasalah</summary><div class="in"><ul>
+        <li><b>Rs selalu -1:</b> kabel AO atau pembagi tegangan lepas.</li>
+        <li><b>Angka naik turun terus di awal:</b> normal; MQ butuh pemanasan beberapa menit, dan stabil sepenuhnya setelah 24–48 jam pertama.</li>
+        <li><b>Rs sangat kecil (&lt; 0,5 kΩ) di udara bersih:</b> cek nilai RL di baris 3.</li>
+      </ul></div></details>
+      <label class="check"><input type="checkbox" id="ck-l5"> Ketiga MQ terbaca dan bereaksi terhadap uap alkohol</label>
+    </section>
+
+    <!-- ================================================================ -->
+    <section id="l6" data-group="Rakit dan uji">
+      <h2><span class="num">10</span>Langkah 6 · Penyimpanan microSD</h2>
+      <p>Modul microSD memakai "bahasa" SPI dengan 4 kabel sinyal. Kebanyakan modul punya pengatur tegangan sendiri, jadi diberi daya 5 V.</p>
+      <div class="diagram" id="dg-sd" role="img" aria-label="Kabel modul microSD ke ESP32"></div>
+      <ol class="steps">
+        <li><div>Format kartu sebagai <b>FAT32</b> di laptop (kartu 32 GB ke bawah).</div></li>
+        <li><div>Pasang kabel sesuai diagram, masukkan kartu, upload kode.</div></li>
+      </ol>
+      <div class="code" data-src="c5" data-name="uji_6_microsd.ino"></div>
+      <details><summary>Arti setiap baris</summary><div class="in"><ul class="explain">
+        <li><b>Baris 1–2</b><span>Library SPI dan SD bawaan ESP32.</span></li>
+        <li><b>Baris 3</b><span>Pin CS (pemilih kartu) di GPIO5.</span></li>
+        <li><b>Baris 6–9</b><span>Menyalakan kartu SD. Kalau gagal, cetak pesan dan berhenti.</span></li>
+        <li><b>Baris 10–11</b><span>Membuka berkas <code>/uji.csv</code> dalam mode tambah. Kalau masih kosong, tulis baris judul kolom dulu.</span></li>
+        <li><b>Baris 12–14</b><span>Menulis satu baris (waktu sejak menyala dalam milidetik + catatan), lalu menutup berkas agar tersimpan.</span></li>
+      </ul></div></details>
+      <h3>Keluaran yang benar</h3>
+      <div class="serial">Berhasil menulis /uji.csv</div>
+      <p>Cabut daya, pindahkan kartu ke laptop, dan buka <code>uji.csv</code>. Setiap kali ESP32 di-reset, satu baris baru bertambah.</p>
+      <label class="check"><input type="checkbox" id="ck-l6"> Berkas uji.csv tertulis di kartu</label>
+    </section>
+
+    <!-- ================================================================ -->
+    <section id="l7" data-group="Rakit dan uji">
+      <h2><span class="num">11</span>Langkah 7 · Kamera kejadian ESP32-CAM</h2>
+      <p>ESP32-CAM adalah papan terpisah yang punya chip ESP32 sendiri. Ia <b>tidur total</b> dan hanya bangun saat pin GPIO13-nya menerima sinyal HIGH. Saat bangun, ia membuang beberapa foto awal (agar pencahayaan otomatisnya pas), menyimpan <b>satu foto</b> ke kartu microSD di papannya sendiri, lalu tidur lagi.</p>
+      <h3>Memprogram ESP32-CAM</h3>
+      <ol class="steps">
+        <li><div>Masukkan kartu microSD (FAT32) ke slot di ESP32-CAM.</div></li>
+        <li><div>Tancapkan ESP32-CAM ke papan <b>ESP32-CAM-MB</b>, lalu colokkan MB ke laptop dengan kabel USB.</div></li>
+        <li><div>Di Arduino IDE pilih <b>Tools → Board → esp32 → AI Thinker ESP32-CAM</b> dan port-nya.</div></li>
+        <li><div>Upload kode di bawah. Kalau muncul "Failed to connect": tahan tombol <b>IO0</b> di papan MB, tekan sekali tombol <b>RST</b> di ESP32-CAM, lepas IO0, lalu upload lagi.</div></li>
+        <li><div>Setelah upload, tekan RST sekali agar kode berjalan normal.</div></li>
+      </ol>
+      <div class="code" data-src="c6" data-name="uji_7_esp32cam.ino"></div>
+      <details><summary>Arti setiap baris</summary><div class="in"><ul class="explain">
+        <li><b>Baris 1–4</b><span>Library kamera, sistem berkas, kartu SD bawaan kamera (<code>SD_MMC</code>), dan pengatur pin saat tidur.</span></li>
+        <li><b>Baris 6</b><span>Pin pembangun: GPIO13.</span></li>
+        <li><b>Baris 7</b><span>Penghitung nomor foto yang tetap tersimpan selama tidur (<code>RTC_DATA_ATTR</code>).</span></li>
+        <li><b>Baris 9–20</b><span>Peta pin kamera untuk papan AI-Thinker (tetap, tinggal disalin), format JPEG, ukuran 800×600 (SVGA), kualitas 12 (makin kecil makin bagus).</span></li>
+        <li><b>Baris 22–28</b><span>Fungsi <code>tidur()</code>: menahan GPIO13 di LOW dengan resistor internal, mengatur agar bangun saat GPIO13 HIGH, lalu tidur total.</span></li>
+        <li><b>Baris 31–34</b><span>Kalau papan baru dinyalakan (bukan dibangunkan oleh pemicu), langsung tidur. Jadi foto hanya diambil saat ada kejadian.</span></li>
+        <li><b>Baris 35–36</b><span>Menyalakan kamera; kalau gagal, tidur lagi.</span></li>
+        <li><b>Baris 37</b><span>Membuang 3 foto pertama agar pencahayaan otomatis stabil.</span></li>
+        <li><b>Baris 38–46</b><span>Mengambil satu foto, menyalakan kartu SD dalam mode 1-bit (agar GPIO13 tetap bebas), mencari nama berkas yang belum dipakai (<code>kejadian_00000.jpg</code>, dan seterusnya), lalu menyimpannya.</span></li>
+        <li><b>Baris 47–50</b><span>Mengembalikan memori foto, menunggu sinyal pemicu turun ke LOW, lalu tidur lagi.</span></li>
+      </ul></div></details>
+      <h3>Uji tanpa ESP32 utama</h3>
+      <ol class="steps">
+        <li><div>Lepas ESP32-CAM dari papan MB. Beri daya dari jalur breadboard: pin <b>5V</b> ke jalur 5 V, <b>GND</b> ke GND. Jangan dari pin 3V3 ESP32 utama, karena arusnya tidak cukup.</div></li>
+        <li><div>Sentuhkan sebentar kabel dari jalur <b>3,3 V</b> ke pin <b>IO13</b> ESP32-CAM, lalu lepaskan.</div></li>
+        <li><div>Ulangi 2–3 kali dengan jeda beberapa detik. Cabut daya, pindahkan kartu kamera ke laptop: harus ada berkas <code>kejadian_00000.jpg</code> dan seterusnya.</div></li>
+      </ol>
+      <details><summary>Kalau bermasalah</summary><div class="in"><ul>
+        <li><b>"Brownout detector was triggered":</b> daya kurang. Pastikan memakai jalur 5 V dari adaptor 3 A dan kapasitor terpasang.</li>
+        <li><b>Galat <code>pin_sccb_sda</code> saat kompilasi:</b> paket esp32 di Arduino IDE terlalu lama; perbarui di Boards Manager.</li>
+        <li><b>Foto gelap atau hijau:</b> normal untuk foto pertama di ruangan gelap; foto berikutnya membaik.</li>
+        <li><b>Kartu SD gagal:</b> format ulang sebagai FAT32, coba kartu lain (8–32 GB).</li>
+      </ul></div></details>
+      <label class="check"><input type="checkbox" id="ck-l7"> ESP32-CAM menyimpan foto setiap IO13 disentuh 3,3 V</label>
+    </section>
+
+    <!-- ================================================================ -->
+    <section id="l8" data-group="Rakit dan uji">
+      <h2><span class="num">12</span>Langkah 8 · Menghubungkan pemicu kamera</h2>
+      <p>Sekarang ESP32 utama yang membangunkan kamera. Satu kabel dari <b>GPIO25</b> ESP32 utama, lewat resistor 1 kΩ, ke <b>IO13</b> ESP32-CAM. GND keduanya sudah sama lewat jalur breadboard.</p>
+      <div class="diagram" id="dg-cam" role="img" aria-label="Kabel pemicu dari ESP32 ke ESP32-CAM"></div>
+      <p>Untuk uji, pemicu dijalankan dengan menekan tombol <b>BOOT</b> di ESP32 utama. Di firmware final, pemicunya adalah kenaikan tajam pada sensor MQ atau PM2.5.</p>
+      <div class="code" data-src="c7" data-name="uji_8_pemicu.ino"></div>
+      <details><summary>Arti setiap baris</summary><div class="in"><ul class="explain">
+        <li><b>Baris 1</b><span>GPIO25 untuk pemicu; GPIO0 adalah tombol BOOT bawaan papan.</span></li>
+        <li><b>Baris 3–8</b><span>Pemicu dijadikan keluaran dan dimulai dari LOW (kamera tetap tidur). Tombol dibaca dengan resistor internal (<code>INPUT_PULLUP</code>): terbaca LOW saat ditekan.</span></li>
+        <li><b>Baris 10–17</b><span>Saat tombol ditekan: kirim HIGH selama 1 detik untuk membangunkan kamera, kembali ke LOW, lalu tunggu 5 detik agar satu tekanan hanya menghasilkan satu foto.</span></li>
+      </ul></div></details>
+      <h3>Keluaran yang benar</h3>
+      <div class="serial">Tekan tombol BOOT untuk memicu kamera.
+Picu!</div>
+      <label class="check"><input type="checkbox" id="ck-l8"> Menekan BOOT menghasilkan satu foto baru di kartu kamera</label>
+    </section>
+
+    <!-- ================================================================ -->
+    <section id="peta" data-group="Gabungkan">
+      <h2><span class="num">13</span>Peta pin lengkap</h2>
+      <p>Setelah langkah 1–8 berhasil satu per satu, semua kabel ini terpasang bersamaan di breadboard. Simpan tabel ini; firmware final memakai pin yang sama.</p>
+      <div class="tbl"><table>
+        <thead><tr><th>Komponen</th><th>Pin komponen</th><th>Tersambung ke</th><th>Kabel</th></tr></thead>
+        <tbody>
+          <tr><td rowspan="3">Daya</td><td>Adaptor 5 V</td><td>Jalur 5 V + kapasitor</td><td><i class="wire" style="background:var(--w5v)"></i>merah</td></tr>
+          <tr><td>ESP32 VIN</td><td>Jalur 5 V (cabut saat upload)</td><td><i class="wire" style="background:var(--w5v)"></i>merah</td></tr>
+          <tr><td>ESP32 3V3</td><td>Jalur 3,3 V</td><td><i class="wire" style="background:var(--w33)"></i>oranye</td></tr>
+          <tr><td rowspan="2">BME280</td><td>VCC / GND</td><td>3,3 V / GND</td><td><i class="wire" style="background:var(--w33)"></i>oranye</td></tr>
+          <tr><td>SDA / SCL</td><td>GPIO21 / GPIO22</td><td><i class="wire" style="background:var(--wsig1)"></i>biru</td></tr>
+          <tr><td rowspan="2">PMS5003</td><td>VCC / GND</td><td>5 V / GND</td><td><i class="wire" style="background:var(--w5v)"></i>merah</td></tr>
+          <tr><td>TX / RX</td><td>GPIO16 (RX2) / GPIO17 (TX2)</td><td><i class="wire" style="background:var(--wsig2)"></i>hijau</td></tr>
+          <tr><td rowspan="2">MQ-2, MQ-7, MQ-135</td><td>VCC / GND</td><td>5 V / GND</td><td><i class="wire" style="background:var(--w5v)"></i>merah</td></tr>
+          <tr><td>AO (lewat 10 kΩ / 20 kΩ)</td><td>GPIO34 / GPIO35 / GPIO32</td><td><i class="wire" style="background:var(--wsig4)"></i>kuning</td></tr>
+          <tr><td rowspan="2">Modul microSD</td><td>VCC / GND</td><td>5 V / GND</td><td><i class="wire" style="background:var(--w5v)"></i>merah</td></tr>
+          <tr><td>CS / SCK / MISO / MOSI</td><td>GPIO5 / GPIO18 / GPIO19 / GPIO23</td><td><i class="wire" style="background:var(--wsig3)"></i>ungu</td></tr>
+          <tr><td rowspan="2">ESP32-CAM</td><td>5V / GND</td><td>5 V / GND</td><td><i class="wire" style="background:var(--w5v)"></i>merah</td></tr>
+          <tr><td>IO13</td><td>GPIO25 lewat 1 kΩ</td><td><i class="wire" style="background:var(--wsig1)"></i>biru</td></tr>
+        </tbody>
+      </table></div>
+      <div class="diagram" id="dg-all" role="img" aria-label="Diagram semua sambungan node AirLens"></div>
+      <label class="check"><input type="checkbox" id="ck-peta"> Semua komponen terpasang bersamaan tanpa masalah</label>
+    </section>
+
+    <!-- ================================================================ -->
+    <section id="kalibrasi" data-group="Gabungkan">
+      <h2><span class="num">14</span>Pemanasan dan kalibrasi R0</h2>
+      <p>Sensor MQ baru perlu "dipanggang" dulu: dinyalakan terus selama <b>24–48 jam</b> sebelum angkanya bisa dipercaya. Setelah itu kita mencatat <b>R0</b>, yaitu nilai Rs saat udaranya bersih. Semua bacaan berikutnya dibandingkan dengan R0.</p>
+      <ol class="steps">
+        <li><div>Biarkan node menyala 24–48 jam memakai kode uji langkah 5. Data selama masa ini tidak dipakai melatih model.</div></li>
+        <li><div>Bawa node ke tempat berudara bersih (dekat jendela terbuka, jauh dari dapur, asap rokok, atau kendaraan) saat siang yang tidak berkabut.</div></li>
+        <li><div>Catat Rs ketiga sensor setiap 2 detik selama 10 menit (biarkan Serial Monitor berjalan, lalu salin ke spreadsheet).</div></li>
+        <li><div>Ambil <b>nilai tengah (median)</b> untuk setiap sensor. Itu R0-nya. Tulis di label kertas yang ditempel di node, dan catat di DECISIONS.md.</div></li>
+        <li><div>Ulangi kalibrasi bila sensor diganti, atau bila monitoring menunjukkan angkanya bergeser.</div></li>
+      </ol>
+      <details class="math"><summary>Hitungan (opsional): memakai R0</summary><div class="in">
+        <p>Misalnya R0 MQ-2 = 18,0 kΩ. Saat ada asap, Rs turun menjadi 6,0 kΩ. Rasio Rs ÷ R0 = 6,0 ÷ 18,0 = <b>0,33</b>.</p>
+        <p>Rasio 1,0 berarti udara sama bersihnya dengan saat kalibrasi; makin kecil rasionya, makin banyak gas. Rasio inilah yang dipakai sebagai fitur model dan pemicu kamera.</p>
+      </div></details>
+      <label class="check"><input type="checkbox" id="ck-kalibrasi"> R0 ketiga sensor sudah dicatat</label>
+    </section>
+
+    <!-- ================================================================ -->
+    <section id="casing" data-group="Gabungkan">
+      <h2><span class="num">15</span>Pindah ke perfboard dan masuk casing</h2>
+      <p>Breadboard cocok untuk uji, tetapi kabelnya mudah lepas. Untuk dipasang berminggu-minggu, rangkaian dipindah ke <b>perfboard</b> (papan berlubang yang disolder), lalu dimasukkan ke casing cetak 3D.</p>
+      <ol class="steps">
+        <li><div>Solder <b>header perempuan</b> (soket) di perfboard untuk ESP32, supaya ESP32 bisa dicabut tanpa membuka solderan.</div></li>
+        <li><div>Buat dua jalur daya (5 V dan 3,3 V) dan satu jalur GND di perfboard, sama seperti breadboard. Pasang kapasitor di jalur 5 V.</div></li>
+        <li><div>Solder ketiga pembagi tegangan MQ di perfboard, dekat pin GPIO34/35/32.</div></li>
+        <li><div>Sambungkan sensor lewat kabel jumper male-female, beri label pada setiap kabel dengan selotip kertas.</div></li>
+        <li><div>Ukur ulang semua tegangan dengan multimeter sebelum menyambung sensor, lalu jalankan lagi kode uji langkah 3–8 satu per satu.</div></li>
+        <li><div>Masukkan ke casing sesuai urutan perakitan di dokumen v2 (bagian 14.7): sensor iklim di base, ESP32/ESP32-CAM/PMS5003/perfboard di sled core, modul MQ di rak ruang panas.</div></li>
+        <li><div>Pastikan lensa ESP32-CAM tepat di belakang cincin lensa oranye, dan lubang kipas PMS5003 menghadap panel PMS.</div></li>
+      </ol>
+      <div class="tip"><b>Belum pernah menyolder?</b><p>Latihan dulu di sisa perfboard dengan beberapa kaki resistor. Solderan yang baik berbentuk kerucut kecil mengkilap. Kalau ragu, minta bantuan teman atau laboran; node tetap bisa didemokan di atas breadboard yang dirapikan.</p></div>
+      <label class="check"><input type="checkbox" id="ck-casing"> Node terpasang di casing dan semua kode uji lulus</label>
+    </section>
+
+    <!-- ================================================================ -->
+    <section id="akhir" data-group="Gabungkan">
+      <h2><span class="num">16</span>Uji akhir</h2>
+      <div class="tbl"><table>
+        <thead><tr><th>Uji</th><th>Cara</th><th>Lulus bila</th></tr></thead>
+        <tbody>
+          <tr><td>Daya</td><td>Multimeter di jalur 5 V saat kamera memotret</td><td>Tetap ≥ 4,8 V</td></tr>
+          <tr><td>Suhu/kelembapan</td><td>Bandingkan dengan termometer ruangan</td><td>Selisih ≤ 2 °C</td></tr>
+          <tr><td>Debu</td><td>Dupa didekatkan beberapa detik</td><td>PM2.5 naik lalu turun</td></tr>
+          <tr><td>Gas</td><td>Uap hand sanitizer</td><td>Rs ÷ R0 MQ-135 dan MQ-2 turun</td></tr>
+          <tr><td>Kamera</td><td>Tekan BOOT 3 kali</td><td>3 foto baru di kartu kamera</td></tr>
+          <tr><td>Penyimpanan</td><td>Biarkan menyala 1 jam</td><td>Berkas CSV bertambah tanpa celah</td></tr>
+          <tr><td>Panas</td><td>Raba casing setelah 2 jam</td><td>Hangat, tidak panas</td></tr>
+        </tbody>
+      </table></div>
+      <label class="check"><input type="checkbox" id="ck-akhir"> Semua uji akhir lulus</label>
+    </section>
+
+    <!-- ================================================================ -->
+    <section id="berikutnya" data-group="Gabungkan">
+      <h2><span class="num">17</span>Berikutnya: firmware final dan Raspberry Pi</h2>
+      <p>Kode di modul ini adalah <b>kode uji</b> per komponen. <b>Firmware final</b> menggabungkan semuanya dan dibuat terpisah setelah perangkat dari kampus pasti:</p>
+      <ul>
+        <li>Membaca semua sensor setiap 60 detik, menghitung Rs ÷ R0, menambahkan waktu dari internet (NTP).</li>
+        <li>Mendeteksi kejadian (kenaikan tajam MQ atau PM2.5) dan memicu kamera, paling banyak satu foto per 5 menit.</li>
+        <li>Menyimpan ke microSD sebagai cadangan, dan mengirim ke penampung data lewat WiFi.</li>
+      </ul>
+      <div class="grid2">
+        <div class="card"><h3>Peran Raspberry Pi</h3><p>Raspberry Pi milikmu cocok menjadi <b>penampung data yang menyala terus</b> selama 3–4 minggu pengumpulan data sebelum pameran. Node mengirim data lewat WiFi, Pi menyimpannya dengan program kecil berbahasa <b>Python</b>. Ini menyelesaikan masalah "data dikirim ke mana" yang dibahas di dokumen v2 bagian 9.</p></div>
+        <div class="card"><h3>Yang perlu disiapkan</h3><p>Tipe Raspberry Pi (misalnya Pi 3 atau 4), kartu microSD untuk Pi, adaptor dayanya, dan jaringan WiFi yang bisa dipakai node dan Pi bersama. Setelah itu, kode penampung Python dan firmware final dibuat sebagai langkah berikutnya.</p></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- ======================== kode uji (teks mentah) ======================== -->
+<script type="text/plain" id="c1">// Uji 1: ESP32 hidup dan bisa "bicara" lewat Serial
+const int LED = 2;            // LED biru bawaan ESP32 DevKit V1
+
+void setup() {
+  pinMode(LED, OUTPUT);
+  Serial.begin(115200);
+  delay(500);
+  Serial.println("ESP32 siap!");
+}
+
+void loop() {
+  digitalWrite(LED, HIGH);
+  Serial.println("LED nyala");
+  delay(500);
+  digitalWrite(LED, LOW);
+  Serial.println("LED mati");
+  delay(500);
+}</script>
+
+<script type="text/plain" id="c2">#include <Wire.h>
+#include <Adafruit_BME280.h>
+
+Adafruit_BME280 bme;
+
+void setup() {
+  Serial.begin(115200);
+  Wire.begin(21, 22);                       // SDA = GPIO21, SCL = GPIO22
+  Serial.println("Mencari perangkat I2C...");
+  for (byte addr = 1; addr < 127; addr++) {
+    Wire.beginTransmission(addr);
+    if (Wire.endTransmission() == 0) {
+      Serial.print("Ditemukan di 0x"); Serial.println(addr, HEX);
+    }
+  }
+  if (!bme.begin(0x76) && !bme.begin(0x77)) {
+    Serial.println("BME280 tidak ditemukan. Cek kabel SDA/SCL dan alamat.");
+    while (true) delay(1000);
+  }
+  Serial.print("Chip ID: 0x"); Serial.println(bme.sensorID(), HEX);
+}
+
+void loop() {
+  Serial.printf("Suhu %.1f C | Kelembapan %.1f %% | Tekanan %.1f hPa\n",
+                bme.readTemperature(), bme.readHumidity(), bme.readPressure() / 100.0);
+  delay(2000);
+}</script>
+
+<script type="text/plain" id="c3">HardwareSerial pms(2);                     // UART ke-2 milik ESP32
+uint8_t buf[32];                           // satu paket PMS5003 = 32 byte
+
+void setup() {
+  Serial.begin(115200);
+  pms.begin(9600, SERIAL_8N1, 16, 17);     // RX = GPIO16, TX = GPIO17
+  Serial.println("Menunggu PMS5003... (kipas harus berputar)");
+}
+
+bool bacaFrame() {
+  while (pms.available() >= 32) {
+    if (pms.read() != 0x42) continue;      // cari byte awal pertama
+    if (pms.peek() != 0x4D) continue;      // dan byte awal kedua
+    buf[0] = 0x42;
+    pms.readBytes(buf + 1, 31);
+    uint16_t sum = 0;
+    for (int i = 0; i < 30; i++) sum += buf[i];
+    uint16_t cek = (buf[30] << 8) | buf[31];
+    return sum == cek;                     // true bila paket utuh
+  }
+  return false;
+}
+
+void loop() {
+  if (bacaFrame()) {
+    uint16_t pm1  = (buf[10] << 8) | buf[11];
+    uint16_t pm25 = (buf[12] << 8) | buf[13];
+    uint16_t pm10 = (buf[14] << 8) | buf[15];
+    Serial.printf("PM1.0 %u | PM2.5 %u | PM10 %u ug/m3\n", pm1, pm25, pm10);
+  }
+  delay(100);
+}</script>
+
+<script type="text/plain" id="c4">const int PIN_MQ2 = 34, PIN_MQ7 = 35, PIN_MQ135 = 32;
+const float RASIO_PEMBAGI = 20.0 / (10.0 + 20.0);   // = 0.667
+const float RL_KOHM = 1.0;                          // resistor beban modul ("102" = 1 kOhm)
+const float VC = 5.0;                               // tegangan modul MQ
+
+float bacaRs(int pin) {
+  uint32_t total = 0;
+  for (int i = 0; i < 20; i++) { total += analogReadMilliVolts(pin); delay(5); }
+  float vAdc = (total / 20.0) / 1000.0;             // volt di pin ESP32
+  float vOut = vAdc / RASIO_PEMBAGI;                // volt asli keluaran modul
+  if (vOut < 0.01) return -1;                       // kabel lepas?
+  return RL_KOHM * (VC - vOut) / vOut;              // Rs dalam kOhm
+}
+
+void setup() {
+  Serial.begin(115200);
+  analogSetAttenuation(ADC_11db);                   // rentang baca hingga ~3,1 V
+}
+
+void loop() {
+  Serial.printf("Rs MQ-2 %.1f kOhm | MQ-7 %.1f kOhm | MQ-135 %.1f kOhm\n",
+                bacaRs(PIN_MQ2), bacaRs(PIN_MQ7), bacaRs(PIN_MQ135));
+  delay(2000);
+}</script>
+
+<script type="text/plain" id="c5">#include <SPI.h>
+#include <SD.h>
+const int SD_CS = 5;                       // CS = GPIO5 (SCK 18, MISO 19, MOSI 23)
+
+void setup() {
+  Serial.begin(115200);
+  if (!SD.begin(SD_CS)) {
+    Serial.println("Kartu SD gagal dibaca. Cek kabel dan format FAT32.");
+    while (true) delay(1000);
+  }
+  File f = SD.open("/uji.csv", FILE_APPEND);
+  if (f.size() == 0) f.println("millis,catatan");
+  f.printf("%lu,halo dari AirLens\n", millis());
+  f.close();
+  Serial.println("Berhasil menulis /uji.csv");
+}
+
+void loop() {}</script>
+
+<script type="text/plain" id="c6">#include "esp_camera.h"
+#include "FS.h"
+#include "SD_MMC.h"
+#include "driver/rtc_io.h"
+
+#define WAKE_PIN GPIO_NUM_13
+RTC_DATA_ATTR int nomorFoto = 0;           // tetap tersimpan selama tidur
+
+camera_config_t konfigurasiKamera() {
+  camera_config_t c = {};
+  c.ledc_channel = LEDC_CHANNEL_0; c.ledc_timer = LEDC_TIMER_0;
+  c.pin_d0 = 5;  c.pin_d1 = 18; c.pin_d2 = 19; c.pin_d3 = 21;
+  c.pin_d4 = 36; c.pin_d5 = 39; c.pin_d6 = 34; c.pin_d7 = 35;
+  c.pin_xclk = 0; c.pin_pclk = 22; c.pin_vsync = 25; c.pin_href = 23;
+  c.pin_sccb_sda = 26; c.pin_sccb_scl = 27;
+  c.pin_pwdn = 32; c.pin_reset = -1;
+  c.xclk_freq_hz = 20000000; c.pixel_format = PIXFORMAT_JPEG;
+  c.frame_size = FRAMESIZE_SVGA; c.jpeg_quality = 12; c.fb_count = 1;
+  return c;
+}
+
+void tidur() {
+  rtc_gpio_pulldown_en(WAKE_PIN);          // tahan GPIO13 di LOW saat tidur
+  esp_sleep_enable_ext0_wakeup(WAKE_PIN, 1); // bangun saat GPIO13 HIGH
+  Serial.println("Tidur. Bangun saat GPIO13 HIGH.");
+  delay(100);
+  esp_deep_sleep_start();
+}
+
+void setup() {
+  Serial.begin(115200);
+  if (esp_sleep_get_wakeup_cause() != ESP_SLEEP_WAKEUP_EXT0) {
+    Serial.println("Nyala pertama: langsung tidur.");
+    tidur();
+  }
+  camera_config_t c = konfigurasiKamera();
+  if (esp_camera_init(&c) != ESP_OK) { Serial.println("Kamera gagal."); tidur(); }
+  for (int i = 0; i < 3; i++) { camera_fb_t *buang = esp_camera_fb_get(); if (buang) esp_camera_fb_return(buang); delay(200); }
+  camera_fb_t *fb = esp_camera_fb_get();
+  if (fb && SD_MMC.begin("/sdcard", true)) {  // true = mode 1-bit, GPIO13 tetap bebas
+    char nama[32];
+    do { snprintf(nama, sizeof(nama), "/kejadian_%05d.jpg", nomorFoto++); } while (SD_MMC.exists(nama));
+    File f = SD_MMC.open(nama, FILE_WRITE);
+    f.write(fb->buf, fb->len);
+    f.close();
+    Serial.printf("Foto tersimpan: %s (%u byte)\n", nama, fb->len);
+  } else Serial.println("Foto atau kartu SD gagal.");
+  if (fb) esp_camera_fb_return(fb);
+  pinMode(13, INPUT);
+  while (digitalRead(13) == HIGH) delay(50);  // tunggu sinyal pemicu turun
+  tidur();
+}
+
+void loop() {}</script>
+
+<script type="text/plain" id="c7">const int PIN_PICU = 25, TOMBOL = 0;      // GPIO0 = tombol BOOT
+
+void setup() {
+  pinMode(PIN_PICU, OUTPUT);
+  digitalWrite(PIN_PICU, LOW);             // kamera tetap tidur
+  pinMode(TOMBOL, INPUT_PULLUP);
+  Serial.begin(115200);
+  Serial.println("Tekan tombol BOOT untuk memicu kamera.");
+}
+
+void loop() {
+  if (digitalRead(TOMBOL) == LOW) {
+    Serial.println("Picu!");
+    digitalWrite(PIN_PICU, HIGH);          // bangunkan kamera
+    delay(1000);
+    digitalWrite(PIN_PICU, LOW);
+    delay(5000);                           // satu tekanan = satu foto
+  }
+}</script>
+
+<script>
+// ---------- blok kode bernomor + tombol salin ----------
+document.querySelectorAll(".code[data-src]").forEach((box) => {
+  const src = document.getElementById(box.dataset.src).textContent.replace(/^\n/, "");
+  const head = document.createElement("div"); head.className = "head";
+  const name = document.createElement("span"); name.textContent = box.dataset.name;
+  const btn = document.createElement("button"); btn.type = "button"; btn.textContent = "Salin";
+  head.append(name, btn);
+  const pre = document.createElement("pre");
+  for (const line of src.split("\n")) { const s = document.createElement("span"); s.textContent = line || " "; pre.appendChild(s); }
+  box.append(head, pre);
+  btn.addEventListener("click", async () => {
+    try { await navigator.clipboard.writeText(src); btn.textContent = "Tersalin"; }
+    catch { const r = document.createRange(); r.selectNodeContents(pre); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r); btn.textContent = "Teks dipilih, tekan Ctrl+C"; }
+    setTimeout(() => (btn.textContent = "Salin"), 2200);
+  });
+});
+
+// ---------- diagram kabel (SVG) ----------
+const NS = "http://www.w3.org/2000/svg";
+const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+function el(tag, attrs, parent, text) {
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (text != null) e.textContent = text;
+  parent && parent.appendChild(e); return e;
+}
+function board(svg, x, y, w, title, pins, side, fill) {
+  const h = 44 + pins.length * 26;
+  el("rect", { x, y, width: w, height: h, rx: 12, fill, stroke: css("--line"), "stroke-width": 1.5 }, svg);
+  el("text", { x: x + w / 2, y: y + 26, "text-anchor": "middle", "font-weight": 700, "font-size": 15 }, svg, title);
+  const pos = {};
+  pins.forEach((p, i) => {
+    const py = y + 50 + i * 26, px = side === "r" ? x + w : x;
+    el("circle", { cx: px, cy: py, r: 5, fill: css("--paper"), stroke: css("--ink-2"), "stroke-width": 1.5 }, svg);
+    el("text", { x: side === "r" ? px - 12 : px + 12, y: py + 4.5, "text-anchor": side === "r" ? "end" : "start", "font-size": 13 }, svg, p);
+    pos[p] = [px, py];
+  });
+  return { pos, h };
+}
+function wire(svg, a, b, color, label) {
+  const mx = (a[0] + b[0]) / 2;
+  el("path", { d: `M${a[0]} ${a[1]} C ${mx} ${a[1]}, ${mx} ${b[1]}, ${b[0]} ${b[1]}`, fill: "none", stroke: color, "stroke-width": 3.2, "stroke-linecap": "round" }, svg);
+  if (label) el("text", { x: mx, y: (a[1] + b[1]) / 2 - 6, "text-anchor": "middle", "font-size": 12, fill: css("--ink-2") }, svg, label);
+}
+function simple(id, left, right, wires, height) {
+  const host = document.getElementById(id); host.innerHTML = "";
+  const svg = el("svg", { viewBox: `0 0 760 ${height}` }, host);
+  const L = board(svg, 30, 20, 230, left.title, left.pins, "r", css("--soft"));
+  const R = board(svg, 500, 20, 230, right.title, right.pins, "l", css("--paper"));
+  for (const [lp, rp, col, lab] of wires) wire(svg, L.pos[lp], R.pos[rp], css(col), lab);
+}
+function drawAll() {
+  // gambaran besar
+  {
+    const host = document.getElementById("dg-overview"); host.innerHTML = "";
+    const svg = el("svg", { viewBox: "0 0 760 300" }, host);
+    const blk = (x, y, w, h, t, s, f) => { el("rect", { x, y, width: w, height: h, rx: 12, fill: f, stroke: css("--line"), "stroke-width": 1.5 }, svg);
+      el("text", { x: x + w / 2, y: y + h / 2 - 3, "text-anchor": "middle", "font-weight": 700, "font-size": 14 }, svg, t);
+      el("text", { x: x + w / 2, y: y + h / 2 + 15, "text-anchor": "middle", "font-size": 12, fill: css("--ink-2") }, svg, s); };
+    blk(290, 110, 180, 80, "ESP32 DevKit V1", "otak + WiFi", css("--soft"));
+    const sensors = [["BME280", "suhu, kelembapan", 20], ["PMS5003", "debu PM2.5", 85], ["MQ-2 · MQ-7 · MQ-135", "gas", 150], ["Adaptor 5 V 3 A", "daya semua komponen", 215]];
+    for (const [t, s, y] of sensors) { blk(20, y, 200, 56, t, s, css("--paper")); wire(svg, [220, y + 28], [290, 150], css(t.startsWith("Adaptor") ? "--w5v" : "--wsig1")); }
+    blk(540, 40, 200, 56, "microSD", "simpan data", css("--paper")); wire(svg, [470, 135], [540, 68], css("--wsig3"));
+    blk(540, 122, 200, 56, "ESP32-CAM", "bangun saat kejadian", css("--paper")); wire(svg, [470, 150], [540, 150], css("--wsig1"), "pemicu");
+    blk(540, 204, 200, 56, "Raspberry Pi", "penampung data (WiFi)", css("--paper"));
+    el("path", { d: "M470 168 C 505 168, 505 232, 540 232", fill: "none", stroke: css("--accent"), "stroke-width": 3, "stroke-dasharray": "7 6" }, svg);
+  }
+  // jalur daya
+  {
+    const host = document.getElementById("dg-power"); host.innerHTML = "";
+    const svg = el("svg", { viewBox: "0 0 760 250" }, host);
+    const rail = (y, col, lab) => { el("line", { x1: 30, y1: y, x2: 730, y2: y, stroke: css(col), "stroke-width": 6, "stroke-linecap": "round" }, svg);
+      el("text", { x: 36, y: y - 10, "font-size": 13, "font-weight": 600 }, svg, lab); };
+    rail(40, "--w5v", "Jalur 5 V (atas +)"); rail(70, "--wgnd", "GND (atas −)"); rail(180, "--w33", "Jalur 3,3 V (bawah +)"); rail(210, "--wgnd", "GND (bawah −)");
+    el("rect", { x: 300, y: 95, width: 170, height: 60, rx: 10, fill: css("--soft"), stroke: css("--line") }, svg);
+    el("text", { x: 385, y: 130, "text-anchor": "middle", "font-weight": 700, "font-size": 14 }, svg, "ESP32");
+    const v = (x, y1, y2, col, lab) => { el("line", { x1: x, y1, x2: x, y2, stroke: css(col), "stroke-width": 3.2 }, svg); if (lab) el("text", { x: x + 6, y: (y1 + y2) / 2 + 4, "font-size": 12, fill: css("--ink-2") }, svg, lab); };
+    v(320, 40, 95, "--w5v", "VIN"); v(450, 155, 180, "--w33", "3V3"); v(420, 155, 210, "--wgnd", "GND");
+    v(690, 70, 210, "--wgnd", "GND bersama");
+    el("rect", { x: 70, y: 82, width: 120, height: 34, rx: 8, fill: css("--paper"), stroke: css("--line") }, svg);
+    el("text", { x: 130, y: 104, "text-anchor": "middle", "font-size": 12.5 }, svg, "USB-C dari adaptor");
+    v(110, 40, 82, "--w5v"); v(150, 70, 82, "--wgnd");
+    el("rect", { x: 560, y: 46, width: 24, height: 18, rx: 4, fill: css("--paper"), stroke: css("--ink-2") }, svg);
+    el("text", { x: 592, y: 60, "font-size": 12, fill: css("--ink-2") }, svg, "kapasitor 1000 µF");
+  }
+  simple("dg-bme", { title: "ESP32", pins: ["3V3", "GND", "GPIO21 (SDA)", "GPIO22 (SCL)"] }, { title: "BME280", pins: ["VCC", "GND", "SDA", "SCL"] },
+    [["3V3", "VCC", "--w33"], ["GND", "GND", "--wgnd"], ["GPIO21 (SDA)", "SDA", "--wsig1"], ["GPIO22 (SCL)", "SCL", "--wsig2"]], 170);
+  simple("dg-pms", { title: "ESP32 + jalur 5 V", pins: ["5 V (jalur)", "GND", "GPIO16 (RX2)", "GPIO17 (TX2)"] }, { title: "PMS5003", pins: ["1 VCC", "2 GND", "5 TX", "4 RX"] },
+    [["5 V (jalur)", "1 VCC", "--w5v"], ["GND", "2 GND", "--wgnd"], ["GPIO16 (RX2)", "5 TX", "--wsig2", "TX → RX"], ["GPIO17 (TX2)", "4 RX", "--wsig1"]], 170);
+  simple("dg-sd", { title: "ESP32 + jalur 5 V", pins: ["5 V (jalur)", "GND", "GPIO5", "GPIO18", "GPIO19", "GPIO23"] }, { title: "Modul microSD", pins: ["VCC", "GND", "CS", "SCK", "MISO", "MOSI"] },
+    [["5 V (jalur)", "VCC", "--w5v"], ["GND", "GND", "--wgnd"], ["GPIO5", "CS", "--wsig3"], ["GPIO18", "SCK", "--wsig3"], ["GPIO19", "MISO", "--wsig3"], ["GPIO23", "MOSI", "--wsig3"]], 220);
+  simple("dg-cam", { title: "ESP32 utama + jalur", pins: ["5 V (jalur)", "GND", "GPIO25"] }, { title: "ESP32-CAM", pins: ["5V", "GND", "IO13"] },
+    [["5 V (jalur)", "5V", "--w5v"], ["GND", "GND", "--wgnd"], ["GPIO25", "IO13", "--wsig1", "lewat resistor 1 kΩ"]], 145);
+  // pembagi tegangan MQ
+  {
+    const host = document.getElementById("dg-mq"); host.innerHTML = "";
+    const svg = el("svg", { viewBox: "0 0 760 260" }, host);
+    el("rect", { x: 30, y: 40, width: 180, height: 150, rx: 12, fill: css("--paper"), stroke: css("--line"), "stroke-width": 1.5 }, svg);
+    el("text", { x: 120, y: 66, "text-anchor": "middle", "font-weight": 700, "font-size": 15 }, svg, "Modul MQ");
+    const pins = { VCC: 92, GND: 118, AO: 144, DO: 170 };
+    for (const [p, y] of Object.entries(pins)) { el("circle", { cx: 210, cy: y, r: 5, fill: css("--paper"), stroke: css("--ink-2"), "stroke-width": 1.5 }, svg); el("text", { x: 196, y: y + 4.5, "text-anchor": "end", "font-size": 13 }, svg, p); }
+    el("text", { x: 222, y: 174, "font-size": 12, fill: css("--ink-2") }, svg, "tidak dipakai");
+    const ln = (pts, col) => el("polyline", { points: pts.map((p) => p.join(",")).join(" "), fill: "none", stroke: css(col), "stroke-width": 3.2, "stroke-linejoin": "round" }, svg);
+    ln([[210, 92], [300, 92], [300, 20], [730, 20]], "--w5v"); el("text", { x: 610, y: 14, "font-size": 12.5, "font-weight": 600 }, svg, "jalur 5 V");
+    ln([[210, 118], [270, 118], [270, 240], [730, 240]], "--wgnd"); el("text", { x: 610, y: 234, "font-size": 12.5, "font-weight": 600 }, svg, "GND");
+    const res = (x, y1, y2, lab) => { el("line", { x1: x, y1, x2: x, y2: y1 + 14, stroke: css("--wsig4"), "stroke-width": 3.2 }, svg);
+      el("rect", { x: x - 11, y: y1 + 14, width: 22, height: y2 - y1 - 28, rx: 4, fill: css("--amber-soft"), stroke: css("--amber"), "stroke-width": 2 }, svg);
+      el("line", { x1: x, y1: y2 - 14, x2: x, y2, stroke: css(lab.includes("20") ? "--wgnd" : "--wsig4"), "stroke-width": 3.2 }, svg);
+      el("text", { x: x + 20, y: (y1 + y2) / 2 + 4, "font-size": 13, "font-weight": 600 }, svg, lab); };
+    ln([[210, 144], [340, 144], [340, 48], [430, 48], [430, 60]], "--wsig4");
+    res(430, 60, 120, "10 kΩ");
+    el("text", { x: 230, y: 138, "font-size": 12, fill: css("--ink-2") }, svg, "AO: 0–5 V");
+    ln([[430, 120], [430, 150]], "--wsig4");
+    el("circle", { cx: 430, cy: 150, r: 6, fill: css("--wsig4") }, svg);
+    res(430, 150, 240, "20 kΩ");
+    ln([[430, 150], [600, 150]], "--wsig4");
+    el("rect", { x: 600, y: 120, width: 130, height: 60, rx: 10, fill: css("--soft"), stroke: css("--line") }, svg);
+    el("text", { x: 665, y: 146, "text-anchor": "middle", "font-weight": 700, "font-size": 14 }, svg, "ESP32");
+    el("text", { x: 665, y: 165, "text-anchor": "middle", "font-size": 12.5 }, svg, "GPIO34/35/32");
+    el("text", { x: 470, y: 142, "font-size": 12, fill: css("--ink-2") }, svg, "maks 3,33 V");
+  }
+  // semua sambungan (ringkas)
+  {
+    const host = document.getElementById("dg-all"); host.innerHTML = "";
+    const svg = el("svg", { viewBox: "0 0 760 470" }, host);
+    const L = board(svg, 270, 20, 220, "ESP32 DevKit V1",
+      ["VIN", "3V3", "GND", "GPIO21", "GPIO22", "GPIO16", "GPIO17", "GPIO34", "GPIO35", "GPIO32", "GPIO5", "GPIO18", "GPIO19", "GPIO23", "GPIO25"], "r", css("--soft"));
+    const dev = (y, t, s, h = 46) => { el("rect", { x: 560, y, width: 180, height: h, rx: 10, fill: css("--paper"), stroke: css("--line") }, svg);
+      el("text", { x: 650, y: y + 20, "text-anchor": "middle", "font-weight": 700, "font-size": 13.5 }, svg, t);
+      el("text", { x: 650, y: y + 37, "text-anchor": "middle", "font-size": 11.5, fill: css("--ink-2") }, svg, s); return [560, y + h / 2]; };
+    const bme = dev(76, "BME280", "SDA, SCL"); const pms = dev(130, "PMS5003", "TX → RX2"); const mq = dev(196, "MQ ×3", "AO lewat pembagi", 70);
+    const sd = dev(290, "microSD", "CS, SCK, MISO, MOSI", 70); const cam = dev(380, "ESP32-CAM", "IO13 lewat 1 kΩ");
+    const P = L.pos;
+    for (const p of ["GPIO21", "GPIO22"]) wire(svg, P[p], bme, css("--wsig1"));
+    for (const p of ["GPIO16", "GPIO17"]) wire(svg, P[p], pms, css("--wsig2"));
+    for (const p of ["GPIO34", "GPIO35", "GPIO32"]) wire(svg, P[p], mq, css("--wsig4"));
+    for (const p of ["GPIO5", "GPIO18", "GPIO19", "GPIO23"]) wire(svg, P[p], sd, css("--wsig3"));
+    wire(svg, P["GPIO25"], cam, css("--wsig1"));
+    el("rect", { x: 20, y: 60, width: 200, height: 120, rx: 10, fill: css("--paper"), stroke: css("--line") }, svg);
+    el("text", { x: 120, y: 86, "text-anchor": "middle", "font-weight": 700, "font-size": 13.5 }, svg, "Jalur daya");
+    el("text", { x: 120, y: 106, "text-anchor": "middle", "font-size": 12, fill: css("--ink-2") }, svg, "5 V: PMS, MQ, microSD, CAM");
+    el("text", { x: 120, y: 124, "text-anchor": "middle", "font-size": 12, fill: css("--ink-2") }, svg, "3,3 V: BME280");
+    el("text", { x: 120, y: 142, "text-anchor": "middle", "font-size": 12, fill: css("--ink-2") }, svg, "GND bersama semua");
+    wire(svg, [220, 90], [270, P["VIN"][1]], css("--w5v")); wire(svg, [220, 120], [270, P["3V3"][1]], css("--w33")); wire(svg, [220, 150], [270, P["GND"][1]], css("--wgnd"));
+  }
+}
+drawAll();
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", drawAll);
+new MutationObserver(drawAll).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+
+// ---------- daftar isi + centang langkah ----------
+const toc = document.getElementById("toc");
+let lastGroup = "";
+const checks = [...document.querySelectorAll(".check input")];
+document.querySelectorAll("main > section").forEach((s) => {
+  if (s.dataset.group !== lastGroup) { lastGroup = s.dataset.group; const g = document.createElement("li"); g.className = "grp"; g.textContent = lastGroup; toc.appendChild(g); }
+  const li = document.createElement("li"), a = document.createElement("a");
+  a.href = "#" + s.id; const ck = s.querySelector(".check input");
+  a.innerHTML = `<span class="tick">${""}</span><span>${s.querySelector("h2").textContent.replace(/^\d+/, (m) => m + ". ")}</span>`;
+  a.dataset.ck = ck ? ck.id : ""; li.appendChild(a); toc.appendChild(li);
+});
+function store(k, v) { try { localStorage.setItem(k, v); } catch {} }
+function load(k) { try { return localStorage.getItem(k); } catch { return null; } }
+function refresh() {
+  const done = checks.filter((c) => c.checked).length;
+  document.getElementById("bar").style.width = `${(done / checks.length) * 100}%`;
+  document.getElementById("progress-text").textContent = `${done} dari ${checks.length} langkah selesai`;
+  toc.querySelectorAll("a").forEach((a) => { const c = a.dataset.ck && document.getElementById(a.dataset.ck); a.querySelector(".tick").textContent = c && c.checked ? "✓" : ""; });
+}
+checks.forEach((c) => { c.checked = load("airlens-iot-" + c.id) === "1"; c.addEventListener("change", () => { store("airlens-iot-" + c.id, c.checked ? "1" : "0"); refresh(); }); });
+refresh();
+const links = [...toc.querySelectorAll("a")];
+const io = new IntersectionObserver((es) => { es.forEach((e) => { if (e.isIntersecting) links.forEach((a) => a.classList.toggle("on", a.getAttribute("href") === "#" + e.target.id)); }); },
+  { rootMargin: "-20% 0px -70% 0px" });
+document.querySelectorAll("main > section").forEach((s) => io.observe(s));
+</script>
+
+</html>

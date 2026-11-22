@@ -75,6 +75,12 @@ services:
     environment:
       <<: *app-env
       IQAIR_API_KEY: ${IQAIR_API_KEY:-}
+      SENSOR_TOKEN: ${SENSOR_TOKEN:-}  # kosong = node Beta diterima tanpa token (jaringan booth tertutup)
+      NODE_TOKEN: ${NODE_TOKEN:-}  # sama, untuk node lengkap /node/readings
+      EXPO_MODE: ${EXPO_MODE:-0}  # 1 = pameran lewat ngrok: SENSOR_TOKEN dan NODE_TOKEN wajib (make expo-setup)
+      VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY:-}    # Web Push (make vapid-keys); kosong = hanya notifikasi saat tab terbuka
+      VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY:-}
+      VAPID_SUBJECT: ${VAPID_SUBJECT:-}
       VLM_BASE_URL: ${VLM_BASE_URL:-}
       VLM_MODEL: ${VLM_MODEL:-}
       MLFLOW_TRACKING_URI: http://mlflow:5000
@@ -94,7 +100,7 @@ services:
       retries: 5
       start_period: 30s
     restart: unless-stopped
-    mem_limit: 768m  # onnxruntime + model + gambar unggahan hingga 40 MP
+    mem_limit: 768m   # onnxruntime + model foto + LightGBM Beta + gambar hingga 40 MP (tanpa PyTorch)
 
   web:
     build:
@@ -160,6 +166,7 @@ services:
       VLM_DEVICE: ${VLM_DEVICE:-}
       KAGGLE_USERNAME: ${KAGGLE_USERNAME:-}
       KAGGLE_KEY: ${KAGGLE_KEY:-}
+      KAGGLE_API_TOKEN: ${KAGGLE_API_TOKEN:-${KAGGLE_KEY:-}}  # Kaggle CLI 2.x membaca token baru (KGAT_...) dari sini
       OPENAQ_API_KEY: ${OPENAQ_API_KEY:-}
       MAPILLARY_ACCESS_TOKEN: ${MAPILLARY_ACCESS_TOKEN:-}
     volumes:
@@ -191,12 +198,15 @@ services:
       POSTGRES_DB: airlens_test
     volumes:
       - ./tests:/app/tests:ro
+      - ./firmware:/app/firmware:ro              # tes firmware/Wokwi (isi sketch, sertifikat, manifest .bin)
+      - ./wokwi:/app/wokwi:ro
+      - ./web/static/tools:/app/web/static/tools:ro
       - ./data/processed:/app/data/processed:ro  # test kebocoran memeriksa split yang sebenarnya
     depends_on:
       db:
         condition: service_healthy
     restart: "no"
-    mem_limit: 512m
+    mem_limit: 1280m  # tes model sintetis (torch untuk ekspor ONNX di tes trainer) + API dalam satu proses
 
 volumes:
   pgdata:

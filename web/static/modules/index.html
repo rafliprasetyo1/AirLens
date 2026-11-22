@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AirLens build guides</title>
+  <link rel="icon" href="/product/airlens-icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/product/product.css">
+  <link rel="stylesheet" href="/shared/nav.css">
+  <style>
+    .guides { padding: 8rem var(--gutter) 5rem; max-width: 52rem; }
+    .guides h1 { font-size: clamp(2.5rem, 6vw, 4rem); }
+    .guides .lede { margin-top: 1rem; }
+    .guide-list { list-style: none; margin: 3rem 0 0; padding: 0; border-top: 1px solid var(--line); }
+    .guide-list li { border-bottom: 1px solid var(--line); }
+    .guide-list a { display: grid; gap: .35rem; padding: 1.5rem 0; color: var(--ink); text-decoration: none; }
+    .guide-list a:hover .guide-title, .guide-list a:focus-visible .guide-title { color: var(--sky); }
+    .guide-title { font: 400 1.5rem/1.2 var(--display); letter-spacing: -.01em; }
+    .guide-meta { color: var(--sky); font-size: .875rem; font-weight: 500; }
+    .guide-list p { color: var(--ink-2); max-width: 36em; }
+    .tools-head { margin-top: 3.5rem; font: 300 clamp(1.5rem, 3vw, 2rem) var(--display, system-ui); color: var(--ink); }
+    .tools-head + .guide-list { margin-top: 1.25rem; }
+    .guides .note { margin-top: 2.5rem; max-width: 36em; }
+  </style>
+  <link rel="stylesheet" href="/shared/alerts.css">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="apple-touch-icon" href="/icons/airlens-192.png">
+  <meta name="theme-color" content="#08121c">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header class="bar">
+    <a class="brand" href="/">
+      <img src="/product/airlens-icon.svg" alt="" width="28" height="28">
+      <span>AirLens</span>
+    </a>
+    <nav class="site-nav" aria-label="AirLens pages">
+      <ul>
+        <li><a href="/">Photo demo</a></li>
+        <li><a href="/beta.html">Beta sensor</a></li>
+        <li><a href="/product.html">Product</a></li>
+        <li><a href="/modules/" aria-current="page">Build guides</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main id="main" class="guides">
+    <h1>Build guides</h1>
+    <p class="lede">Step-by-step guides for wiring, testing and assembling the AirLens nodes.</p>
+    <ul class="guide-list">
+      <li>
+        <a href="merakit-node-lite.html">
+          <span class="guide-meta">Running at this booth</span>
+          <span class="guide-title">Beta version</span>
+          <p>ESP32 DevKit V1 with four MQ gas sensors (MQ-2, MQ-3, MQ-7, MQ-135), each through a voltage divider, sending readings over HTTPS to a small AI model explained with SHAP.</p>
+        </a>
+      </li>
+      <li>
+        <a href="merakit-node-lengkap.html">
+          <span class="guide-meta">Full version · concept design</span>
+          <span class="guide-title">Full version (concept)</span>
+          <p>Raspberry Pi 5 with AI HAT+, Camera Module 3 Wide, Sensirion SEN66 and Alphasense CO-B4, in a 3D-printed case.</p>
+        </a>
+      </li>
+    </ul>
+    <h2 class="tools-head">Beta tools (operator)</h2>
+    <ul class="guide-list">
+      <li>
+        <a href="/tools/flash.html">
+          <span class="guide-meta">Chrome or Edge · USB</span>
+          <span class="guide-title">Flash tool</span>
+          <p>Install the AirLens Beta firmware (4 MQ gas sensors) from the browser and save WiFi, the AirLens address and the node token on the device.</p>
+        </a>
+      </li>
+      <li>
+        <a href="/tools/recorder.html">
+          <span class="guide-meta">Chrome or Edge · USB</span>
+          <span class="guide-title">Calibration recorder</span>
+          <p>Record labelled readings (clean air, incense smoke, hand sanitizer) from the device and download them as CSV.</p>
+        </a>
+      </li>
+    </ul>
+    <p class="note muted">The guides are written in Indonesian. They work offline and use system fonts.</p>
+  </main>
+  <script src="/shared/alerts.js"></script>
+</body>
+</html>

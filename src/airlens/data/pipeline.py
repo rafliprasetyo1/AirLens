@@ -172,6 +172,7 @@ def run(profile_name: str | None, skip_download: bool) -> dict:
         "per_sumber": count_by(kept, "split", "source"),
     }
 
+    kept["label_epa"] = kept["label"]          # kategori EPA asli (untuk model referensi 5 kelas / compare_merge)
     kept["label"] = kept["label_final"]
     out_dir.mkdir(parents=True, exist_ok=True)
     kept.drop(columns=["label_final"]).to_parquet(out_dir / "dataset.parquet", index=False)

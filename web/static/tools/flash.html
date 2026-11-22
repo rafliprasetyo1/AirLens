@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AirLens tools: flash Beta firmware</title>
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="/product/airlens-icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/product/product.css">
+  <link rel="stylesheet" href="/tools/tools.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header class="bar">
+    <a class="brand" href="/modules/">
+      <img src="/product/airlens-icon.svg" alt="" width="28" height="28">
+      <span>AirLens tools</span>
+    </a>
+    <a class="bar-link" href="/tools/recorder.html">Recorder</a>
+  </header>
+
+  <main id="main" class="tools">
+    <p class="tag">Operator tool</p>
+    <h1>Flash AirLens Beta</h1>
+    <p>Install the firmware on the ESP32 from this browser, then save the WiFi network, the AirLens address and the node token on the device. Nothing needs to be installed on this computer.</p>
+
+    <div class="notice-box warn" id="no-serial" hidden>
+      <p>This browser can't talk to USB devices. Open this page in Chrome or Edge on a computer, through <code>http://localhost:8080</code> or an <code>https://</code> address.</p>
+    </div>
+
+    <section aria-labelledby="h-fw">
+      <h2 id="h-fw">1. Choose the firmware</h2>
+      <ul class="fw-list" id="fw-list"><li>Loading firmware list…</li></ul>
+    </section>
+
+    <section aria-labelledby="h-flash">
+      <h2 id="h-flash">2. Connect and flash</h2>
+      <p>Connect the board with a USB data cable. If no port appears, the computer may need the CP210x or CH340 USB driver (admin rights); flash from another computer instead, because the device keeps the same AirLens address.</p>
+      <div class="row">
+        <button type="button" class="btn primary" id="connect">Connect a device</button>
+        <button type="button" class="btn" id="flash" disabled>Flash firmware</button>
+        <button type="button" class="btn" id="disconnect" disabled>Disconnect</button>
+      </div>
+      <p class="status-line" id="flash-status" role="status">No device connected.</p>
+      <progress id="progress" max="100" value="0" hidden></progress>
+    </section>
+
+    <section aria-labelledby="h-wifi">
+      <h2 id="h-wifi">3. Set WiFi and server</h2>
+      <p>These settings go straight to the device over USB and are stored in its memory (NVS). The password is never saved in this browser and never sent to the AirLens server.</p>
+      <form id="wifi-form" autocomplete="off">
+        <div class="form-grid">
+          <div class="field"><label for="ssid">WiFi name (SSID)</label><input id="ssid" name="ssid" required maxlength="32"></div>
+          <div class="field"><label for="pass">WiFi password</label><input id="pass" name="pass" type="password" maxlength="64" autocomplete="new-password"></div>
+          <div class="field"><label for="url">Server URL</label><input id="url" name="url" required maxlength="200" inputmode="url">
+            <small id="url-hint">The ngrok address, for example https://name.ngrok-free.app/api/sensor/readings</small></div>
+          <div class="field"><label for="token">Node token (SENSOR_TOKEN)</label><input id="token" name="token" type="password" maxlength="128" autocomplete="off">
+            <small>From the .env file on the AirLens computer.</small></div>
+          <div class="field"><label for="node">Node name</label><input id="node" name="node" maxlength="64" pattern="[A-Za-z0-9_.\-]{1,64}" value="lite-01"></div>
+          <div class="field" id="interval-field"><label for="interval">Seconds between readings</label><input id="interval" name="interval" type="number" min="2" max="60" value="2">
+            <small>Over ngrok's free plan, use 10 s during the exhibition to save the monthly request quota (2 s while recording calibration).</small></div>
+        </div>
+        <div class="row" style="margin-top:1rem">
+          <button type="submit" class="btn primary" id="save" disabled>Save to device</button>
+          <button type="button" class="btn" id="read" disabled>Read device settings</button>
+        </div>
+      </form>
+      <p class="status-line" id="wifi-status" role="status"></p>
+    </section>
+
+    <section aria-labelledby="h-log">
+      <h2 id="h-log">Device log</h2>
+      <pre class="log" id="log" aria-live="off"></pre>
+    </section>
+  </main>
+  <script type="module" src="/tools/flash.js"></script>
+</body>
+</html>
