@@ -9,7 +9,7 @@ import { buildESP32, ESP32, pinX } from "./parts/esp32.js";
 import { buildMQ, MQ } from "./parts/mq.js";
 import { buildBreadboard, buildResistor, buildJumper, buildFlatJumper, parseSTL, printedMaterial, BB, colX, ROW, RAIL, WIRE } from "./parts/bench.js";
 
-const FLOOR = 2.4, BB_X = -14, BB_TOP = FLOOR + BB.H;
+const FLOOR = 2.4, BB_X = -29, BB_TOP = FLOOR + BB.H;   // BB_X sama dengan beta_case.py (revisi USB 2026-11-22)
 const MQ_X = 54.5, MQ_Y = FLOOR + 9.0;
 export const SENSORS = [   // z tiga dimensi = -y CadQuery; MQ-2 paling dekat ke depan
   { model: "MQ-2", z: 39, gpio: 3, colour: WIRE.blue },
@@ -95,8 +95,8 @@ function assemble(caseGeo) {
   plug.position.copy(usbAt);
   P.usb = plug;
   // lewat celah micro-USB di dinding -X (beta_case.py), lalu jatuh ke meja
-  const cable = new THREE.CatmullRomCurve3([usbAt.clone().add(new THREE.Vector3(-6, 0, 0)), new THREE.Vector3(-82, usbAt.y, usbAt.z),
-    new THREE.Vector3(-100, usbAt.y - 9, usbAt.z + 5), new THREE.Vector3(-125, 1.9, usbAt.z + 28), new THREE.Vector3(-190, 1.9, usbAt.z + 70)]);
+  const cable = new THREE.CatmullRomCurve3([usbAt.clone().add(new THREE.Vector3(-6, 0, 0)), new THREE.Vector3(-90, usbAt.y, usbAt.z),
+    new THREE.Vector3(-106, usbAt.y - 9, usbAt.z + 5), new THREE.Vector3(-130, 1.9, usbAt.z + 28), new THREE.Vector3(-195, 1.9, usbAt.z + 70)]);
   const cableMesh = new THREE.Mesh(new THREE.TubeGeometry(cable, 64, 1.9, 12, false), new THREE.MeshStandardMaterial({ color: 0x26282b, roughness: 0.55 }));
   P.usb.userData.cable = cableMesh;
   P.wires.add(plug, cableMesh);
@@ -173,7 +173,8 @@ export function createScene(canvas, { weak = false, onProgress } = {}) {
   const pulses = [];
 
   async function load(base) {
-    const urls = [`${base}airlens_beta_base.stl`, `${base}airlens_beta_lid.stl`];
+    const CASE_REV = "2026-11-22c";   // naikkan setiap STL casing diganti (STL di-cache browser 1 hari)
+    const urls = [`${base}airlens_beta_base.stl?v=${CASE_REV}`, `${base}airlens_beta_lid.stl?v=${CASE_REV}`];
     const got = [0, 0], total = [0, 0];
     const bufs = await Promise.all(urls.map(async (u, i) => {
       const res = await fetch(u);

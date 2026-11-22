@@ -16,6 +16,9 @@ L, Wd, H_BASE, H_LID, R, WALL, FLOOR, CLR = 150.0, 112.0, 30.0, 12.0, 8.0, 2.2, 
 X_PART = 34.0                    # posisi sekat (ruang sensor di sisi +X, kedalaman ±39 mm)
 MQ_X = 54.5                      # pusat modul MQ (papan 32 × 22, sisi panjang searah X)
 MQ_Y = (-39.0, -13.0, 13.0, 39.0)  # MQ-2, MQ-3, MQ-7, MQ-135 berjajar
+BB_X = -29.0                     # pusat breadboard 83 × 55. Revisi 2026-11-22: digeser 15 mm ke dinding -X agar mulut
+                                 # micro-USB ESP32 (rata dengan ujung breadboard) hanya ±2,5 mm dari dinding dalam
+ESP_Y = -1.27                    # pusat port USB ESP32 (baris pin b dan j breadboard)
 
 
 def rr(l, w, r, z0, h):
@@ -24,9 +27,10 @@ def rr(l, w, r, z0, h):
 
 def beta_base():
     b = rr(L, Wd, R, 0, H_BASE).cut(rr(L - 2 * WALL, Wd - 2 * WALL, R - WALL, FLOOR, H_BASE))
-    # rusuk penahan breadboard 83 × 55
-    for x in (-56.0 - 1.2, 27.6 + 1.2):
-        b = b.union(cq.Workplane("XY").box(2.0, 40, 4).translate((x, 0, FLOOR + 2)))
+    # rusuk penahan breadboard 83 × 55 (ujung -X menempel dinding)
+    # kiri: menyatu dengan dinding (-72,9 .. -70,8; celah 0,3 mm ke breadboard), kanan: rusuk biasa
+    b = b.union(cq.Workplane("XY").box(2.1, 40, 4).translate((-71.85, 0, FLOOR + 2)))
+    b = b.union(cq.Workplane("XY").box(2.0, 40, 4).translate((BB_X + 41.5 + 1.3, 0, FLOOR + 2)))
     # sekat panas dengan celah kabel di atas
     b = b.union(cq.Workplane("XY").box(2.0, Wd - 2 * WALL, 22).translate((X_PART, 0, FLOOR + 11))
                 .cut(cq.Workplane("XY").box(4, 14, 8).translate((X_PART, 0, FLOOR + 19))))
@@ -42,8 +46,13 @@ def beta_base():
             b = b.cut(cq.Workplane("XY").box(10, 16, 2.0).translate((L / 2, y, z)))
         for s in (-1, 1):
             b = b.cut(cq.Workplane("XY").box(26, 10, 2.0).translate((MQ_X, s * Wd / 2, z)))
-    # celah micro-USB ESP32 di ujung -X
-    b = b.cut(cq.Workplane("XY").box(10, 13, 8).translate((-L / 2, 0, FLOOR + 14.5)))
+    # celah micro-USB ESP32 di ujung -X: 14 × 11 mm agar badan plastik colokan ikut masuk
+    b = b.cut(cq.Workplane("XY").box(10, 14, 11).translate((-L / 2, ESP_Y, FLOOR + 14.5)))
+    # ventilasi ruang ESP32 (masuk): kisi tegak rendah di kedua dinding samping, pola berbeda dari kisi sensor.
+    # Udara keluar lewat kisi tutup di atas ESP32 (beta_lid), jadi panas ESP32 tidak lewat celah sekat ke sensor.
+    for x in [-64.0 + i * 6.0 for i in range(8)]:
+        for s in (-1, 1):
+            b = b.cut(cq.Workplane("XY").box(2.2, 10, 9).translate((x, s * Wd / 2, FLOOR + 7.5)))
     # lubang kait tutup
     for x in (-48, 48):
         for s in (-1, 1):
@@ -70,11 +79,16 @@ def beta_lid():
     for y in MQ_Y:
         for i in range(7):
             lid = lid.cut(cq.Workplane("XY").box(2.4, 16, 10).translate((41 + i * 4.4, y, z0 + H_LID)))
-    # tulisan timbul
+    # kisi keluar ruang ESP32: dua kelompok pendek mengapit tulisan (tulisan di y = ±4)
+    for i in range(8):
+        for yc in (-17.0, 17.0):
+            lid = lid.cut(cq.Workplane("XY").box(2.4, 10, 10).translate((-66 + i * 4.4, yc, z0 + H_LID)))
+    # tulisan nama
     try:
-        txt = (cq.Workplane("XY").workplane(offset=z0 + H_LID).center(-30, 0)
+        # diukir 0,6 mm (bukan timbul): tutup dicetak terbalik, permukaan atas di bed, tanpa support
+        txt = (cq.Workplane("XY").workplane(offset=z0 + H_LID - 0.6).center(-30, 0)
                .text("AirLens Beta", 8, 0.6, kind="bold", halign="center", valign="center"))
-        lid = lid.union(txt)
+        lid = lid.cut(txt)
     except Exception as e:      # font tidak tersedia
         print("teks dilewati:", e)
     return lid

@@ -538,3 +538,11 @@ Lingkup ditegaskan pemilik: **proyek utama** = foto pengguna → tingkat kualita
 | Tata letak ESP32 di breadboard mengikuti kenyataan: baris pin di b dan j, baris a sisi GPIO terbuka | DevKit V1 menutup semua lubang breadboard kecuali satu baris; kabel GPIO 34/35/32/33 masuk ke baris itu |
 | Warna garis sensor di grafik Beta = warna kabel sinyal di model 3D (MQ-2 biru, MQ-3 kuning tua, MQ-7 ungu, MQ-135 hijau) | Pengunjung bisa mencocokkan grafik dengan kabel di model |
 | Tema diganti gelap atas permintaan pemilik (2026-11-22 malam): latar biru tua `#0B1424`, kepala/kaki hitam `#05080D`, aksi kuningan pucat `#D9B872` | Latar terang terasa belum selesai bagi pemilik. Kuningan senada dengan pin emas ESP32 di model 3D; tidak memakai cyan/glow. Semua teks tetap >= 4.5:1 (uji UI 39/39). Warna garis sensor dicerahkan untuk latar gelap |
+
+## Casing Beta revisi USB dan ventilasi (2026-11-22, belum dicetak)
+
+| Keputusan | Alasan |
+|---|---|
+| Breadboard + ESP32 digeser 15 mm ke dinding -X (`BB_X = -29`), celah USB 14 × 11 mm dipusatkan ke port | Sebelumnya mulut micro-USB terbenam ±18 mm dari dinding; logam colokan hanya ±6,5 mm, kabel tidak bisa masuk |
+| Ruang ESP32 diberi jalur udara sendiri: kisi tegak rendah di kedua sisi (masuk) + kisi pendek di tutup (keluar); celah kabel di sekat disumbat busa | ESP32 + AMS1117 ±0,4–0,8 W tanpa jalan keluar selain celah sekat ke ruang sensor; panasnya bisa memengaruhi bacaan MQ. Juga tampilan tidak lagi timpang |
+| Tulisan "AirLens Beta" di tutup diukir 0,6 mm, bukan timbul | Tutup dicetak terbalik (permukaan atas di bed) tanpa support |

@@ -10,13 +10,13 @@ const BASE = { az: 32, el: 22, dist: 420, tx: -6, ty: 14, tz: 0, lid: 0, lidFade
 const SCENES = {
   hero: (p) => ({ spin: 1 }),
   open: (p) => ({ az: 22, el: 46, dist: 330, tx: -2, ty: 8, tz: 3, lid: span(p, 0.05, 0.5), lidFade: 1 - span(p, 0.3, 0.65) }),
-  esp32: () => ({ az: -30, el: 40, dist: 150, tx: -29, ty: 33, tz: 1, lid: 1, lidFade: 0, wires: 0, esp: 1 }),
+  esp32: () => ({ az: -30, el: 40, dist: 150, tx: -44, ty: 33, tz: 1, lid: 1, lidFade: 0, wires: 0, esp: 1 }),
   sensors: (p) => {
     const k = Math.min(3, Math.floor(p * 4)), mq = [0, 0, 0, 0];
     mq[k] = 1;
     return { az: 62, el: 32, dist: 190, tx: 50, ty: 26, tz: [39, 13, -13, -39][k] * 0.55, lid: 1, lidFade: 0, wires: 0, mq, step: k };
   },
-  divider: () => ({ az: 18, el: 54, dist: 118, tx: 9, ty: 11, tz: -8, lid: 1, lidFade: 0, wires: 0 }),
+  divider: () => ({ az: 18, el: 54, dist: 118, tx: -6, ty: 11, tz: -8, lid: 1, lidFade: 0, wires: 0 }),
   explode: (p) => ({ az: 34, el: 18, dist: 480, tx: 0, ty: 34, tz: 0, lid: 0, lidFade: 1, wires: 0, explode: span(p, 0.05, 0.55) }),
   flow: () => ({ az: 38, el: 50, dist: 330, tx: 2, ty: 10, tz: 0, lid: 1, lidFade: 0, pulse: 1 }),
   end: () => ({ spin: 1 }),
