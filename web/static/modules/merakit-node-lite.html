@@ -6,8 +6,8 @@
 <title>Merakit AirLens Beta</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="icon" href="/product/airlens-icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="/shared/theme.css?v=20261122b">
-<link rel="stylesheet" href="/shared/alerts.css?v=20261122b">
+<link rel="stylesheet" href="/shared/theme.css?v=20261122c">
+<link rel="stylesheet" href="/shared/alerts.css?v=20261122c">
 <style>nav.toc { top: 73px !important; max-height: calc(100vh - 89px) !important; } section { scroll-margin-top: 80px !important; }</style>
 <style>
 /* Warna dan huruf mengikuti tema website AirLens (web/static/shared/theme.css): latar kabut abu kebiruan, tinta slate,
@@ -407,7 +407,7 @@ void loop() {
 #include <time.h>
 #include "airlens_roots.h"
 
-#define FW_VERSION "beta-4mq-1.1.0"
+#define FW_VERSION "beta-4mq-1.1.1"
 
 const int PIN_MQ2 = 34, PIN_MQ3 = 35, PIN_MQ7 = 32, PIN_MQ135 = 33;
 unsigned long periodMs = 2000;              // jarak bacaan; bawaan 2 s, diatur lewat SET {"interval":"10"}
@@ -417,6 +417,9 @@ Preferences prefs;
 String ssid, pass, url, token, nodeId;
 unsigned long lastRead = 0, lastWifiTry = 0;
 bool timeSynced = false;
+bool sntpStarted = false;                         // configTime sekali per sambungan WiFi
+bool postOkShown = false;                         // cetak satu kali "post 200" per sambungan (tanda berhasil)
+unsigned long lastTimeMsg = 0;
 String line;                                // baris perintah Serial yang sedang diketik
 
 void loadSettings() {
@@ -474,6 +477,7 @@ void handleCommand(String cmd) {
     WiFi.disconnect();
     lastWifiTry = 0;
     timeSynced = false;
+    sntpStarted = false;
     Serial.printf("{\"event\":\"saved\",\"keys\":[%s]}\n", saved.c_str());
     printSettings();
   } else if (cmd == "GET") {
@@ -515,14 +519,26 @@ void ensureWifi() {
   Serial.printf("{\"event\":\"wifi\",\"status\":\"connecting\",\"ssid\":\"%s\"}\n", ssid.c_str());
 }
 
+// Jam dari internet (NTP) dibutuhkan untuk memeriksa sertifikat HTTPS. configTime() hanya dipanggil SEKALI per sambungan
+// WiFi: memanggilnya ulang memulai sinkronisasi dari nol, sehingga di jaringan lambat (Wokwi, WiFi lab) jam tidak pernah
+// siap dan tidak ada data terkirim (bug v1.1.0). Pemeriksaan jam tidak memblokir pembacaan sensor.
 void syncTime() {
-  if (timeSynced || WiFi.status() != WL_CONNECTED) return;
-  configTime(0, 0, "pool.ntp.org", "time.google.com");
+  if (WiFi.status() != WL_CONNECTED) { sntpStarted = false; postOkShown = false; return; }
+  if (!sntpStarted) {
+    sntpStarted = true;
+    configTime(0, 0, "pool.ntp.org", "time.google.com");
+    Serial.printf("{\"event\":\"wifi\",\"status\":\"connected\",\"ip\":\"%s\",\"time\":\"%s\"}\n",
+                  WiFi.localIP().toString().c_str(), timeSynced ? "ok" : "syncing");
+    lastTimeMsg = millis();
+  }
+  if (timeSynced) return;
   struct tm t;
-  if (getLocalTime(&t, 5000)) {
+  if (getLocalTime(&t, 0)) {
     timeSynced = true;
-    Serial.printf("{\"event\":\"wifi\",\"status\":\"connected\",\"ip\":\"%s\",\"time\":\"ok\"}\n",
-                  WiFi.localIP().toString().c_str());
+    Serial.println("{\"event\":\"time\",\"status\":\"ok\"}");
+  } else if (millis() - lastTimeMsg >= 10000) {
+    lastTimeMsg = millis();
+    Serial.println("{\"event\":\"time\",\"status\":\"waiting\"}");   // jaringan mungkin memblokir NTP (UDP 123)
   }
 }
 
@@ -552,7 +568,8 @@ void post(const String& body) {
   http.addHeader("ngrok-skip-browser-warning", "1");
   if (token.length()) http.addHeader("X-Node-Token", token);
   int code = http.POST(body);
-  if (code != 200) Serial.printf("{\"event\":\"post\",\"code\":%d}\n", code);
+  if (code != 200) { Serial.printf("{\"event\":\"post\",\"code\":%d}\n", code); postOkShown = false; }
+  else if (!postOkShown) { postOkShown = true; Serial.println("{\"event\":\"post\",\"code\":200}"); }
   http.end();
 }
 
@@ -712,4 +729,4 @@ document.querySelectorAll("main > section").forEach((s) => io.observe(s));
 
 </html>
 
-<script src="/shared/alerts.js?v=20261122b"></script>
+<script src="/shared/alerts.js?v=20261122c"></script>

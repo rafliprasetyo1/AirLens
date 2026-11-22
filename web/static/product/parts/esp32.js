@@ -2,7 +2,7 @@
 // micro-USB, tombol EN dan BOOT, CP2102, regulator AMS1117, dua LED, header 2 × 15 pin (jarak baris 25,4 mm).
 // Titik asal: pusat papan, sisi bawah PCB (y = 0). Pin menancap ke bawah melewati penyangga plastik header.
 import * as THREE from "three";
-import { sheet, texture, text, grain, pcb, box, cyl, chip, smd, led, instances, M, mat } from "./kit.js?v=20261122b";
+import { sheet, texture, text, grain, pcb, box, cyl, chip, smd, led, instances, M, mat } from "./kit.js?v=20261122c";
 
 export const ESP32 = {
   L: 51.5, W: 28.3, T: 1.6,

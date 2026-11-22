@@ -112,9 +112,14 @@ function onLine(line) {
     say(el.wifiStatus, `Device ${msg.fw}: node ${msg.node}, WiFi "${msg.ssid || "-"}", URL ${msg.url || "-"}, `
       + `password ${msg.has_pass ? "saved" : "not set"}, token ${msg.has_token ? "saved" : "not set"}.`, "ok");
   } else if (msg.event === "wifi" && msg.status === "connected") {
-    say(el.wifiStatus, `Connected to WiFi (IP ${msg.ip}). Readings are being sent.`, "ok");
+    say(el.wifiStatus, msg.time === "syncing" ? `Connected to WiFi (IP ${msg.ip}). Getting the time from the internet before sending…`
+      : `Connected to WiFi (IP ${msg.ip}). Readings are being sent.`, "ok");
+  } else if (msg.event === "time") {
+    if (msg.status === "ok") say(el.wifiStatus, "Clock synced. Readings are being sent.", "ok");
+    else say(el.wifiStatus, "Still waiting for the internet time (NTP). The network may block NTP (UDP port 123).", "error");
   } else if (msg.event === "post" || msg.event === "frame") {
-    if (msg.code === 401) say(el.wifiStatus, "The server rejected the token (401). Check SENSOR_TOKEN.", "error");
+    if (msg.code === 200) say(el.wifiStatus, "Readings reach AirLens (HTTP 200).", "ok");
+    else if (msg.code === 401) say(el.wifiStatus, "The server rejected the token (401). Check SENSOR_TOKEN.", "error");
     else if (msg.code < 0) say(el.wifiStatus, `Could not reach the server (code ${msg.code}). Check the URL and internet.`, "error");
   }
 }

@@ -1,15 +1,15 @@
 {
-  "built_at": "2026-11-21T22:21:23+00:00",
+  "built_at": "2026-11-22T16:28:18+00:00",
   "core": "esp32:esp32@3.3.13",
-  "git_commit": "eb0fb7c",
+  "git_commit": "4209571",
   "offset": "0x0",
   "baud": 115200,
   "files": {
     "beta": {
       "file": "beta.bin",
-      "version": "beta-4mq-1.1.0",
+      "version": "beta-4mq-1.1.1",
       "bytes": 1126400,
-      "sha256": "16035f31a553044e67022e13c83fc2c7a56e7444368afa784fbee3b69987f00c",
+      "sha256": "e6ce705978854d663d20dd8c198be556c3488af6e1c33198bf15c5d90d228dbd",
       "board": "ESP32 DevKit (ESP32-WROOM-32)"
     }
   }
