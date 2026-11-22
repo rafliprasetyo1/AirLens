@@ -37,9 +37,20 @@ s = p.read_text()
 start = s.index('<script type="text/plain" id="c3">') + len('<script type="text/plain" id="c3">')
 end = s.index("</script>", start)
 fw = Path("firmware/beta/beta.ino").read_text().rstrip("\n")
-if s[start:end] != fw:
-    p.write_text(s[:start] + fw + s[end:])
-    print("modul perakitan: kode firmware diperbarui (jalankan make sync-modules)")
+new = s[:start] + fw + s[end:]
+# penjelasan "Baris X–Y" tiap fungsi mengikuti kode terbaru (dulu bergeser setiap firmware berubah)
+import re
+src = fw.split("\n")
+for m in re.finditer(r'<b>Baris [0-9]+–[0-9]+</b><span><code>(\w+)</code>', new):
+    name = m.group(1)
+    i = next((k for k, l in enumerate(src) if re.match(rf"\w[\w<>]* {name}\(", l)), None)
+    if i is None:
+        continue
+    j = next(k for k in range(i, len(src)) if src[k].startswith("}"))
+    new = new.replace(m.group(0), f'<b>Baris {i + 1}–{j + 1}</b><span><code>{name}</code>', 1)
+if new != s:
+    p.write_text(new)
+    print("modul perakitan: kode firmware dan nomor baris penjelasan diperbarui (jalankan make sync-modules)")
 PY
 
 [ -n "${ROOTS_ONLY:-}" ] && { cp firmware/beta/beta.ino wokwi/beta/sketch.ino; exit 0; }

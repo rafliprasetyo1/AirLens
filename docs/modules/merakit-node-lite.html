@@ -176,7 +176,8 @@ header.intro h1, section > h2, h3 { font-stretch: 116%; }   /* judul lebar seper
       <label class="check"><input type="checkbox" id="ck-software"> ESP32 terdeteksi (Arduino IDE atau halaman flash)</label>
     </section>
 
-    <section id="l1" data-group="Rakit dan uji">
+    <div class="tip"><b>Gladi dulu tanpa alat (opsional)</b>Sebelum merakit, alur alat &rarr; ngrok &rarr; AirLens &rarr; HP bisa dicoba dengan ESP32 simulasi di Wokwi: jalankan <code>make gladi</code> di terminal dan ikuti petunjuknya (lihat <code>wokwi/README.md</code>). Selesai gladi, <b>wajib</b> <code>make gladi-stop</code> (menutup jalur gladi dan mengganti token). Di Wokwi, sensor tersambung langsung ke GPIO tanpa pembagi karena Wokwi tidak menyimulasikan resistor analog; alat asli <b>wajib</b> memakai pembagi seperti di langkah berikut.</div>
+<section id="l1" data-group="Rakit dan uji">
       <h2><span class="num">4</span>Langkah 1 · ESP32 hidup</h2>
       <p>Sama seperti praktikum LED: pilih <b>Tools → Board → esp32 → ESP32 Dev Module</b>, upload, buka <b>Serial Monitor</b> di <b>115200 baud</b>.</p>
       <div class="code" data-src="c1" data-name="beta_1_esp32.ino"></div>
@@ -255,7 +256,11 @@ MQ-2 912 mV | MQ-3 803 mV | MQ-7 1004 mV | MQ-135 851 mV</div>
         <li><div>Di komputer AirLens, buka <code>http://localhost:8080/tools/flash.html</code> di Chrome (atau buka tautan <b>Flash tool</b> di halaman Build guides).</div></li>
         <li><div>Pilih <b>AirLens Beta: 4 MQ gas sensors</b>, klik <b>Connect a device</b>, pilih port ESP32, lalu <b>Flash firmware</b>. Tunggu sampai "Done".</div></li>
         <li><div>Isi formulir <b>Set WiFi and server</b>: nama dan sandi WiFi (2,4 GHz), <b>Server URL</b> = <code>https://&lt;alamat-ngrok&gt;/api/sensor/readings</code>, <b>Node token</b> = nilai <code>SENSOR_TOKEN</code> dari <code>.env</code>, nama node <code>lite-01</code>. Klik <b>Save to device</b>.</div></li>
-        <li><div>Log di bawah halaman harus menunjukkan <code>"wifi","status":"connected"</code>, lalu satu baris bacaan tiap 2 detik tanpa pesan galat.</div></li>
+        <li><div>Log di bawah halaman harus menunjukkan, berurutan: <code>"wifi","status":"connected"</code>, lalu <code>"time","status":"ok"</code> (jam dari internet siap), lalu <code>"post","code":200</code> (bacaan pertama sampai ke AirLens). Setelah itu satu baris bacaan tiap 2 detik tanpa pesan galat.</div></li>
+        <li><div>Bila muncul pesan lain:
+          <code>"time","status":"waiting"</code> berulang = jaringan memblokir jam internet (NTP, UDP 123), coba WiFi lain atau hotspot HP;
+          <code>"post","code":401</code> = token salah, isi ulang <code>SENSOR_TOKEN</code>;
+          <code>"post","code":-1,...,"tls":"..."</code> = koneksi HTTPS gagal, periksa alamat ngrok (berganti tiap ngrok dinyalakan ulang) dan internet. Isi <code>tls</code> menyebut penyebab pastinya.</div></li>
       </ol>
       <p>Lewat Arduino IDE juga bisa: buka <code>firmware/beta/beta.ino</code> dari repo (berkas <code>airlens_roots.h</code> ada di folder yang sama), upload, lalu kirim pengaturan dengan mengetik satu baris di Serial Monitor:</p>
       <div class="serial">SET {"ssid":"NamaWiFi","pass":"SandiWiFi","url":"https://&lt;alamat-ngrok&gt;/api/sensor/readings","token":"&lt;SENSOR_TOKEN&gt;","node":"lite-01"}</div>
@@ -265,17 +270,17 @@ MQ-2 912 mV | MQ-3 803 mV | MQ-7 1004 mV | MQ-135 851 mV</div>
         <li><b>Baris 21–26</b><span>Pustaka WiFi, HTTPS, HTTP, memori NVS (<code>Preferences</code>), jam, dan berkas sertifikat akar Let's Encrypt yang dipakai domain ngrok.</span></li>
         <li><b>Baris 28–32</b><span>Versi firmware, pin keempat sensor (ADC1), jarak antar bacaan 2 detik, dan jumlah sampel rata-rata.</span></li>
         <li><b>Baris 34–38</b><span>Variabel pengaturan (WiFi, URL, token, nama node) dan penanda waktu.</span></li>
-        <li><b>Baris 40–48</b><span><code>loadSettings</code>: ambil pengaturan dari memori NVS; nama node bawaan <code>lite-01</code>.</span></li>
-        <li><b>Baris 50–68</b><span><code>jsonValue</code> dan <code>hasKey</code>: membaca nilai dari perintah <code>SET {...}</code> yang dikirim halaman flash.</span></li>
-        <li><b>Baris 70–74</b><span><code>printSettings</code>: mencetak pengaturan tersimpan. Kata sandi dan token <b>tidak pernah dicetak</b>, hanya "ada/tidak".</span></li>
-        <li><b>Baris 76–112</b><span><code>handleCommand</code>: <code>SET</code> menyimpan pengaturan lalu menyambung ulang WiFi; <code>GET</code> menampilkan pengaturan; <code>CLEAR</code> menghapus semuanya; <code>REBOOT</code> menyalakan ulang.</span></li>
-        <li><b>Baris 114–124</b><span><code>readSerial</code>: kumpulkan huruf dari Serial sampai Enter, lalu jalankan perintahnya.</span></li>
-        <li><b>Baris 126–133</b><span><code>ensureWifi</code>: sambung ke WiFi tanpa memblokir; kalau gagal, coba lagi tiap 15 detik sambil tetap membaca sensor.</span></li>
-        <li><b>Baris 135–144</b><span><code>syncTime</code>: ambil jam dari internet (NTP). Jam yang benar dibutuhkan untuk memeriksa masa berlaku sertifikat HTTPS.</span></li>
-        <li><b>Baris 146–150</b><span><code>readMv</code>: rata-rata 16 bacaan tegangan pin dalam milivolt.</span></li>
-        <li><b>Baris 152–174</b><span><code>post</code>: kirim JSON ke AirLens. Koneksi HTTPS dipakai ulang agar tidak berjabat tangan TLS tiap 2 detik. Header <code>ngrok-skip-browser-warning</code> melewati halaman peringatan ngrok, <code>X-Node-Token</code> membuktikan bahwa ini alat kita.</span></li>
-        <li><b>Baris 176–184</b><span><code>setup</code>: buka Serial, atur ADC, pasang sertifikat akar, muat pengaturan.</span></li>
-        <li><b>Baris 186–199</b><span><code>loop</code>: layani perintah Serial dan WiFi; setiap 2 detik baca keempat sensor, cetak satu baris JSON, lalu kirim.</span></li>
+        <li><b>Baris 43–52</b><span><code>loadSettings</code>: ambil pengaturan dari memori NVS; nama node bawaan <code>lite-01</code>.</span></li>
+        <li><b>Baris 55–70</b><span><code>jsonValue</code> dan <code>hasKey</code>: membaca nilai dari perintah <code>SET {...}</code> yang dikirim halaman flash.</span></li>
+        <li><b>Baris 74–78</b><span><code>printSettings</code>: mencetak pengaturan tersimpan. Kata sandi dan token <b>tidak pernah dicetak</b>, hanya "ada/tidak".</span></li>
+        <li><b>Baris 80–117</b><span><code>handleCommand</code>: <code>SET</code> menyimpan pengaturan lalu menyambung ulang WiFi; <code>GET</code> menampilkan pengaturan; <code>CLEAR</code> menghapus semuanya; <code>REBOOT</code> menyalakan ulang.</span></li>
+        <li><b>Baris 119–129</b><span><code>readSerial</code>: kumpulkan huruf dari Serial sampai Enter, lalu jalankan perintahnya.</span></li>
+        <li><b>Baris 131–138</b><span><code>ensureWifi</code>: sambung ke WiFi tanpa memblokir; kalau gagal, coba lagi tiap 15 detik sambil tetap membaca sensor.</span></li>
+        <li><b>Baris 143–161</b><span><code>syncTime</code>: ambil jam dari internet (NTP), <b>sekali</b> per sambungan WiFi, tanpa menahan pembacaan sensor. Jam yang benar dibutuhkan untuk memeriksa masa berlaku sertifikat HTTPS. Selama jam belum siap, Serial mencetak <code>"time","status":"waiting"</code> tiap 10 detik.</span></li>
+        <li><b>Baris 163–167</b><span><code>readMv</code>: rata-rata 16 bacaan tegangan pin dalam milivolt.</span></li>
+        <li><b>Baris 174–199</b><span><code>post</code>: kirim JSON ke AirLens. Koneksi HTTPS dipakai ulang agar tidak berjabat tangan TLS tiap 2 detik. Header <code>ngrok-skip-browser-warning</code> melewati halaman peringatan ngrok, <code>X-Node-Token</code> membuktikan bahwa ini alat kita.</span></li>
+        <li><b>Baris 201–209</b><span><code>setup</code>: buka Serial, atur ADC, pasang sertifikat akar, muat pengaturan.</span></li>
+        <li><b>Baris 211–224</b><span><code>loop</code>: layani perintah Serial dan WiFi; setiap 2 detik baca keempat sensor, cetak satu baris JSON, lalu kirim.</span></li>
       </ul></div></details>
       <details><summary>Kalau bermasalah</summary><div class="in"><ul>
         <li><b>WiFi tidak tersambung:</b> nama atau sandi salah, atau WiFi hanya 5 GHz (ESP32 hanya 2,4 GHz).</li>
