@@ -89,10 +89,12 @@ async function start() {
       el.style.transform = `translate(${p.x.toFixed(1)}px, ${p.y.toFixed(1)}px)`;
       el.classList.add("on");
       // jaga teks tetap di dalam layar (HP): geser teksnya saja, titik dan garis tetap di tempat
-      const txt = el.firstElementChild.nextElementSibling, r = txt.getBoundingClientRect();
-      const off = Number(txt.dataset.off || 0);
+      // hitung ulang tiap frame dari posisi asli (geseran lama tidak boleh menumpuk)
+      const txt = el.firstElementChild.nextElementSibling;
+      txt.style.marginLeft = "0px";
+      const r = txt.getBoundingClientRect();
       const delta = Math.max(0, 6 - r.left) - Math.max(0, r.right - (innerWidth - 6));
-      if (Math.abs(delta) > 0.5) { txt.dataset.off = String(off + delta); txt.style.marginLeft = `${off + delta}px`; }
+      if (delta) txt.style.marginLeft = `${delta}px`;
     }
   };
 
