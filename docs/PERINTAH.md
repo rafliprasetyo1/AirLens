@@ -107,7 +107,9 @@ Ukur modul MQ dan breadboard asli dulu sebelum mencetak.
 | `git status` | File yang berubah |
 | `git log --oneline -5` | Commit terakhir |
 | `git push` | Kirim commit ke GitHub |
+| `git clone https://github.com/rafliprasetyo1/AirLens.git` | Ambil proyek pertama kali di komputer baru (dari folder `~`) |
 | `git pull` | Ambil kode terbaru (komputer lab) |
+| `git fetch origin && git reset --hard origin/main` | Samakan clone lama dengan GitHub bila `git pull` gagal (riwayat sempat ditulis ulang). `.env`, `results/`, `data/` tidak tersentuh |
 
 ## Darurat saat pameran
 

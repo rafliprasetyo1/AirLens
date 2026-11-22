@@ -13,6 +13,9 @@ wsl -d Ubuntu-24.04
 ---------------------------------------------------------------------
 cd ~/AirLens
 git pull
+# Bila git pull gagal ("divergent branches" / "refusing to merge"), samakan dengan GitHub:
+#   git fetch origin && git reset --hard origin/main      (.env tidak tersentuh)
+# Bila folder ~/AirLens belum ada sama sekali: ikuti LANGKAH 1 di AirLens_perintah_lab.txt (git clone + .env + ngrok).
 export PATH="$HOME/.local/bin:$PATH"
 make doctor
 # Ulangi sampai "HASIL: siap". .env dan authtoken ngrok sudah disiapkan saat sesi lab

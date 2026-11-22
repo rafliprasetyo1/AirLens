@@ -1,7 +1,7 @@
 =====================================================================
  AIRLENS - PERINTAH DI KOMPUTER LAB (SESI TANPA PELATIHAN)
  Repo : https://github.com/rafliprasetyo1/AirLens  (publik)
- Alur : siapkan -> make doctor -> make expo-setup -> rakit Beta -> flash ESP32
+ Alur : git clone -> siapkan .env + ngrok -> make doctor -> make expo-setup -> rakit Beta -> flash ESP32
         -> pemanasan -> rekam kalibrasi -> uji ujung ke ujung -> unggah CSV -> bersihkan
  Model sudah final (dilatih di Kaggle, diambil otomatis oleh make expo-setup).
  Pelatihan GPU di lab hanya cadangan: lihat LAMPIRAN A.
@@ -37,9 +37,20 @@ docker compose version
 
 git config --global user.name "rafliprasetyo1"
 git config --global user.email "<EMAIL_GITHUB_ANDA>"   # ganti dengan email akun GitHub Anda
+# Ambil proyek dari GitHub. Pilih SATU:
+#   A. Komputer ini belum punya folder ~/AirLens (pertama kali):
 cd ~
-[ -d AirLens ] && (cd AirLens && git pull) || git clone https://github.com/rafliprasetyo1/AirLens.git
+git clone https://github.com/rafliprasetyo1/AirLens.git
 cd ~/AirLens
+
+#   B. Folder ~/AirLens sudah ada (pernah di-clone sebelumnya): samakan dengan GitHub.
+#      Pakai fetch + reset, bukan git pull: riwayat GitHub sempat ditulis ulang (2026-11-23), sehingga git pull
+#      pada clone lama gagal. File yang tidak di-git (.env, results/, data/) tidak tersentuh.
+cd ~/AirLens
+git fetch origin
+git reset --hard origin/main
+
+# Cek: commit teratas harus sama dengan halaman GitHub
 git log --oneline -3
 
 cp -n .env.example .env
