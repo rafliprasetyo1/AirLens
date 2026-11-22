@@ -45,6 +45,10 @@ if docker compose -f compose.yaml --profile train run --rm --no-deps -T trainer 
 else bad "Kaggle CLI gagal login" "periksa KAGGLE_USERNAME / KAGGLE_KEY di .env"; fi
 rm -f /tmp/doctor_kaggle.txt
 
+echo "== Jalur darurat (simulator berlabel Simulated)"
+[ -f data/raw/multimodal_gas/Gas_Sensors_Measurements.csv ] && ok "data replay simulator ada (sensor_sim.py --replay dataset)" \
+  || warn "data replay simulator belum ada" "make data-beta (unduh CSV ±330 KB, tanpa pelatihan; perlu sekali per mesin)"
+
 echo "== Layanan dan model aktif"
 if curl -sf localhost:8080/api/health >/tmp/doctor_h.json 2>/dev/null; then
   ok "website + API menyala (http://localhost:8080)"

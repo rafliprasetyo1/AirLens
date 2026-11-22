@@ -22,6 +22,8 @@ make doctor
 3. Nyalakan AirLens + ngrok + QR
 ---------------------------------------------------------------------
 make expo-setup PROFILE=lab
+make data-beta
+# make data-beta: data untuk simulator darurat (sekali per komputer; sudah ada bila dijalankan saat sesi lab).
 # Catat alamat publik dan URL sensor. QR: docs/assets/qr_expo.png (tampilkan / cetak).
 
 ---------------------------------------------------------------------

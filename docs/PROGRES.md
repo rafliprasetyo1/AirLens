@@ -64,6 +64,15 @@ ulang setelah rekaman lab (`make beta-recordings-push` + `make kaggle-push`).
 | Batasan Wokwi: pembagi resistor analog tidak disimulasikan; HTTPS terlalu lambat | Diagram Wokwi AOUT langsung ke GPIO; jalur HTTP khusus gladi |
 | `make gladi` / `make gladi-stop` (bisa kapan saja, juga di lab sebelum merakit) | Selesai; token diganti setelah gladi |
 
+## Siap push (2026-11-23)
+
+| Bagian | Status |
+|---|---|
+| `make test` 301 lulus, `make ui-test` 39/39, `make doctor` siap (0 catatan) | Selesai |
+| Contekan perintah `docs/PERINTAH.md` | Selesai |
+| Semua perintah terminal di panduan lab dan hari H diperiksa (`make -n`, skrip, tautan unduhan ngrok) | Selesai; `make data-beta` ditambahkan ke persiapan lab (jalur darurat simulator gagal tanpanya) |
+| Email pribadi di panduan lab diganti placeholder (repo publik) | Selesai |
+
 ## Yang dikerjakan di lab (tanpa pelatihan)
 
 `make doctor` → `make expo-setup PROFILE=lab` → rakit Beta → flash + Set WiFi (`tools/flash.html`) → pemanasan →

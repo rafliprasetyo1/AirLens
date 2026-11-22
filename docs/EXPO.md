@@ -75,7 +75,7 @@ Saran:
 
 | Masalah | Langkah |
 |---|---|
-| Internet putus | Layar booth tetap `http://localhost:8080`. Jalankan simulator Beta berlabel "Simulated": `python3 scripts/sensor_sim.py --replay dataset`. ESP32 terus mencoba sampai internet kembali; setelah kembali, `make expo-public` (alamat baru) dan perbarui URL ESP32 |
+| Internet putus | Layar booth tetap `http://localhost:8080`. Jalankan simulator Beta berlabel "Simulated": `python3 scripts/sensor_sim.py --replay dataset` (butuh `make data-beta` sekali per komputer; `make doctor` mengingatkan). ESP32 terus mencoba sampai internet kembali; setelah kembali, `make expo-public` (alamat baru) dan perbarui URL ESP32 |
 | ngrok putus / alamat berubah | `make expo-public`, perbarui URL ESP32 (flash.html) dan QR |
 | Layanan mati / error | `make expo-setup` (ulang dari awal, aman); log: `make logs` |
 | Sensor rusak / ESP32 hilang | Simulator seperti di atas (selalu berlabel "Simulated"); fitur foto → kualitas udara tetap jalan |

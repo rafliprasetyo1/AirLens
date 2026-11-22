@@ -16,6 +16,8 @@ Berkas pendamping: `CLAUDE.md` (aturan proyek untuk Claude Code) dan `PROMPTS.md
 
 ---
 
+> **Contekan perintah yang sering dipakai:** [docs/PERINTAH.md](docs/PERINTAH.md). Sesi lab: [AirLens_perintah_lab.txt](AirLens_perintah_lab.txt), hari pameran: [docs/EXPO_HARI_H.txt](docs/EXPO_HARI_H.txt).
+
 ## Ringkasan layanan
 
 | Layanan | Alamat dari browser Windows | Fungsi |

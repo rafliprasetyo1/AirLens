@@ -36,7 +36,7 @@ for t in make git curl openssl python3; do command -v $t >/dev/null && echo "ada
 docker compose version
 
 git config --global user.name "rafliprasetyo1"
-git config --global user.email "rafliprstyo5@gmail.com"
+git config --global user.email "<EMAIL_GITHUB_ANDA>"   # ganti dengan email akun GitHub Anda
 cd ~
 [ -d AirLens ] && (cd AirLens && git pull) || git clone https://github.com/rafliprasetyo1/AirLens.git
 cd ~/AirLens
@@ -76,6 +76,9 @@ make expo-setup PROFILE=lab
 # Catat dari keluarannya:
 #   - Website publik: https://<alamat-sesi>.ngrok-free.app/
 #   - URL sensor ESP32: https://<alamat-sesi>.ngrok-free.app/api/sensor/readings
+# Pertama kali di komputer ini: image Docker dibangun dan diunduh (beberapa GB, bisa 20-40 menit). Jalankan sedini mungkin.
+# Siapkan data jalur darurat (simulator bila internet putus/sensor rusak; unduh CSV ±330 KB, TANPA pelatihan):
+make data-beta
 # Alamat ngrok free berganti setiap sesi; kalau ngrok di-restart, jalankan: make expo-public
 # lalu perbarui URL ESP32 (LANGKAH 5, bagian Set WiFi saja).
 # Layar booth: buka http://localhost:8080 di Chrome komputer ini (tidak memakai kuota ngrok).
@@ -179,6 +182,7 @@ KALAU ESP32 TIDAK TERDETEKSI
 KALAU ADA MASALAH
 ---------------------------------------------------------------------
 # Layanan mati / error            : make expo-setup PROFILE=lab   (aman diulang); log: make logs
+# Simulator bilang "jalankan dulu make data-beta": jalankan make data-beta (sekali), lalu ulangi perintah simulator
 # Alamat ngrok berubah / putus     : make expo-public, lalu perbarui URL ESP32 (LANGKAH 5) dan QR
 # Internet putus                   : layar booth tetap http://localhost:8080; simulator berlabel Simulated:
 #                                    python3 scripts/sensor_sim.py --replay dataset
