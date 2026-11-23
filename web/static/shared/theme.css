@@ -1,25 +1,30 @@
 /* AirLens: satu tema untuk semua halaman (Foto, Beta, Product, panduan, alat operator).
-   Gagasan: perangkat elektronik kelas atas di malam hari. Latar biru tua sangat gelap, kepala dan kaki hitam,
-   satu warna aksi kuningan pucat (senada dengan pin emas ESP32 di model 3D). Tanpa cyan, tanpa glow, tanpa gradien hias.
-   Warna terang lain hanya untuk DATA: tingkat kualitas udara (warna resmi AQI) dan peringatan.
-   Satu keluarga huruf (Archivo, sumbu lebar 62–125 %): judul lebar dan tebal seperti cetakan panel alat ukur.
-   Kontras (WCAG AA) di atas --haze: --ink 15.9:1, --ink-2 8.7:1, --petrol (kuningan) 9.7:1, --alert 8.3:1, --amber 10.7:1. */
+   Gagasan: panel alat ukur. Antarmuka akromatik: tinta putih tulang di atas biru tua kehitaman, kepala dan kaki hitam.
+   Warna HANYA untuk udara: tingkat AQI resmi, garis sensor, peringatan. Satu-satunya hiasan adalah garis skala AQI
+   (hijau, oranye, ungu) di tepi bawah kepala halaman, seperti skala di bodi alat ukur.
+   Satu keluarga huruf (Archivo, sumbu lebar 62–125 %): judul lebar dan tebal, label sedikit dipadatkan.
+   Isi halaman berada di satu kontainer tengah (--page); kepala, isi, dan kaki memakai tepi yang sama (--edge).
+   Kontras (WCAG AA) di atas --haze: lihat angka terukur di DECISIONS.md (semua teks >= 4.5:1). */
 
 @font-face { font-family: "Archivo"; font-style: normal; font-display: swap; font-weight: 100 900; font-stretch: 62% 125%;
   src: url("/vendor/fonts/archivo-latin-wdth-normal.woff2") format("woff2-variations"), url("/vendor/fonts/archivo-latin-wdth-normal.woff2") format("woff2"); }
 
 :root {
-  --haze: #0b1424;        /* latar halaman: biru tua sangat gelap */
+  --haze: #0a1220;        /* latar halaman: biru tua kehitaman */
   --night: #05080d;       /* kepala, kaki: hitam */
-  --paper: #111d30;       /* permukaan terangkat: isian, panel kecil */
-  --sheet: #0f1a2c;       /* lembar hasil */
-  --ink: #eaeff5;
-  --ink-2: #a6b4c4;
-  --rule: #2a3a52;
-  --rule-soft: #1c2a3f;
-  --petrol: #d9b872;      /* warna aksi (nama lama dipertahankan): kuningan pucat */
-  --petrol-ink: #13100a;
-  --petrol-soft: rgb(217 184 114 / .14);
+  --paper: #0f192b;       /* permukaan terangkat: isian, panel kecil */
+  --sheet: #0d1727;       /* lembar hasil */
+  --ink: #ecf1f6;         /* tinta utama, juga warna aksi (tombol utama, tautan, fokus) */
+  --ink-2: #9fb0c2;
+  --ink-3: #6b7c90;       /* teks nonaktif */
+  --rule: #22324a;
+  --rule-soft: #18253a;
+  --rule-strong: #3a4d68; /* batas kontrol */
+  --petrol: var(--ink);   /* nama lama: warna aksi = tinta (antarmuka akromatik) */
+  --petrol-ink: #0a1220;
+  --petrol-soft: rgb(236 241 246 / .07);
+  /* skala AQI resmi (data, bukan hiasan) */
+  --aqi-low: #00e400; --aqi-mid: #ff7e00; --aqi-high: #8f3f97;
   --alert: #ff8e84;
   --alert-soft: #3b1b20;
   --ok: #63d19a;
@@ -34,9 +39,11 @@
   --t-xs: .8125rem; --t-sm: .9375rem; --t-md: 1.0625rem; --t-lg: 1.3125rem; --t-xl: 1.6875rem;
   --t-2xl: clamp(2rem, 4.2vw, 2.75rem); --t-3xl: clamp(2.5rem, 7vw, 4.5rem);
 
-  --gutter: clamp(1rem, 5vw, 4.5rem);
+  --gutter: clamp(1rem, 4.5vw, 4rem);
+  --page: 85rem;          /* lebar isi maksimum; ikut membesar bersama ukuran huruf dasar */
+  --edge: max(var(--gutter), calc((100% - var(--page)) / 2));   /* tepi kiri-kanan: isi selalu di tengah layar */
   --measure: 40rem;       /* ±68 karakter */
-  --r-media: 14px; --r-ctl: 8px;
+  --r-media: 6px; --r-ctl: 3px; --r-chip: 2px;
 
   /* nama lama yang masih dipakai skrip/komponen bersama */
   --line: var(--rule); --raised: var(--paper); --sky: var(--petrol); --text: var(--font); --display: var(--font);
@@ -46,7 +53,8 @@
 
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
-html { -webkit-text-size-adjust: 100%; background: var(--haze); }
+/* ukuran huruf dasar 16 px, naik perlahan di monitor besar (±18,4 px di 2560 px) agar tidak tampak kecil dan kosong */
+html { -webkit-text-size-adjust: 100%; background: var(--haze); font-size: clamp(16px, calc(12px + .25vw), 19px); }
 body { margin: 0; background: var(--haze); color: var(--ink); font: 400 var(--t-md)/1.6 var(--font); font-stretch: 100%;
   overflow-x: clip; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
 h1, h2, h3 { margin: 0; font-family: var(--font); color: var(--ink); text-wrap: balance; }
@@ -55,23 +63,26 @@ h2 { font-size: var(--t-2xl); font-weight: 720; font-stretch: var(--wide); line-
 h3 { font-size: var(--t-lg); font-weight: 650; font-stretch: 108%; line-height: 1.2; letter-spacing: -.01em; }
 p { margin: 0; }
 img { max-width: 100%; height: auto; }
-a { color: var(--petrol); text-underline-offset: .18em; text-decoration-thickness: 1px; }
-a:hover { text-decoration-thickness: 2px; }
+a { color: var(--ink); text-underline-offset: .22em; text-decoration-thickness: 1px; text-decoration-color: rgb(236 241 246 / .45); }
+a:hover { text-decoration-color: var(--ink); }
 code { font: 500 .92em/1 ui-monospace, Consolas, monospace; }
 .muted { color: var(--ink-2); }
 .small { font-size: var(--t-sm); }
 .label { font-size: var(--t-xs); font-weight: 600; font-stretch: var(--narrow); color: var(--ink-2); letter-spacing: .01em; }
 .lede { font-size: var(--t-lg); line-height: 1.45; color: var(--ink-2); max-width: 32em; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-:focus-visible { outline: 3px solid var(--petrol); outline-offset: 3px; border-radius: 4px; }
+:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; border-radius: var(--r-ctl); }
 .skip { position: absolute; left: -999px; top: .75rem; z-index: 30; background: var(--ink); color: var(--haze);
   padding: .5rem .8rem; border-radius: var(--r-ctl); font-weight: 600; text-decoration: none; }
 .skip:focus { left: .75rem; }
 
 /* ---------------------------------------------------------------- kepala: sama persis di setiap halaman */
 header.bar { position: sticky; top: 0; z-index: 20; height: auto; overflow: visible; flex: none; border-radius: 0; display: flex; align-items: center; gap: .75rem 1.75rem;
-  padding: .7rem var(--gutter); background: rgb(5 8 13 / .94); border-bottom: 1px solid var(--rule-soft);
+  padding: .7rem var(--edge); background: rgb(5 8 13 / .94);
   -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
+/* garis skala AQI resmi di tepi bawah kepala: satu-satunya hiasan, dan isinya data (Low / Elevated / High) */
+header.bar::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 2px; opacity: .9;
+  background: linear-gradient(90deg, var(--aqi-low) 0 33.33%, var(--aqi-mid) 33.33% 66.66%, var(--aqi-high) 66.66% 100%); }
 .brand { display: inline-flex; align-items: center; gap: .55rem; flex: none; color: var(--ink); text-decoration: none;
   font-size: 1.125rem; font-weight: 760; font-stretch: var(--wide); letter-spacing: -.02em; }
 .brand img { width: 28px; height: 28px; border-radius: 7px; display: block; }
@@ -83,7 +94,7 @@ header.bar .site-nav { flex: 1 1 auto; min-width: 0; }   /* menyusut dan bisa di
 .site-nav a { display: inline-block; padding: .5rem 0; color: var(--nav-ink); text-decoration: none; white-space: nowrap;
   font-size: var(--t-sm); font-weight: 560; border-bottom: 2px solid transparent; }
 .site-nav a:hover { color: var(--nav-strong); }
-.site-nav a[aria-current="page"] { color: var(--nav-strong); border-bottom-color: var(--nav-accent); }
+.site-nav a[aria-current="page"] { color: var(--nav-strong); border-bottom-color: var(--ink); }
 @media (max-width: 560px) {
   header.bar { gap: .5rem 1rem; }
   .site-nav ul { gap: 1rem; }
@@ -92,24 +103,30 @@ header.bar .site-nav { flex: 1 1 auto; min-width: 0; }   /* menyusut dan bisa di
 @media (max-width: 420px) { header.bar .brand span { display: none; } }
 
 /* ---------------------------------------------------------------- tombol */
-.btn { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; min-height: 44px; padding: .6rem 1.15rem;
-  font: 600 var(--t-sm)/1.2 var(--font); font-stretch: 104%; border-radius: var(--r-ctl); cursor: pointer; text-decoration: none;
-  color: var(--petrol); background: transparent; border: 1.5px solid var(--petrol); }
-.btn:hover:not(:disabled) { background: var(--petrol-soft); }
-.btn.primary, .btn[aria-pressed="true"] { color: var(--petrol-ink); background: var(--petrol); }
-.btn.primary:hover:not(:disabled) { background: #e6c88a; border-color: #e6c88a; }
-.btn:disabled { cursor: not-allowed; color: #7d8b9b; background: #1a2638; border-color: #1a2638; }
+/* tombol: blok tegas seperti tombol panel alat, bukan pil. Utama = tinta penuh; kedua = garis tipis. */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; min-height: 44px; padding: .65rem 1.25rem;
+  font: 640 var(--t-sm)/1.2 var(--font); font-stretch: 110%; letter-spacing: .005em; border-radius: var(--r-ctl);
+  cursor: pointer; text-decoration: none; color: var(--ink); background: transparent; border: 1px solid var(--rule-strong);
+  transition: background-color .15s, border-color .15s, color .15s; }
+.btn:hover:not(:disabled) { border-color: var(--ink); background: var(--petrol-soft); }
+.btn.primary, .btn[aria-pressed="true"] { color: var(--petrol-ink); background: var(--ink); border-color: var(--ink); }
+.btn.primary:hover:not(:disabled) { background: #ffffff; border-color: #ffffff; }
+.btn:disabled { cursor: not-allowed; color: var(--ink-3); background: transparent; border: 1px dashed var(--rule-strong); }
 .btn:active:not(:disabled) { transform: translateY(1px); }
 .text-link { font-weight: 600; }
 
 /* ---------------------------------------------------------------- isian */
 select, input[type="text"], input[type="url"], input[type="password"], input[type="number"] {
-  font: inherit; color: var(--ink); background: var(--paper); border: 1px solid #4a5d78; border-radius: var(--r-ctl);
+  font: inherit; color: var(--ink); background: var(--paper); border: 1px solid var(--rule-strong); border-radius: var(--r-ctl);
   padding: .55rem .7rem; min-height: 44px; max-width: 100%; }
-input[type="checkbox"] { accent-color: var(--petrol); }
+select:hover, input:hover { border-color: var(--ink-2); }
+input[type="checkbox"] { accent-color: var(--ink); }
+/* panel info/peringatan: bingkai tipis di semua sisi (bukan garis kiri tebal); peringatan = bingkai dan judul merah */
+.panel-note { padding: 1rem 1.15rem; border: 1px solid var(--rule); border-radius: var(--r-media); background: var(--paper); }
+.panel-note.is-alert { border-color: rgb(255 142 132 / .55); background: var(--alert-soft); }
 
 /* ---------------------------------------------------------------- kaki */
-.foot { padding: 2rem var(--gutter) 2.5rem; background: var(--night); border-top: 1px solid var(--rule-soft); color: var(--ink-2); font-size: var(--t-sm); }
+.foot { padding: 2rem var(--edge) 2.5rem; background: var(--night); border-top: 1px solid var(--rule-soft); color: var(--ink-2); font-size: var(--t-sm); }
 .foot p { max-width: var(--measure); }
 
 @media (prefers-reduced-motion: reduce) {

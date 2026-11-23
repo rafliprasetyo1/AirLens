@@ -2,7 +2,7 @@
    Satu-satunya yang mencolok di halaman ini adalah model 3D; teks di sekitarnya tenang.
    Lebar: teks di kolom kiri, panggung 3D menempel di kanan. Sempit/tegak: panggung di atas, teks menggulir di bawahnya. */
 
-:root { --bar-h: 57px; --stage-w: 60vw; }
+:root { --bar-h: calc(1.4rem + 46px); --stage-w: 60vw; --edge-v: max(var(--gutter), calc((100vw - var(--page)) / 2)); }
 
 /* panggung: latar studio terang (sapuan abu kebiruan), bayangan model jatuh ke "meja" */
 /* lebar: panggung selebar layar di belakang teks (overlay). Model digeser ke kanan oleh kamera (beta-scene.js), dan bagian
@@ -18,22 +18,22 @@
   color: var(--ink-2); font-size: var(--t-sm); transition: opacity .4s; }
 .loader.done { opacity: 0; pointer-events: none; }
 .loader-track { width: 180px; height: 3px; background: var(--rule-soft); border-radius: 2px; overflow: hidden; }
-.loader-bar { display: block; height: 100%; width: 0; background: var(--petrol); transition: width .2s; }
+.loader-bar { display: block; height: 100%; width: 0; background: var(--ink); transition: width .2s; }
 
 /* label 3D: titik, garis penunjuk, teks. Tanpa kotak. */
 .callout { position: absolute; left: 0; top: 0; display: flex; align-items: flex-end; gap: 0; opacity: 0; transition: opacity .3s;
   will-change: transform; }
 .callout.on { opacity: 1; }
 .callout::before { content: ""; position: absolute; left: -4px; top: -4px; width: 8px; height: 8px; border-radius: 50%;
-  background: var(--petrol); box-shadow: 0 0 0 3px var(--night); }
+  background: var(--ink); box-shadow: 0 0 0 3px var(--night); }
 .callout .lead { position: absolute; left: 0; top: 0; height: 1px; background: var(--ink); transform-origin: 0 0; }
 .callout .txt { position: absolute; white-space: nowrap; font-size: var(--t-sm); font-weight: 640; line-height: 1.25;
   font-stretch: var(--narrow); color: var(--ink); padding: 3px 8px; border-radius: 4px; background: rgb(5 8 13 / .82); }   /* terbaca di atas permukaan terang (breadboard, tutup putih) */
 .callout .txt small { display: block; font-weight: 450; color: var(--ink-2); font-size: var(--t-xs); }
 
 /* teks cerita */
-main { position: relative; z-index: 3; width: calc(100vw - var(--stage-w)); }
-.sec { min-height: calc(100svh - var(--bar-h)); display: flex; align-items: center; padding: 4rem var(--gutter) 4rem; }
+main { position: relative; z-index: 3; width: max(calc(100vw - var(--stage-w)), calc(var(--edge-v) + 36rem)); }
+.sec { min-height: calc(100svh - var(--bar-h)); display: flex; align-items: center; padding: 4rem var(--gutter) 4rem var(--edge-v); }
 .sec.tall { min-height: 190svh; align-items: flex-start; }
 .sec.tall .copy { position: sticky; top: calc(var(--bar-h) + 12svh); }
 .copy { max-width: 31rem; }
@@ -56,7 +56,7 @@ main { position: relative; z-index: 3; width: calc(100vw - var(--stage-w)); }
 .sensor-list li { display: grid; grid-template-columns: 5.5rem minmax(0, 1fr); gap: 1rem; padding: .8rem 0 .8rem .9rem;
   border-left: 3px solid var(--rule); transition: border-color .3s, color .3s; }
 .sensor-list strong { font-weight: 720; font-stretch: var(--wide); color: var(--ink-2); transition: color .3s; }
-.sensor-list li[aria-current="true"] { border-left-color: var(--petrol); }
+.sensor-list li[aria-current="true"] { border-left-color: var(--ink); }
 .sensor-list li[aria-current="true"] strong, .sensor-list li[aria-current="true"] span { color: var(--ink); }
 
 .formula { display: flex; flex-wrap: wrap; gap: .25rem .75rem; align-items: baseline; padding: 1rem 0; margin-top: 1.5rem !important;
@@ -71,11 +71,11 @@ main { position: relative; z-index: 3; width: calc(100vw - var(--stage-w)); }
 
 .flow { margin: 1.5rem 0 0; padding: 0; list-style: none; counter-reset: f; }
 .flow li { counter-increment: f; display: grid; grid-template-columns: 2rem minmax(0, 1fr); padding: .5rem 0; }
-.flow li::before { content: counter(f); font-weight: 760; font-stretch: var(--wide); color: var(--petrol); font-variant-numeric: tabular-nums; }
+.flow li::before { content: counter(f); font-weight: 760; font-stretch: var(--wide); color: var(--ink-2); font-variant-numeric: tabular-nums; }
 
 .actions { display: flex; flex-wrap: wrap; gap: .75rem; margin-top: 1.75rem !important; }
 
-.product .foot { position: relative; z-index: 3; width: calc(100vw - var(--stage-w)); }
+.product .foot { position: relative; z-index: 3; width: auto; }
 
 /* tanpa WebGL: panggung disembunyikan, teks memakai lebar penuh */
 .no-3d .stage, .no-3d .callouts { display: none; }

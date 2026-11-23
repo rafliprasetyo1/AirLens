@@ -1,9 +1,9 @@
 /* Lonceng notifikasi di header (semua halaman) + panel "Enable alerts" (halaman Beta). Token dari /shared/theme.css. */
 .alerts-bell { display: inline-grid; place-items: center; flex: none; width: 44px; height: 44px; margin-left: auto;
-  border-radius: 50%; border: 1px solid var(--rule); background: transparent; color: var(--ink-2); cursor: pointer; }
+  border-radius: var(--r-ctl); border: 1px solid var(--rule-strong); background: transparent; color: var(--ink-2); cursor: pointer; }
 .alerts-bell:hover { color: var(--ink); border-color: var(--ink-2); }
-.alerts-bell[aria-pressed="true"] { color: var(--petrol-ink); background: var(--petrol); border-color: var(--petrol); }
-.alerts-panel { margin-top: 2rem; padding: 1.1rem 1.25rem; border-left: 4px solid var(--petrol); border-radius: 8px;
+.alerts-bell[aria-pressed="true"] { color: var(--petrol-ink); background: var(--ink); border-color: var(--ink); }
+.alerts-panel { margin-top: 2rem; padding: 1.1rem 1.25rem; border: 1px solid var(--rule); border-radius: var(--r-media);
   background: var(--paper); max-width: 46rem; display: grid; gap: .65rem; }
 .alerts-panel .row { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem 1.2rem; }
 .alerts-panel label { display: inline-flex; align-items: center; gap: .45rem; color: var(--ink-2); font-size: var(--t-sm); }

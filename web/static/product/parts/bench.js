@@ -1,7 +1,7 @@
 // Breadboard setengah (400 lubang), resistor karbon 1/4 W dengan gelang warna, kabel jumper, dan casing cetak dari STL.
 import * as THREE from "three";
 import { mergeVertices, toCreasedNormals } from "three/addons/utils/BufferGeometryUtils.js";
-import { sheet, texture, text, grain, box, lathe, M, mat } from "./kit.js?v=20261122c";
+import { sheet, texture, text, grain, box, lathe, M, mat } from "./kit.js?v=20261123";
 
 // ---------------------------------------------------------------- breadboard
 export const BB = { L: 83, W: 55, H: 8.5, pitch: 2.54 };

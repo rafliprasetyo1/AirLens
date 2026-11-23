@@ -4,8 +4,8 @@
 
 :root { --cat: #2a3a52; --cat-ink: #eaeff5; --gauge-len: 157; }
 
-.layout { display: grid; grid-template-columns: minmax(0, 30rem) minmax(0, 1fr); gap: 2.5rem clamp(2rem, 5vw, 5rem);
-  padding: clamp(2rem, 5vw, 3.5rem) var(--gutter) 3rem; max-width: 84rem; }
+.layout { display: grid; grid-template-columns: minmax(0, 32rem) minmax(0, 1fr); gap: 2.5rem clamp(2rem, 5vw, 5rem);
+  padding: clamp(2rem, 5vw, 3.5rem) var(--edge) 3rem; }
 @media (max-width: 920px) { .layout { grid-template-columns: minmax(0, 1fr); } }
 
 /* ---------------------------------------------------------------- kolom kiri */
@@ -14,21 +14,24 @@
 .disclaimer { margin-top: .9rem; font-size: var(--t-sm); color: var(--amber); font-weight: 560; }
 .step { display: flex; align-items: baseline; gap: .6rem; margin: 2.25rem 0 .8rem; font-size: var(--t-lg); font-weight: 680;
   font-stretch: 108%; letter-spacing: -.01em; }
-.step span { color: var(--petrol); font-weight: 780; font-stretch: var(--wide); font-variant-numeric: tabular-nums; }
+/* nomor langkah: kotak kecil bergaris seperti penanda di panel alat (isinya memang urutan) */
+.step span { display: inline-grid; place-items: center; width: 1.7em; height: 1.7em; flex: none; align-self: center;
+  border: 1px solid var(--rule-strong); border-radius: var(--r-chip); color: var(--ink-2); font-size: .72em; font-weight: 700;
+  font-stretch: 100%; font-variant-numeric: tabular-nums; }
 
 .dropzone { position: relative; display: grid; place-items: center; min-height: 230px; overflow: hidden; cursor: pointer; text-align: center;
-  border: 2px dashed #3d5170; border-radius: var(--r-media); background: var(--paper); transition: border-color .2s, background-color .2s; }
-.dropzone:hover { border-color: var(--petrol); }
-.dropzone.drag { border-color: var(--petrol); border-style: solid; background: var(--petrol-soft); }
+  border: 1px dashed var(--rule-strong); border-radius: var(--r-media); background: var(--paper); transition: border-color .2s, background-color .2s; }
+.dropzone:hover { border-color: var(--ink-2); }
+.dropzone.drag { border-color: var(--ink); border-style: solid; background: var(--petrol-soft); }
 .dz-empty { padding: 1.75rem 1.25rem; display: grid; gap: .4rem; justify-items: center; }
-.dz-icon { width: 44px; height: 44px; color: var(--petrol); margin-bottom: .25rem; }
+.dz-icon { width: 44px; height: 44px; color: var(--ink-2); margin-bottom: .25rem; }
 .preview { margin: 0; width: 100%; position: relative; }
 .preview img { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; }
 .preview figcaption { padding: .55rem .8rem .7rem; font-size: var(--t-sm); text-align: left; overflow-wrap: anywhere; }
-.preview .change { display: block; color: var(--petrol); font-weight: 600; }
+.preview .change { display: block; color: var(--ink); font-weight: 600; text-decoration: underline; text-decoration-color: rgb(236 241 246 / .45); text-underline-offset: .22em; }
 .preview-missing { display: grid; place-items: center; aspect-ratio: 4 / 3; background: var(--rule-soft); color: var(--ink-2); padding: 1rem; }
 /* garis pemindai: hanya saat foto diperiksa/dianalisis */
-.scanner { position: absolute; left: 0; right: 0; top: 0; height: 2px; opacity: 0; pointer-events: none; background: var(--petrol);
+.scanner { position: absolute; left: 0; right: 0; top: 0; height: 2px; opacity: 0; pointer-events: none; background: var(--ink);
 }
 .scanning .scanner { opacity: 1; animation: scan 1.6s ease-in-out infinite alternate; }
 @keyframes scan { from { top: 0; } to { top: calc(100% - 3rem); } }
@@ -40,7 +43,7 @@
 #analyze { width: 100%; min-height: 52px; font-size: var(--t-md); }
 
 /* ---------------------------------------------------------------- lembar hasil */
-.sheet { align-self: start; background: var(--sheet); border: 1px solid var(--rule-soft); border-radius: var(--r-media);
+.sheet { align-self: start; background: var(--sheet); border: 1px solid var(--rule); border-radius: var(--r-media);
   padding: clamp(1.1rem, 3vw, 1.75rem); min-width: 0; }
 @media (min-width: 921px) { .sheet { position: sticky; top: 80px; } }
 .sheet:focus { outline: none; }
@@ -51,19 +54,19 @@
   transition: border-color .3s, color .3s; }
 .stages .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--rule); }
 .stages .state { grid-column: 2; font-weight: 640; min-height: 1.2em; }
-.stages li.mulai { border-top-color: var(--petrol); color: var(--ink); }
-.stages li.mulai .dot { background: var(--petrol); animation: pulse 1s ease-in-out infinite; }
+.stages li.mulai { border-top-color: var(--ink); color: var(--ink); }
+.stages li.mulai .dot { background: var(--ink); animation: pulse 1s ease-in-out infinite; }
 .stages li.selesai { border-top-color: var(--ok); color: var(--ink); }
 .stages li.selesai .dot { background: var(--ok); }
 .stages li.selesai .state { color: var(--ok); }
 .stages li.gagal { border-top-color: var(--alert); color: var(--ink); }
 .stages li.gagal .dot { background: var(--alert); }
 .stages li.gagal .state { color: var(--alert); }
-@keyframes pulse { 50% { box-shadow: 0 0 0 5px rgb(217 184 114 / .2); } }
+@keyframes pulse { 50% { box-shadow: 0 0 0 5px rgb(236 241 246 / .16); } }
 @media (max-width: 480px) {
   .stages { grid-template-columns: minmax(0, 1fr); gap: .35rem; }
   .stages li { grid-template-columns: 10px minmax(0, 1fr) auto; border-top: 0; border-left: 3px solid var(--rule-soft); padding: .2rem 0 .2rem .6rem; }
-  .stages li.mulai { border-left-color: var(--petrol); } .stages li.selesai { border-left-color: var(--ok); } .stages li.gagal { border-left-color: var(--alert); }
+  .stages li.mulai { border-left-color: var(--ink); } .stages li.selesai { border-left-color: var(--ok); } .stages li.gagal { border-left-color: var(--alert); }
   .stages .state { grid-column: 3; }
 }
 
@@ -72,10 +75,11 @@
 .scale { display: grid; grid-template-columns: repeat(3, 1fr); height: 10px; border-radius: 5px; overflow: hidden; }
 .scale .t-low { background: #00e400; } .scale .t-mid { background: #ff7e00; } .scale .t-high { background: #8f3f97; }
 
-.alert { display: grid; gap: .5rem; justify-items: start; padding: 1rem 1.1rem; border-radius: 10px; background: var(--alert-soft);
-  border-left: 4px solid var(--alert); animation: rise .35s ease-out both; }
-.alert.warn { background: var(--amber-soft); border-left-color: var(--amber); }
-.alert-title { font-weight: 700; }
+.alert { display: grid; gap: .5rem; justify-items: start; padding: 1rem 1.15rem; border-radius: var(--r-media); background: var(--alert-soft);
+  border: 1px solid rgb(255 142 132 / .55); animation: rise .35s ease-out both; }
+.alert.warn { background: var(--amber-soft); border-color: rgb(240 190 90 / .5); }
+.alert-title { font-weight: 700; color: var(--alert); }
+.alert.warn .alert-title { color: var(--amber); }
 
 .cards { display: grid; }
 .card { padding: 1.25rem 0; border-top: 1px solid var(--rule-soft); animation: rise .45s cubic-bezier(.2, .7, .2, 1) both;
@@ -85,7 +89,7 @@
 
 /* bidang tingkat: warna resmi AQI memenuhi seluruh bidang */
 .main-card { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .75rem 1.5rem; align-items: center; border: 0;
-  padding: clamp(1.1rem, 3vw, 1.6rem); border-radius: 10px; background: var(--cat); color: var(--cat-ink);
+  padding: clamp(1.1rem, 3vw, 1.6rem); border-radius: var(--r-media); background: var(--cat); color: var(--cat-ink);
   transition: background-color .4s, color .4s; }
 .verdict { display: grid; gap: .25rem; min-width: 0; }
 .eyebrow { font-size: var(--t-sm); font-weight: 600; font-stretch: var(--narrow); opacity: .85; }

@@ -17,9 +17,9 @@ src, out = sys.argv[1], sys.argv[2]
 s = open(src, encoding="utf-8").read()
 s = re.sub(r'<link[^>]+fonts\.(googleapis|gstatic)\.com[^>]*>\n?', "", s)
 head = ('<link rel="icon" href="/product/airlens-icon.svg" type="image/svg+xml">\n'
-        '<link rel="stylesheet" href="/shared/theme.css?v=20261122c">\n<link rel="stylesheet" href="/shared/alerts.css?v=20261122c">\n'
+        '<link rel="stylesheet" href="/shared/theme.css?v=20261123">\n<link rel="stylesheet" href="/shared/alerts.css?v=20261123">\n'
         '<style>nav.toc { top: 73px !important; max-height: calc(100vh - 89px) !important; } '
-        'section { scroll-margin-top: 80px !important; }</style>\n')
+        'section { scroll-margin-top: 80px !important; } .wrap { max-width: calc(var(--page) + 32px) !important; }</style>\n')
 s = s.replace("<style>", head + "<style>", 1)
 bar = ('<header class="bar">\n  <a class="brand" href="/"><img src="/product/airlens-icon.svg" alt="" width="28" height="28"><span>AirLens</span></a>\n'
        '  <nav class="site-nav" aria-label="AirLens pages"><ul>\n    <li><a href="/">Photo demo</a></li>\n'
@@ -27,7 +27,7 @@ bar = ('<header class="bar">\n  <a class="brand" href="/"><img src="/product/air
        '    <li><a href="/modules/" aria-current="page">Build guides</a></li>\n  </ul></nav>\n</header>\n')
 # modul ditulis tanpa <head>/<body> eksplisit: kepala disisipkan tepat setelah </style> pertama milik modul
 i = s.index("</style>", s.index(head) + len(head)) + len("</style>")
-s = s[:i] + "\n" + bar + s[i:] + '\n<script src="/shared/alerts.js?v=20261122c"></script>\n'
+s = s[:i] + "\n" + bar + s[i:] + '\n<script src="/shared/alerts.js?v=20261123"></script>\n'
 
 open(out, "w", encoding="utf-8").write(s)
 PY

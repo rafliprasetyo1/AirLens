@@ -6,24 +6,25 @@
   <title>AirLens build guides</title>
   <link rel="icon" href="/product/airlens-icon.svg" type="image/svg+xml">
   <link rel="preload" href="/vendor/fonts/archivo-latin-wdth-normal.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="/shared/theme.css?v=20261122c">
+  <link rel="stylesheet" href="/shared/theme.css?v=20261123">
   <style>
-    .guides { padding: clamp(2rem, 5vw, 3.5rem) var(--gutter) 5rem; max-width: 52rem; }
+    .guides { padding: clamp(2rem, 5vw, 3.5rem) var(--edge) 5rem; }
+    .guides > * { max-width: 52rem; }
     .guides h1 { font-size: clamp(2.5rem, 6vw, 4rem); }
     .guides .lede { margin-top: 1rem; }
     .guide-list { list-style: none; margin: 2.5rem 0 0; padding: 0; border-top: 1px solid var(--rule); }
     .guide-list li { border-bottom: 1px solid var(--rule); }
     .guide-list a { display: grid; gap: .4rem; padding: 1.4rem 0; color: var(--ink); text-decoration: none; }
-    .guide-list a:hover .guide-title, .guide-list a:focus-visible .guide-title { color: var(--petrol); }
+    .guide-list a:hover .guide-title, .guide-list a:focus-visible .guide-title { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: .2em; }
     .guide-title { font-size: var(--t-xl); font-weight: 720; font-stretch: var(--wide); letter-spacing: -.015em; line-height: 1.15; }
     .guide-list p { color: var(--ink-2); max-width: 38em; }
-    .guide-meta { font-size: var(--t-sm); font-weight: 600; font-stretch: var(--narrow); color: var(--petrol); }
+    .guide-meta { font-size: var(--t-sm); font-weight: 600; font-stretch: var(--narrow); color: var(--ink-2); }
     .guide-list .concept .guide-title { color: var(--ink-2); }
     .guide-list .concept .guide-meta { color: var(--ink-2); }
     .tools-head { margin-top: 3.5rem; font-size: var(--t-xl); }
     .tools-head + p { margin-top: .5rem; color: var(--ink-2); }
   </style>
-  <link rel="stylesheet" href="/shared/alerts.css?v=20261122c">
+  <link rel="stylesheet" href="/shared/alerts.css?v=20261123">
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="apple-touch-icon" href="/icons/airlens-192.png">
   <meta name="theme-color" content="#05080d">
@@ -80,6 +81,6 @@
       </li>
     </ul>
   </main>
-  <script src="/shared/alerts.js?v=20261122c"></script>
+  <script src="/shared/alerts.js?v=20261123"></script>
 </body>
 </html>

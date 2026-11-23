@@ -567,3 +567,13 @@ Lingkup ditegaskan pemilik: **proyek utama** = foto pengguna → tingkat kualita
 |---|---|
 | Format `MPO` diterima sebagai JPEG | Saat diunggah dari iPhone, HEIC dikonversi ke JPEG berisi beberapa gambar (peta kedalaman/HDR). Pillow menyebutnya MPO, sehingga ditolak `tipe_tidak_didukung` (terjadi pada uji HP pemilik pukul 22:31). Gambar utama dipakai, gambar tambahan dan metadata dibuang |
 | Pesan penolakan menyebut format yang terdeteksi | Agar kasus format tak terduga berikutnya langsung terlihat dari pesan atau log |
+
+## Desain "panel alat ukur" dan kontainer tengah (2026-11-23)
+
+| Keputusan | Alasan |
+|---|---|
+| Semua halaman memakai kontainer tengah `--page` (85rem) dan tepi `--edge`; kepala, isi, kaki segaris. Ukuran huruf dasar 16 px naik perlahan sampai 19 px di monitor besar | Di monitor lebar isi halaman menempel ke kiri dan separuh layar kanan kosong (hanya Product yang normal). HP tetap satu kolom dengan margin 16 px |
+| Antarmuka akromatik: tinta `#ECF1F6` di atas `#0A1220`; tombol utama blok putih tulang, tombol kedua garis tipis, sudut 3 px. Warna hanya untuk data (AQI resmi, garis sensor, peringatan) | Navy + aksen emas di semua tombol/tautan adalah resep "mewah" generik. Dengan aturan ini setiap warna di layar bermakna, seperti panel alat ukur |
+| Garis skala AQI (hijau/oranye/ungu) 2 px di tepi bawah kepala halaman sebagai satu-satunya hiasan | Ciri khas yang isinya data (skala yang dilaporkan AirLens), bukan dekorasi |
+| Panel info/peringatan berbingkai tipis di semua sisi (bukan garis kiri tebal); status Beta memakai lampu kecil | Garis kiri tebal berwarna adalah pola komponen generik |
+| Kontras terukur: tinta 16,5:1, tinta kedua 8,45:1, tombol utama 16,5:1 (teks nonaktif 4,38:1, dikecualikan WCAG) | `make ui-test` 39/39 |

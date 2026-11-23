@@ -1,6 +1,7 @@
 /* Halaman alat operator (flash + recorder). Token, huruf, kepala, dan tombol dari /shared/theme.css.
    Tidak masuk navigasi pengunjung; lewat ngrok halaman ini ditolak nginx (403). */
-.tools { padding: clamp(2rem, 5vw, 3rem) var(--gutter) 4rem; max-width: 64rem; }
+.tools { padding: clamp(2rem, 5vw, 3rem) var(--edge) 4rem; }
+.tools > * { max-width: 60rem; }
 .tools .tag { font-size: var(--t-sm); font-weight: 600; font-stretch: var(--narrow); color: var(--amber); }
 .tools h1 { font-size: clamp(2.25rem, 5.6vw, 3.6rem); margin-top: .4rem; }
 .tools h2 { font-size: clamp(1.4rem, 3vw, 1.9rem); }
@@ -12,8 +13,8 @@
 .tools section > * + * { margin-top: 1rem; }
 .tools code { color: var(--ink); }
 .bar-link { margin-left: auto; font-size: var(--t-sm); font-weight: 600; text-decoration: none; }
-.notice-box { padding: .9rem 1.1rem; border-left: 4px solid var(--petrol); border-radius: 8px; background: var(--paper); }
-.notice-box.warn { border-left-color: var(--alert); background: var(--alert-soft); }
+.notice-box { padding: .9rem 1.1rem; border: 1px solid var(--rule); border-radius: var(--r-media); background: var(--paper); }
+.notice-box.warn { border-color: rgb(255 142 132 / .55); background: var(--alert-soft); }
 .notice-box p { color: var(--ink) !important; }
 .row { display: flex; flex-wrap: wrap; gap: .75rem 1rem; align-items: center; }
 .field { display: grid; gap: .35rem; max-width: 30rem; }

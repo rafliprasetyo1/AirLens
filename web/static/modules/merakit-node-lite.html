@@ -6,17 +6,17 @@
 <title>Merakit AirLens Beta</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="icon" href="/product/airlens-icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="/shared/theme.css?v=20261122c">
-<link rel="stylesheet" href="/shared/alerts.css?v=20261122c">
-<style>nav.toc { top: 73px !important; max-height: calc(100vh - 89px) !important; } section { scroll-margin-top: 80px !important; }</style>
+<link rel="stylesheet" href="/shared/theme.css?v=20261123">
+<link rel="stylesheet" href="/shared/alerts.css?v=20261123">
+<style>nav.toc { top: 73px !important; max-height: calc(100vh - 89px) !important; } section { scroll-margin-top: 80px !important; } .wrap { max-width: calc(var(--page) + 32px) !important; }</style>
 <style>
 /* Warna dan huruf mengikuti tema website AirLens (web/static/shared/theme.css): latar kabut abu kebiruan, tinta slate,
    satu warna aksi petrol, huruf Archivo (judul lebar). Di website, font dimuat dari /vendor/fonts (tanpa domain luar).
    Tata letak: daftar isi menempel di kiri (desktop), langkah-langkah perakitan di kanan seperti lembar kerja bengkel.
    Warna kabel mengikuti kebiasaan elektronika: merah 5 V, oranye 3,3 V, hitam GND; warna lain untuk sinyal. */
-:root {   /* gelap seperti website: biru tua + hitam, aksi kuningan pucat */
-  --bg: #0B1424; --paper: #111D30; --ink: #EAEFF5; --ink-2: #A6B4C4; --line: #2A3A52; --soft: #16233A;
-  --accent: #D9B872; --accent-ink: #13100A; --amber: #F0BE5A; --amber-soft: #33280F; --danger: #FF8E84; --danger-soft: #3B1B20;
+:root {   /* gelap seperti website: biru tua + hitam, antarmuka akromatik (warna hanya untuk data) */
+  --bg: #0A1220; --paper: #0F192B; --ink: #EAEFF5; --ink-2: #A6B4C4; --line: #2A3A52; --soft: #16233A;
+  --accent: #ECF1F6; --accent-ink: #0A1220; --amber: #F0BE5A; --amber-soft: #33280F; --danger: #FF8E84; --danger-soft: #3B1B20;
   --ok: #63D19A; --ok-soft: #12291E; --code-bg: #05080D; --code-ink: #E3EEF4; --code-dim: #7D8B9B;
   --w5v: #FF5A6A; --w33: #F5A04A; --wgnd: #C9D3DA; --wsig1: #5AA2FF; --wsig2: #4FC27F; --wsig3: #B591F2; --wsig4: #E3B23C;
   --f-head: "Archivo", "Segoe UI", sans-serif; --f-body: "Archivo", system-ui, sans-serif; --f-mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
@@ -741,4 +741,4 @@ document.querySelectorAll("main > section").forEach((s) => io.observe(s));
 
 </html>
 
-<script src="/shared/alerts.js?v=20261122c"></script>
+<script src="/shared/alerts.js?v=20261123"></script>
