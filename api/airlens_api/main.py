@@ -138,7 +138,7 @@ def nearest_city(request: Request, lat: float, lon: float):
     """Nama kota stasiun IQAir terdekat dari lokasi browser, agar website bisa menampilkannya sebelum analisis.
     Memakai cache koordinat yang sama dengan /predict (dibulatkan 0,05°), jadi analisis berikutnya tidak memanggil IQAir lagi."""
     if not (-90 <= lat <= 90 and -180 <= lon <= 180):
-        raise HTTPException(422, "Koordinat tidak valid.")
+        raise HTTPException(422, "Invalid coordinates.")
     try:
         r = request.app.state.iqair.by_coords(lat, lon)
     except IQAirUnavailable as exc:
@@ -162,11 +162,11 @@ async def predict(
     if city_id:
         city = next((c for c in CITIES if c["id"] == city_id), None)
         if city is None:
-            raise HTTPException(status_code=422, detail="Kota tidak dikenal.")
+            raise HTTPException(status_code=422, detail="Unknown city.")
     coords = None
     if city is None and lat is not None and lon is not None:
         if not (-90 <= lat <= 90 and -180 <= lon <= 180):
-            raise HTTPException(status_code=422, detail="Koordinat tidak valid.")
+            raise HTTPException(status_code=422, detail="Invalid coordinates.")
         coords = (lat, lon)
     job = request.app.state.jobs.create()
     req = PredictRequest(data=data, city=city, coords=coords, store_photo=store_photo)
@@ -178,7 +178,7 @@ async def predict(
 def job_status(job_id: str, request: Request):
     job = request.app.state.jobs.get(job_id)
     if job is None:
-        raise HTTPException(status_code=404, detail="Job tidak ditemukan atau sudah kedaluwarsa.")
+        raise HTTPException(status_code=404, detail="Job not found or expired.")
     events, done = request.app.state.jobs.snapshot(job, 0)
     return {"job_id": job.id, "done": done, "events": events, "result": job.result}
 
@@ -189,7 +189,7 @@ async def job_events(job_id: str, request: Request):
     jobs: JobStore = request.app.state.jobs
     job = jobs.get(job_id)
     if job is None:
-        raise HTTPException(status_code=404, detail="Job tidak ditemukan atau sudah kedaluwarsa.")
+        raise HTTPException(status_code=404, detail="Job not found or expired.")
 
     async def stream():
         sent = 0

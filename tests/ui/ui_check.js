@@ -38,7 +38,7 @@ async function upload(page, file) {
   await input.uploadFile(file);
 }
 const waitDone = (page, timeout = 30000) => page.waitForFunction(
-  () => document.querySelector("#analyze").textContent.trim() === "Analisis foto"
+  () => document.querySelector("#analyze").textContent.trim() === "Analyse photo"
     && (!document.querySelector("#cards").hidden || !document.querySelector("#alert").hidden), { timeout });
 const visible = (page, sel) => page.$eval(sel, (e) => getComputedStyle(e).display !== "none" && e.getBoundingClientRect().height > 0);
 const text = (page, sel) => page.$eval(sel, (e) => e.textContent.trim());
@@ -74,7 +74,7 @@ const CONTRAST_FN = `(sel) => {
     const clsBefore = await page.evaluate(() => window.__cls);
     await page.click("#analyze");
     await page.waitForFunction(() => document.querySelector("#dropzone").classList.contains("scanning")
-      || document.querySelector("#analyze").textContent.includes("Menganalisis"), { timeout: 5000 }).catch(() => {});
+      || document.querySelector("#analyze").textContent.includes("Analysing"), { timeout: 5000 }).catch(() => {});
     await waitDone(page);
     await new Promise((r) => setTimeout(r, 1500)); // animasi selesai sebelum tangkapan layar
     const stages = await page.$$eval("#stages li", (l) => l.map((x) => `${x.dataset.stage}:${x.className}`));
@@ -84,7 +84,7 @@ const CONTRAST_FN = `(sel) => {
     check("rentang indeks tampil", /\d+–\d+/.test(await text(page, "#cat-range")), await text(page, "#cat-range"));
     check("pembanding IQAir tampil", (await text(page, "#iq-body")).length > 0, (await text(page, "#iq-body")).slice(0, 80));
     check("3 petunjuk visual + skala", (await page.$$("#hints li.hint-row")).length === 3 && (await page.$$("#hints .hint-scale")).length === 1);
-    check("kartu belum pasti bergaya beda (amber)", (await page.$eval("#main-card", (e) => e.classList.contains("uncertain"))) === (await text(page, "#cat-chip")).startsWith("Belum pasti"));
+    check("kartu belum pasti bergaya beda (amber)", (await page.$eval("#main-card", (e) => e.classList.contains("uncertain"))) === (await text(page, "#cat-chip")).startsWith("Uncertain"));
     check("riwayat sesi bertambah", (await page.$$eval("#history li", (l) => l.filter((x) => !x.classList.contains("muted")).length)) >= 1);
     const cls = (await page.evaluate(() => window.__cls)) - clsBefore;
     check("tidak ada pergeseran tata letak saat hasil muncul (CLS < 0.1)", cls < 0.1, `CLS ${cls.toFixed(4)}`);
@@ -115,11 +115,11 @@ const CONTRAST_FN = `(sel) => {
     await page.click("#analyze");
     await waitDone(page);
     await new Promise((r) => setTimeout(r, 600));
-    check("foto gelap ditolak dengan alasan jelas", /gelap|malam/i.test(await text(page, "#alert-msg")), await text(page, "#alert-msg"));
+    check("foto gelap ditolak dengan alasan jelas", /dark|night/i.test(await text(page, "#alert-msg")), await text(page, "#alert-msg"));
     await page.screenshot({ path: `${OUT}/03_galat_foto_gelap.png` });
 
     await upload(page, F.big);
-    check("file > 10 MB ditolak di browser", await visible(page, "#alert") && /besar/i.test(await text(page, "#alert-title")),
+    check("file > 10 MB ditolak di browser", await visible(page, "#alert") && /large/i.test(await text(page, "#alert-title")),
       await text(page, "#alert-title"));
 
     await upload(page, F.photo);  // tanpa kota: IQAir tidak tersedia, prediksi tetap jalan
@@ -127,7 +127,7 @@ const CONTRAST_FN = `(sel) => {
     await page.click("#analyze");
     await waitDone(page);
     check("tanpa lokasi: hasil tetap tampil, IQAir diberi keterangan", await visible(page, "#cards")
-      && /kota|lokasi/i.test(await text(page, "#iq-body")), await text(page, "#iq-body"));
+      && /city|location/i.test(await text(page, "#iq-body")), await text(page, "#iq-body"));
     await page.screenshot({ path: `${OUT}/04_iqair_tidak_tersedia.png`, fullPage: true });
     await page.close();
   }
@@ -138,10 +138,10 @@ const CONTRAST_FN = `(sel) => {
     let mode = "model";
     page.on("request", (req) => {
       const u = req.url();
-      if (u.endsWith("/api/predict") && mode === "server") return req.respond({ status: 503, contentType: "application/json", body: '{"detail":"Layanan sedang tidak tersedia."}' });
+      if (u.endsWith("/api/predict") && mode === "server") return req.respond({ status: 503, contentType: "application/json", body: '{"detail":"The service is unavailable."}' });
       if (u.endsWith("/api/predict")) return req.respond({ status: 202, contentType: "application/json", body: '{"job_id":"sim"}' });
       if (u.endsWith("/api/jobs/sim/events")) {
-        const res = { status: "error", code: "model_tidak_tersedia", message: "Model belum tersedia. Coba lagi beberapa saat lagi.", disclaimer: "x" };
+        const res = { status: "error", code: "model_tidak_tersedia", message: "The model is not available yet. Try again in a moment.", disclaimer: "x" };
         return req.respond({ status: 200, contentType: "text/event-stream",
           body: `event: tahap\ndata: {"stage":"periksa","status":"selesai"}\n\nevent: tahap\ndata: {"stage":"analisis","status":"gagal"}\n\nevent: hasil\ndata: ${JSON.stringify(res)}\n\n` });
       }
@@ -155,7 +155,7 @@ const CONTRAST_FN = `(sel) => {
     mode = "server";
     await page.click("#retry");
     await waitDone(page);
-    check("server membalas 503: pesan jelas + coba lagi", await visible(page, "#retry") && /tidak tersedia|gagal/i.test(
+    check("server membalas 503: pesan jelas + coba lagi", await visible(page, "#retry") && /unavailable|could not/i.test(
       `${await text(page, "#alert-title")} ${await text(page, "#alert-msg")}`), await text(page, "#alert-msg"));
     await page.close();
   }

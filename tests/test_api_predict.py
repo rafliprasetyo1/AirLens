@@ -115,7 +115,7 @@ def test_valid_photo_full_flow(client):
     job_id, body = run(client, outdoor_jpeg())
     res = body["result"]
     assert res["status"] in ("ok", "uncertain")
-    assert res["disclaimer"].startswith("Perkiraan")
+    assert res["disclaimer"].startswith("Estimated")
     assert len(res["probabilities"]) == 5 and abs(sum(p["p"] for p in res["probabilities"]) - 1) < 1e-3
     assert {h["key"] for h in res["hints"]} == {"contrast_rms", "dark_mean", "sky_lum"}
     assert res["iqair"]["status"] == "tidak_tersedia" and res["iqair"]["code"] == "tanpa_lokasi"
@@ -250,13 +250,13 @@ def test_iqair_down_does_not_block_prediction(client, monkeypatch):
     from airlens_api.main import app
 
     def boom(*a, **k):
-        raise IQAirUnavailable("jaringan", "IQAir tidak terjangkau (ConnectionError).")
+        raise IQAirUnavailable("jaringan", "IQAir is unreachable (ConnectionError).")
 
     monkeypatch.setattr(app.state.iqair, "by_city", boom)
     _, body = run(client, outdoor_jpeg(), city_id="jakarta")
     res = body["result"]
     assert res["status"] in ("ok", "uncertain")
-    assert res["iqair"] == {"status": "tidak_tersedia", "code": "jaringan", "message": "IQAir tidak terjangkau (ConnectionError)."}
+    assert res["iqair"] == {"status": "tidak_tersedia", "code": "jaringan", "message": "IQAir is unreachable (ConnectionError)."}
     assert ("iqair", "gagal") in [(e["stage"], e["status"]) for e in body["events"]]
 
 

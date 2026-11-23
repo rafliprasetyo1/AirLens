@@ -586,3 +586,10 @@ Lingkup ditegaskan pemilik: **proyek utama** = foto pengguna → tingkat kualita
 | Partikel = debu yang menyala saat masuk berkas cahaya (efek Tyndall), `shared/atmosphere.js` di semua halaman | Polusi terlihat karena menghamburkan cahaya; itulah yang diukur AirLens. Ringan: <= 110 partikel, 30 fps, berkas digambar sekali per ukuran layar, berhenti saat tab tersembunyi, diam bila reduced motion |
 | Dipertahankan: kontainer tengah, garis skala AQI di kepala, warna data resmi (AQI, sensor, peringatan), panel berbingkai tipis, huruf Archivo | Hal yang sudah benar dari revisi sebelumnya |
 | Tombol utama gradien `#6461F5` ke `#4F4CE0` (bukan `#6E6BFF` polos) | Teks putih di `#6E6BFF` hanya 4,0:1; dengan gradien ini >= 4,6:1. `make ui-test` 39/39 |
+
+## Halaman Foto berbahasa Inggris (2026-11-23)
+
+| Keputusan | Alasan |
+|---|---|
+| Halaman Foto dan semua pesan dari API ke pengguna (penolakan foto, IQAir, petunjuk visual, saran tingkat, galat) kini berbahasa Inggris; kode galat internal tetap (`terlalu_gelap`, `tanpa_lokasi`, ...) | Halaman lain sudah berbahasa Inggris; permintaan pemilik. `tier_view(..., "en")` dan `class_label(..., "en")` dipakai API; bawaan `id` tetap untuk laporan lain |
+| Garis tiga warna AQI di placeholder hasil dihapus | Permintaan pemilik; garis skala tipis di kepala halaman tetap |

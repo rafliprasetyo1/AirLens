@@ -1,24 +1,24 @@
 <!doctype html>
-<html lang="id">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>AirLens: kualitas udara dari foto</title>
-  <meta name="description" content="Unggah foto luar ruangan; AirLens memperkirakan tingkat kualitas udara dari kabut di foto dan membandingkannya dengan stasiun IQAir terdekat.">
+  <title>AirLens: air quality from a photo</title>
+  <meta name="description" content="Upload an outdoor photo; AirLens estimates the air quality level from the haze in it and compares it with the nearest IQAir station.">
   <link rel="icon" href="/product/airlens-icon.svg" type="image/svg+xml">
   <link rel="preload" href="/vendor/fonts/archivo-latin-wdth-normal.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="/shared/theme.css?v=20261123b">
-  <link rel="stylesheet" href="/styles.css?v=20261123b">
-  <link rel="stylesheet" href="/shared/alerts.css?v=20261123b">
+  <link rel="stylesheet" href="/shared/theme.css?v=20261123c">
+  <link rel="stylesheet" href="/styles.css?v=20261123c">
+  <link rel="stylesheet" href="/shared/alerts.css?v=20261123c">
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="apple-touch-icon" href="/icons/airlens-192.png">
   <meta name="theme-color" content="#05080d">
 </head>
 <body>
-  <a class="skip" href="#hasil">Lewati ke hasil</a>
+  <a class="skip" href="#hasil">Skip to result</a>
   <header class="bar">
     <a class="brand" href="/"><img src="/product/airlens-icon.svg" alt="" width="28" height="28"><span>AirLens</span></a>
-    <nav class="site-nav" aria-label="Halaman AirLens">
+    <nav class="site-nav" aria-label="AirLens pages">
       <ul>
         <li><a href="/" aria-current="page">Photo demo</a></li>
         <li><a href="/beta.html">Beta sensor</a></li>
@@ -30,71 +30,70 @@
 
   <main class="layout">
     <section class="ask" aria-labelledby="judul-halaman">
-      <h1 id="judul-halaman">Seberapa bersih udara di fotomu?</h1>
-      <p class="lede">Unggah foto luar ruangan. AirLens menebak tingkat kualitas udara dari kabut di foto, lalu membandingkannya dengan stasiun IQAir terdekat.</p>
-      <p class="disclaimer" role="note">Perkiraan dari foto, bukan pengukuran resmi.</p>
+      <h1 id="judul-halaman">How clean is the air in your photo?</h1>
+      <p class="lede">Upload an outdoor photo. AirLens estimates the air quality level from the haze in it, then compares it with the nearest IQAir station.</p>
+      <p class="disclaimer" role="note">Estimated from a photo, not an official measurement.</p>
 
-      <h2 id="judul-unggah" class="step"><span>1</span>Unggah foto</h2>
+      <h2 id="judul-unggah" class="step"><span>1</span>Upload a photo</h2>
       <div id="dropzone" class="dropzone" tabindex="0" role="button"
-           aria-describedby="dz-hint" aria-label="Pilih atau seret foto ke sini">
+           aria-describedby="dz-hint" aria-label="Choose or drop a photo here">
         <input id="file" class="sr-only" type="file" accept="image/jpeg,image/png,image/webp,image/heif,image/heic,.jpg,.jpeg,.png,.webp,.heic,.heif" tabindex="-1" aria-hidden="true">
         <div class="dz-empty" id="dz-empty">
           <svg class="dz-icon" viewBox="0 0 48 48" aria-hidden="true"><path d="M6 34 17 22l8 8 6-6 11 10" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="33" cy="14" r="4" fill="none" stroke="currentColor" stroke-width="2.4"/></svg>
-          <p><strong>Seret foto ke sini</strong> atau tekan untuk memilih</p>
-          <p id="dz-hint" class="muted small">JPG/JPEG, PNG, WebP, atau HEIF/HEIC (foto iPhone), maksimal 10 MB. Foto siang hari dengan langit terlihat.</p>
+          <p><strong>Drop a photo here</strong> or tap to choose</p>
+          <p id="dz-hint" class="muted small">JPG/JPEG, PNG, WebP or HEIF/HEIC (iPhone photos), up to 10 MB. A daytime photo with the sky visible.</p>
         </div>
         <figure class="preview" id="preview" hidden>
-          <img id="preview-img" alt="Pratinjau foto yang dipilih">
+          <img id="preview-img" alt="Preview of the selected photo">
           <div class="scanner" aria-hidden="true"></div>
-          <figcaption><span id="preview-name" class="muted"></span><span class="change">Tekan atau seret foto lain untuk mengganti</span></figcaption>
+          <figcaption><span id="preview-name" class="muted"></span><span class="change">Tap or drop another photo to replace it</span></figcaption>
         </figure>
       </div>
 
-      <h2 id="judul-lokasi" class="step"><span>2</span>Kota untuk pembanding IQAir</h2>
+      <h2 id="judul-lokasi" class="step"><span>2</span>City for the IQAir comparison</h2>
       <div class="location" role="group" aria-labelledby="judul-lokasi">
-        <label for="city" class="sr-only">Kota</label>
+        <label for="city" class="sr-only">City</label>
         <div class="loc-row">
-          <select id="city"><option value="">Pilih kota…</option></select>
-          <button type="button" id="geo" class="btn">Gunakan lokasi saya</button>
+          <select id="city"><option value="">Choose a city…</option></select>
+          <button type="button" id="geo" class="btn">Use my location</button>
         </div>
-        <p id="geo-status" class="muted small" aria-live="polite">Lokasi hanya dipakai untuk mencari stasiun IQAir terdekat. GPS di dalam foto tidak pernah dibaca.</p>
+        <p id="geo-status" class="muted small" aria-live="polite">Your location is only used to find the nearest IQAir station. GPS data inside the photo is never read.</p>
       </div>
 
       <label class="consent">
         <input type="checkbox" id="consent">
-        <span>Izinkan foto ini disimpan untuk memperbaiki model. <span class="muted">Tanpa centang, foto tidak disimpan; hanya hash dan statistiknya.</span></span>
+        <span>Allow this photo to be kept to improve the model. <span class="muted">Unticked, the photo is not kept; only its hash and statistics.</span></span>
       </label>
 
-      <button type="button" id="analyze" class="btn primary" disabled>Analisis foto</button>
+      <button type="button" id="analyze" class="btn primary" disabled>Analyse photo</button>
     </section>
 
     <section class="sheet results" id="hasil" aria-labelledby="judul-hasil" tabindex="-1">
-      <h2 id="judul-hasil" class="sr-only">Hasil</h2>
-      <ol class="stages" id="stages" aria-label="Tahap proses">
-        <li data-stage="periksa"><span class="dot" aria-hidden="true"></span><span>Memeriksa foto</span><span class="state" data-state></span></li>
-        <li data-stage="analisis"><span class="dot" aria-hidden="true"></span><span>Menganalisis kabut</span><span class="state" data-state></span></li>
-        <li data-stage="iqair"><span class="dot" aria-hidden="true"></span><span>Membandingkan dengan IQAir</span><span class="state" data-state></span></li>
+      <h2 id="judul-hasil" class="sr-only">Result</h2>
+      <ol class="stages" id="stages" aria-label="Progress">
+        <li data-stage="periksa"><span class="dot" aria-hidden="true"></span><span>Checking photo</span><span class="state" data-state></span></li>
+        <li data-stage="analisis"><span class="dot" aria-hidden="true"></span><span>Analysing haze</span><span class="state" data-state></span></li>
+        <li data-stage="iqair"><span class="dot" aria-hidden="true"></span><span>Comparing with IQAir</span><span class="state" data-state></span></li>
       </ol>
       <p class="sr-only" id="live" aria-live="polite"></p>
 
       <div class="result-area" id="result-area">
         <div class="placeholder" id="placeholder">
-          <div class="scale" aria-hidden="true"><span class="t-low"></span><span class="t-mid"></span><span class="t-high"></span></div>
-          <p>Hasilnya muncul di sini: tingkat kualitas udara, seberapa yakin modelnya, dan angka resmi IQAir untuk kotamu.</p>
+          <p>Your result appears here: the air quality level, how confident the model is, and the official IQAir number for your city.</p>
         </div>
 
         <div class="alert" id="alert" role="alert" hidden>
           <p class="alert-title" id="alert-title"></p>
           <p id="alert-msg"></p>
-          <button type="button" class="btn" id="retry">Coba lagi</button>
+          <button type="button" class="btn" id="retry">Try again</button>
         </div>
 
         <div class="cards" id="cards" hidden>
           <article class="card main-card" id="main-card" style="--i:0">
             <div class="verdict">
-              <p class="eyebrow" id="verdict-eyebrow">Perkiraan kategori</p>
+              <p class="eyebrow" id="verdict-eyebrow">Estimated level</p>
               <p class="chip" id="cat-chip">—</p>
-              <p class="range">Rentang indeks AQI <strong id="cat-range">—</strong></p>
+              <p class="range">AQI range <strong id="cat-range">—</strong></p>
             </div>
             <div class="gauge">
               <svg viewBox="0 0 120 70" aria-hidden="true">
@@ -102,25 +101,25 @@
                 <path class="gauge-fg" id="gauge-fg" d="M10 62 A50 50 0 0 1 110 62"/>
               </svg>
               <div class="gauge-num"><span id="conf-num">0</span><span class="pct">%</span></div>
-              <p class="gauge-label">keyakinan</p>
+              <p class="gauge-label">confidence</p>
             </div>
             <p class="advice" id="advice"></p>
-            <p class="badge" id="smoke-badge" hidden>Model uji (belum hasil pelatihan penuh)</p>
+            <p class="badge" id="smoke-badge" hidden>Test model (not fully trained yet)</p>
           </article>
 
           <article class="card" style="--i:1" aria-labelledby="iq-title">
-            <h3 id="iq-title">Pembanding resmi (IQAir)</h3>
+            <h3 id="iq-title">Official comparison (IQAir)</h3>
             <div id="iq-body"></div>
           </article>
 
           <article class="card" style="--i:2" aria-labelledby="hint-title">
-            <h3 id="hint-title">Petunjuk visual dari foto</h3>
-            <p class="muted small">Bar penuh berarti lebih berkabut daripada foto-foto data latih.</p>
+            <h3 id="hint-title">Visual clues in the photo</h3>
+            <p class="muted small">A full bar means hazier than the training photos.</p>
             <ul class="hints" id="hints"></ul>
           </article>
 
           <article class="card" style="--i:3" aria-labelledby="prob-title">
-            <h3 id="prob-title">Peluang tiap tingkat</h3>
+            <h3 id="prob-title">Chance of each level</h3>
             <ul class="probs" id="probs"></ul>
             <p class="muted small" id="model-info"></p>
           </article>
@@ -128,17 +127,17 @@
       </div>
 
       <section class="history" aria-labelledby="hist-title">
-        <h3 id="hist-title">Riwayat sesi ini</h3>
-        <ul id="history"><li class="muted">Belum ada.</li></ul>
+        <h3 id="hist-title">This session</h3>
+        <ul id="history"><li class="muted">Nothing yet.</li></ul>
       </section>
     </section>
   </main>
 
   <footer class="foot">
-    <p>Tingkat mengikuti kategori AQI US EPA (revisi 2024), digabung menjadi tiga. Perkiraan dari foto, bukan pengukuran resmi; untuk keputusan kesehatan gunakan data stasiun resmi.</p>
+    <p>Levels follow the US EPA AQI categories (2024 revision), merged into three. Estimated from a photo, not an official measurement; use official station data for health decisions.</p>
   </footer>
-  <script src="/app.js?v=20261123b"></script>
-  <script src="/shared/alerts.js?v=20261123b"></script>
-  <script src="/shared/atmosphere.js?v=20261123b"></script>
+  <script src="/app.js?v=20261123c"></script>
+  <script src="/shared/alerts.js?v=20261123c"></script>
+  <script src="/shared/atmosphere.js?v=20261123c"></script>
 </body>
 </html>

@@ -105,6 +105,13 @@ def merge_for_classes(classes: list[str]) -> dict[str, str]:
     return merge
 
 
-def class_label(cls: str, merge: dict[str, str]) -> str:
-    """Label kelas akhir, mis. 'Baik / Sedang' untuk gabungan good -> moderate (urutan EPA)."""
-    return " / ".join(CATEGORY_LABELS[c] for c in CATEGORIES if c == cls or merge.get(c) == cls)
+CATEGORY_LABELS_EN = {
+    "good": "Good", "moderate": "Moderate", "usg": "Unhealthy for sensitive groups", "unhealthy": "Unhealthy",
+    "very_unhealthy": "Very unhealthy", "hazardous": "Hazardous",
+}
+
+
+def class_label(cls: str, merge: dict[str, str], lang: str = "id") -> str:
+    """Label kelas akhir, mis. 'Baik / Sedang' untuk gabungan good -> moderate (urutan EPA). lang="en" untuk website."""
+    labels = CATEGORY_LABELS_EN if lang == "en" else CATEGORY_LABELS
+    return " / ".join(labels[c] for c in CATEGORIES if c == cls or merge.get(c) == cls)

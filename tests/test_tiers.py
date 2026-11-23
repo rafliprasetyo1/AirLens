@@ -55,10 +55,10 @@ def test_promote_treats_legacy_and_new_names_as_same_scheme():
 
 
 @pytest.mark.parametrize("classes,merge,cat,label,rng", [
-    (list(TIER_IDS), TIER_MERGE, "elevated", "Meningkat", [101, 200]),          # model baru
-    (LEGACY, LEGACY_MERGE, "unhealthy", "Meningkat", [101, 200]),               # model 3 kelas lama (rollback)
-    (LEGACY, LEGACY_MERGE, "very_unhealthy", "Tinggi", [201, 500]),
-    (FIVE, FIVE_MERGE, "usg", "Tidak sehat bagi kelompok sensitif", [101, 150]),  # model 5 kelas: kategori EPA
+    (list(TIER_IDS), TIER_MERGE, "elevated", "Elevated", [101, 200]),           # model baru (website berbahasa Inggris)
+    (LEGACY, LEGACY_MERGE, "unhealthy", "Elevated", [101, 200]),                # model 3 kelas lama (rollback)
+    (LEGACY, LEGACY_MERGE, "very_unhealthy", "High", [201, 500]),
+    (FIVE, FIVE_MERGE, "usg", "Unhealthy for sensitive groups", [101, 150]),    # model 5 kelas: kategori EPA
 ])
 def test_api_category_view_for_new_legacy_and_five_class_models(classes, merge, cat, label, rng):
     view = PredictionPipeline._category_view(None, cat, classes, merge)

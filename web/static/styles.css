@@ -74,8 +74,6 @@
 
 .result-area { min-height: 520px; position: relative; }
 .placeholder { display: grid; gap: 1rem; align-content: center; min-height: 240px; padding: 1.5rem 0; color: var(--ink-2); max-width: 30rem; }
-.scale { display: grid; grid-template-columns: repeat(3, 1fr); height: 10px; border-radius: 5px; overflow: hidden; }
-.scale .t-low { background: #00e400; } .scale .t-mid { background: #ff7e00; } .scale .t-high { background: #8f3f97; }
 
 .alert { display: grid; gap: .5rem; justify-items: start; padding: 1rem 1.15rem; border-radius: var(--r-media); background: var(--alert-soft);
   border: 1px solid rgb(255 142 132 / .55); animation: rise .35s ease-out both; }

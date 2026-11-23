@@ -79,9 +79,9 @@ def haze_features(img: Image.Image) -> dict[str, float]:
 
 # Petunjuk visual yang ditampilkan ke pengguna. "naik" = nilai lebih tinggi berarti lebih berkabut.
 HINTS = {
-    "contrast_rms": {"label": "Kontras", "hazier": "turun"},
-    "dark_mean": {"label": "Dark channel (lapisan kabut)", "hazier": "naik"},
-    "sky_lum": {"label": "Kecerahan langit", "hazier": "naik"},
+    "contrast_rms": {"label": "Contrast", "hazier": "turun"},
+    "dark_mean": {"label": "Dark channel (haze layer)", "hazier": "naik"},
+    "sky_lum": {"label": "Sky brightness", "hazier": "naik"},
 }
 
 

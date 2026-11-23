@@ -43,7 +43,7 @@ async function start() {
   const weak = (navigator.hardwareConcurrency || 8) <= 4 || (navigator.deviceMemory || 8) <= 4;
   let stage;
   try {
-    const { createScene } = await import("./beta-scene.js?v=20261123b");
+    const { createScene } = await import("./beta-scene.js?v=20261123c");
     stage = createScene(canvas, { weak, onProgress: (f) => { bar.style.width = `${Math.round(f * 100)}%`; } });
     stage.setReduced(reducedQuery.matches);
     reducedQuery.addEventListener("change", (e) => stage.setReduced(e.matches));

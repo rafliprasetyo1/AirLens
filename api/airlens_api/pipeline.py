@@ -30,25 +30,25 @@ from airlens_api.validation import UploadRejected, validate_and_strip
 
 logger = logging.getLogger("airlens.api.pipeline")
 
-DISCLAIMER = "Perkiraan dari foto, bukan pengukuran resmi."
+DISCLAIMER = "Estimated from a photo, not an official measurement."
 # Warna resmi AQI US EPA; teks di atasnya dipilih agar kontras >= 4,5:1.
 COLORS = {
     "good": ("#00E400", "#0b0b0b"), "moderate": ("#FFFF00", "#0b0b0b"), "usg": ("#FF7E00", "#0b0b0b"),
     "unhealthy": ("#FF0000", "#0b0b0b"), "very_unhealthy": ("#8F3F97", "#ffffff"), "hazardous": ("#7E0023", "#ffffff"),
 }
 ADVICE = {
-    "good": "Kualitas udara baik. Aman untuk beraktivitas di luar ruangan.",
-    "moderate": "Umumnya aman. Orang yang sangat sensitif sebaiknya mengurangi aktivitas berat yang lama di luar.",
-    "usg": "Anak, lansia, dan penderita asma atau penyakit jantung sebaiknya mengurangi aktivitas berat di luar.",
-    "unhealthy": "Semua orang sebaiknya mengurangi aktivitas berat di luar ruangan; kelompok sensitif menghindarinya.",
-    "very_unhealthy": "Hindari aktivitas di luar ruangan. Bila harus keluar, gunakan masker yang sesuai (mis. N95).",
-    "hazardous": "Tetap di dalam ruangan dan tutup jendela. Ikuti arahan resmi pemerintah setempat.",
+    "good": "Air quality is good. Outdoor activity is fine.",
+    "moderate": "Generally fine. Very sensitive people should cut down on long, intense activity outdoors.",
+    "usg": "Children, older adults and people with asthma or heart disease should cut down on intense activity outdoors.",
+    "unhealthy": "Everyone should cut down on intense activity outdoors; sensitive groups should avoid it.",
+    "very_unhealthy": "Avoid outdoor activity. If you must go out, wear a suitable mask (for example N95).",
+    "hazardous": "Stay indoors with the windows closed. Follow official local guidance.",
 }
 REJECT_MESSAGES = {
-    "terlalu_kecil": "Foto terlalu kecil. Gunakan foto minimal 100 piksel di sisi terpendek.",
-    "terlalu_gelap": "Foto terlalu gelap atau diambil malam hari. Gunakan foto siang hari.",
-    "terlalu_terang": "Foto terlalu terang (overexposed). Coba foto lain.",
-    "langit_tidak_terlihat": "Langit tidak terlihat. Gunakan foto luar ruangan dengan langit di bagian atas.",
+    "terlalu_kecil": "The photo is too small. Use a photo at least 100 pixels on its shortest side.",
+    "terlalu_gelap": "The photo is too dark or was taken at night. Use a daytime photo.",
+    "terlalu_terang": "The photo is overexposed. Try another photo.",
+    "langit_tidak_terlihat": "No sky is visible. Use an outdoor photo with the sky at the top.",
 }
 
 
@@ -97,15 +97,15 @@ class PredictionPipeline:
         lo, hi = class_ranges(classes, merge)[cat]
         tier = tier_of(cat, classes, merge)
         if tier:
-            return {**tier_view(tier), "key": cat, "tier": tier, "aqi_range": [lo, hi]}
+            return {**tier_view(tier, "en"), "key": cat, "tier": tier, "aqi_range": [lo, hi]}
         bg, fg = COLORS[cat]
-        return {"key": cat, "label": class_label(cat, merge), "aqi_range": [lo, hi], "color": bg,
+        return {"key": cat, "label": class_label(cat, merge, "en"), "aqi_range": [lo, hi], "color": bg,
                 "text_color": fg, "advice": ADVICE[cat], "tier": None}
 
     @staticmethod
     def _label(cat: str, classes: list[str], merge: dict[str, str]) -> str:
         tier = tier_of(cat, classes, merge)
-        return tier_view(tier)["label"] if tier else class_label(cat, merge)
+        return tier_view(tier, "en")["label"] if tier else class_label(cat, merge, "en")
 
     def _iqair_view(self, reading: Reading, pred_cat: str | None, classes: list[str], merge: dict[str, str]) -> dict:
         cat = merge.get(aqi_to_category(reading.aqi_us), aqi_to_category(reading.aqi_us))
@@ -159,8 +159,8 @@ class PredictionPipeline:
             self._run(job, req, start, base_log)
         except Exception:  # galat tak terduga: tetap beri tahu pengguna dan catat
             logger.exception("job %s gagal", job.id)
-            self.jobs.emit(job, "galat", "gagal", message="Terjadi galat di server.")
-            self.jobs.finish(job, {"status": "error", "code": "galat_server", "message": "Terjadi galat di server. Coba lagi.",
+            self.jobs.emit(job, "galat", "gagal", message="Server error.")
+            self.jobs.finish(job, {"status": "error", "code": "galat_server", "message": "Server error. Try again.",
                                    "disclaimer": DISCLAIMER})
             self._log(job, status="rejected", reject_reason="galat_server",
                       latency_ms=(time.perf_counter() - start) * 1000, **base_log)
@@ -196,7 +196,7 @@ class PredictionPipeline:
         try:
             logits, emb = self.models.infer(x)
         except ModelUnavailable as e:
-            msg = "Model belum tersedia. Coba lagi beberapa saat lagi."
+            msg = "The model is not available yet. Try again in a moment."
             self.jobs.emit(job, "analisis", "gagal", code="model_tidak_tersedia", message=msg)
             self.jobs.finish(job, {"status": "error", "code": "model_tidak_tersedia", "message": msg, "detail": str(e)[:200],
                                    "disclaimer": DISCLAIMER})
@@ -232,7 +232,7 @@ class PredictionPipeline:
             elif req.city:
                 reading = self.iqair.by_city(req.city["city"], req.city["state"], req.city["country"])
             else:
-                raise IQAirUnavailable("tanpa_lokasi", "Pilih kota atau izinkan lokasi untuk pembanding IQAir.")
+                raise IQAirUnavailable("tanpa_lokasi", "Choose a city or allow location to compare with IQAir.")
             iq_view = self._iqair_view(reading, None if uncertain else pred_cat, classes, merge)
             self.jobs.emit(job, "iqair", "selesai")
         except IQAirUnavailable as e:

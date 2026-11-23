@@ -16,8 +16,8 @@ const el = {
   probs: $("probs"), modelInfo: $("model-info"), history: $("history"), mainCard: $("main-card"),
 };
 const narrow = window.matchMedia("(max-width: 860px)");
-const STAGE_TEXT = { mulai: "berjalan…", selesai: "selesai", gagal: "gagal" };
-const STAGE_NAME = { periksa: "Memeriksa foto", analisis: "Menganalisis kabut", iqair: "Membandingkan dengan IQAir" };
+const STAGE_TEXT = { mulai: "running…", selesai: "done", gagal: "failed" };
+const STAGE_NAME = { periksa: "Checking photo", analisis: "Analysing haze", iqair: "Comparing with IQAir" };
 const MAX_BYTES = 10 * 1024 * 1024;
 const TYPES = ["image/jpeg", "image/png", "image/webp", "image/heif", "image/heic"];
 // Sebagian browser (Chrome/Edge di Windows dan Android) memberi tipe kosong untuk foto HEIC: cek ekstensinya juga.
@@ -45,14 +45,14 @@ function node(tag, attrs = {}, ...children) {
 const pct = (p) => Math.round(p * 100);
 function announce(msg) { el.live.textContent = ""; requestAnimationFrame(() => { el.live.textContent = msg; }); }
 function fmtTime(iso) {
-  try { return new Date(iso).toLocaleString("id-ID", { dateStyle: "medium", timeStyle: "short" }); } catch { return iso; }
+  try { return new Date(iso).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" }); } catch { return iso; }
 }
 
 // ------------------------------------------------------------------ pilih file & seret-lepas
 function pick(file) {
   if (!file) return;
-  if (!TYPES.includes(file.type) && !EXTS.test(file.name)) return showAlert("Format tidak didukung", "Gunakan foto JPG/JPEG, PNG, WebP, atau HEIF/HEIC.", "warn");
-  if (file.size > MAX_BYTES) return showAlert("File terlalu besar", "Ukuran maksimal 10 MB.", "warn");
+  if (!TYPES.includes(file.type) && !EXTS.test(file.name)) return showAlert("Unsupported format", "Use a JPG/JPEG, PNG, WebP or HEIF/HEIC photo.", "warn");
+  if (file.size > MAX_BYTES) return showAlert("File too large", "The maximum size is 10 MB.", "warn");
   selected = file;
   if (previewUrl) URL.revokeObjectURL(previewUrl);
   previewUrl = URL.createObjectURL(file);
@@ -70,8 +70,8 @@ el.img.addEventListener("error", () => {
   if (!msg) { msg = node("div", { class: "preview-missing" }, ""); el.preview.prepend(msg); }
   // Browser selain Safari tidak bisa menampilkan HEIC; fotonya tetap bisa dianalisis server.
   msg.textContent = selected && isHeif(selected)
-    ? "Pratinjau HEIF/HEIC tidak didukung browser ini. Foto tetap bisa dianalisis."
-    : "Pratinjau tidak tersedia: berkas mungkin bukan gambar.";
+    ? "This browser cannot preview HEIF/HEIC. The photo can still be analysed."
+    : "No preview: the file may not be an image.";
   msg.hidden = false;
 });
 el.img.addEventListener("load", () => {
@@ -97,11 +97,11 @@ async function loadCities() {
   try {
     const r = await fetch(`${API}/cities`);
     for (const c of await r.json()) el.city.append(node("option", { value: c.id }, `${c.name} (${c.state})`));
-  } catch { el.geoStatus.textContent = "Daftar kota gagal dimuat; gunakan lokasi perangkat."; }
+  } catch { el.geoStatus.textContent = "The city list did not load; use your device location."; }
 }
-const GEO = "__geo__";   // pilihan dropdown "Lokasi saya" (koordinat perangkat, bukan kota dari daftar)
+const GEO = "__geo__";   // pilihan dropdown "My location" (koordinat perangkat, bukan kota dari daftar)
 el.city.addEventListener("change", () => {
-  if (el.city.value && el.city.value !== GEO) { coords = null; el.geoStatus.textContent = "Memakai kota yang dipilih."; }
+  if (el.city.value && el.city.value !== GEO) { coords = null; el.geoStatus.textContent = "Using the selected city."; }
 });
 function geoOption(label) {
   let opt = el.city.querySelector(`option[value="${GEO}"]`);
@@ -110,35 +110,35 @@ function geoOption(label) {
   el.city.value = GEO;
 }
 el.geo.addEventListener("click", () => {
-  if (!window.isSecureContext) { el.geoStatus.textContent = "Lokasi perangkat hanya bisa dipakai lewat alamat https:// (misalnya alamat ngrok). Pilih kota dari daftar."; return; }
-  if (!navigator.geolocation) { el.geoStatus.textContent = "Peramban ini tidak mendukung lokasi. Pilih kota dari daftar."; return; }
-  el.geoStatus.textContent = "Meminta izin lokasi…";
+  if (!window.isSecureContext) { el.geoStatus.textContent = "Device location only works over https:// (for example the ngrok address). Choose a city from the list."; return; }
+  if (!navigator.geolocation) { el.geoStatus.textContent = "This browser does not support location. Choose a city from the list."; return; }
+  el.geoStatus.textContent = "Asking for location permission…";
   el.geo.disabled = true;
   navigator.geolocation.getCurrentPosition(
     async (pos) => {
       el.geo.disabled = false;
       coords = { lat: pos.coords.latitude, lon: pos.coords.longitude };
-      geoOption("Lokasi saya (mencari stasiun IQAir…)");
-      el.geoStatus.textContent = `Lokasi ditemukan (${coords.lat.toFixed(2)}, ${coords.lon.toFixed(2)}). Mencari stasiun IQAir terdekat…`;
+      geoOption("My location (finding an IQAir station…)");
+      el.geoStatus.textContent = `Location found (${coords.lat.toFixed(2)}, ${coords.lon.toFixed(2)}). Finding the nearest IQAir station…`;
       try {
         const r = await fetch(`${API}/nearest-city?lat=${coords.lat}&lon=${coords.lon}`);
         if (!r.ok) throw new Error(String(r.status));
         const c = await r.json();
         const place = [c.city, c.state].filter(Boolean).join(", ");
-        geoOption(`Lokasi saya: ${place}`);
-        el.geoStatus.textContent = `Pembanding IQAir memakai stasiun terdekat: ${place} (AQI US ${c.aqi_us} saat ini).`;
+        geoOption(`My location: ${place}`);
+        el.geoStatus.textContent = `Comparing with the nearest IQAir station: ${place} (US AQI ${c.aqi_us} now).`;
       } catch {
-        geoOption("Lokasi saya");
-        el.geoStatus.textContent = "Lokasi perangkat dipakai; stasiun IQAir terdekat dicari saat analisis.";
+        geoOption("My location");
+        el.geoStatus.textContent = "Using your device location; the nearest IQAir station is found during analysis.";
       }
     },
     (err) => {
       el.geo.disabled = false;
       coords = null;
       el.geoStatus.textContent = err.code === 1
-        ? "Izin lokasi ditolak. Di iPhone: Pengaturan > Privasi & Keamanan > Layanan Lokasi > Situs Web Safari > Saat Digunakan, lalu coba lagi. Atau pilih kota dari daftar."
-        : err.code === 3 ? "Pencarian lokasi terlalu lama. Coba lagi, atau pilih kota dari daftar."
-        : "Lokasi tidak bisa ditentukan (GPS atau jaringan). Pilih kota dari daftar.";
+        ? "Location permission was denied. On iPhone: Settings > Privacy & Security > Location Services > Safari Websites > While Using, then try again. Or choose a city from the list."
+        : err.code === 3 ? "Finding your location took too long. Try again, or choose a city from the list."
+        : "Your location could not be found (GPS or network). Choose a city from the list.";
     },
     { enableHighAccuracy: false, timeout: 15000, maximumAge: 600000 },
   );
@@ -167,7 +167,7 @@ function hideAlert() { el.alert.hidden = true; }
 function setBusy(b) {
   busy = b;
   el.analyze.disabled = b || !selected;
-  el.analyze.textContent = b ? "Menganalisis…" : "Analisis foto";
+  el.analyze.textContent = b ? "Analysing…" : "Analyse photo";
   el.dz.setAttribute("aria-disabled", String(b));
   if (!b) el.dz.classList.remove("scanning");
 }
@@ -194,20 +194,20 @@ async function analyze() {
       r = await fetch(`${API}/predict`, { method: "POST", body: form });
       if (![502, 503, 504].includes(r.status) || attempt >= 3) break;
       setStage("periksa", "mulai");
-      el.stages.querySelector('[data-stage="periksa"] [data-state]').textContent = `server belum siap, mencoba lagi ${attempt + 1}/3`;
-      announce(`Server belum siap, mencoba lagi ${attempt + 1} dari 3`);
+      el.stages.querySelector('[data-stage="periksa"] [data-state]').textContent = `server not ready, retrying ${attempt + 1}/3`;
+      announce(`Server not ready, retrying ${attempt + 1} of 3`);
       await new Promise((ok) => setTimeout(ok, 1500 * (attempt + 1)));
     }
     if (!r.ok) {
       const body = await r.json().catch(() => ({}));
       const down = [502, 503, 504].includes(r.status);
       throw new Error(typeof body.detail === "string" ? body.detail
-        : down ? `Layanan sedang tidak tersedia (server membalas ${r.status}). Tunggu sebentar lalu coba lagi.` : `Server membalas ${r.status}.`);
+        : down ? `The service is unavailable (server replied ${r.status}). Wait a moment and try again.` : `Server replied ${r.status}.`);
     }
     job = await r.json();
   } catch (err) {
     setBusy(false);
-    return showAlert("Gagal mengirim foto", err.message || "Server tidak terjangkau. Periksa koneksi lalu coba lagi.");
+    return showAlert("Could not send the photo", err.message || "The server is unreachable. Check your connection and try again.");
   }
   follow(job.job_id);
 }
@@ -233,8 +233,8 @@ function follow(jobId) {
     fetch(`${API}/jobs/${jobId}`).then((r) => r.json()).then((j) => {
       for (const ev of j.events || []) if (ev.stage in STAGE_NAME) setStage(ev.stage, ev.status);
       if (j.done) finish(j.result);
-      else { setBusy(false); showAlert("Koneksi terputus", "Kemajuan tidak bisa diikuti. Coba lagi."); }
-    }).catch(() => { setBusy(false); showAlert("Koneksi terputus", "Server tidak terjangkau. Coba lagi."); });
+      else { setBusy(false); showAlert("Connection lost", "Progress could not be followed. Try again."); }
+    }).catch(() => { setBusy(false); showAlert("Connection lost", "The server is unreachable. Try again."); });
   };
 }
 
@@ -242,11 +242,11 @@ function follow(jobId) {
 function finish(res) {
   setBusy(false);
   if (res.status === "rejected") {
-    showAlert("Foto tidak bisa dipakai", res.message);
-    return addHistory("Ditolak", "#b9b8b2", res.message);
+    showAlert("This photo cannot be used", res.message);
+    return addHistory("Rejected", "#b9b8b2", res.message);
   }
   if (res.status === "error") {
-    showAlert("Belum bisa memproses", res.message);
+    showAlert("Cannot process yet", res.message);
     return;
   }
   renderResult(res);
@@ -274,14 +274,14 @@ function renderResult(res) {
 
   // Belum pasti: tampilkan dua kandidat teratas (peluang terkalibrasi, jadi boleh dijumlahkan).
   const ru = uncertain ? res.runner_up : null;
-  el.eyebrow.textContent = uncertain ? (ru ? "Belum pasti — dua kandidat teratas" : "Belum pasti — kandidat teratas")
-    : "Perkiraan kategori";
-  el.chip.textContent = uncertain ? `Belum pasti (mungkin: ${cat.label})` : cat.label;
+  el.eyebrow.textContent = uncertain ? (ru ? "Uncertain: top two candidates" : "Uncertain: top candidate")
+    : "Estimated level";
+  el.chip.textContent = uncertain ? `Uncertain (maybe ${cat.label})` : cat.label;
   el.range.textContent = ru ? candidateRange(cat, ru) : `${cat.aqi_range[0]}–${cat.aqi_range[1]}`;
   el.advice.textContent = uncertain
-    ? (ru ? `Kemungkinan antara ${cat.label} (${pct(res.confidence)}%) dan ${ru.label} (${pct(ru.p)}%), `
-        + `peluang gabungan ${pct(res.confidence + ru.p)}%. ` : "")
-      + `Keyakinan ${pct(res.confidence)}% di bawah ambang ${pct(res.threshold)}%. Coba foto lain dengan langit lebih terlihat, atau lihat pembanding IQAir.`
+    ? (ru ? `Probably ${cat.label} (${pct(res.confidence)}%) or ${ru.label} (${pct(ru.p)}%), `
+        + `${pct(res.confidence + ru.p)}% combined. ` : "")
+      + `Confidence ${pct(res.confidence)}% is below the ${pct(res.threshold)}% threshold. Try another photo with more sky, or check the IQAir comparison.`
     : cat.advice;
   el.smoke.hidden = !res.model?.smoke;
   el.mainCard.classList.toggle("uncertain", uncertain);
@@ -308,10 +308,10 @@ function renderResult(res) {
   el.cards.hidden = true;
   void el.cards.offsetWidth;
   el.cards.hidden = false;
-  announce(uncertain ? `Hasil belum pasti. Kandidat teratas ${cat.label}${ru ? `, lalu ${ru.label}` : ""}.`
-    : `Perkiraan: ${cat.label}, keyakinan ${pct(res.confidence)} persen.`);
-  addHistory(uncertain ? "Belum pasti" : cat.label, uncertain ? "#9a9993" : cat.color,
-    `keyakinan ${pct(res.confidence)}%${res.iqair?.status === "ok" ? ` · IQAir ${res.iqair.aqi_us}` : ""}`);
+  announce(uncertain ? `Uncertain result. Top candidate ${cat.label}${ru ? `, then ${ru.label}` : ""}.`
+    : `Estimate: ${cat.label}, ${pct(res.confidence)} percent confidence.`);
+  addHistory(uncertain ? "Uncertain" : cat.label, uncertain ? "#9a9993" : cat.color,
+    `confidence ${pct(res.confidence)}%${res.iqair?.status === "ok" ? ` · IQAir ${res.iqair.aqi_us}` : ""}`);
 }
 
 // Rentang AQI dua kandidat: digabung bila bersebelahan, dipisah bila tidak.
@@ -319,33 +319,33 @@ function candidateRange(a, b) {
   const [lo, hi] = a.aqi_range[0] < b.aqi_range[0] ? [a, b] : [b, a];
   return lo.aqi_range[1] + 1 === hi.aqi_range[0]
     ? `${lo.aqi_range[0]}–${hi.aqi_range[1]}`
-    : `${lo.aqi_range[0]}–${lo.aqi_range[1]} atau ${hi.aqi_range[0]}–${hi.aqi_range[1]}`;
+    : `${lo.aqi_range[0]}–${lo.aqi_range[1]} or ${hi.aqi_range[0]}–${hi.aqi_range[1]}`;
 }
 
 function renderIqair(iq) {
   el.iq.replaceChildren();
   if (!iq || iq.status !== "ok") {
-    el.iq.append(node("p", { class: "muted" }, iq?.message || "Pembanding IQAir tidak tersedia."));
+    el.iq.append(node("p", { class: "muted" }, iq?.message || "IQAir comparison unavailable."));
     return;
   }
   const grid = node("div", { class: "iq-grid" },
     node("span", { class: "iq-aqi" }, iq.aqi_us),
     node("div", {},
-      node("p", {}, node("strong", {}, "AQI US"), ` · ${iq.city}${iq.state ? `, ${iq.state}` : ""}`),
+      node("p", {}, node("strong", {}, "US AQI"), ` in ${iq.city}${iq.state ? `, ${iq.state}` : ""}`),
       node("p", { class: "muted small" }, iq.stale
-        ? `Internet tidak tersedia: memakai data IQAir terakhir yang tersimpan (diambil ${fmtTime(iq.fetched_at)}).`
-        : `Diperbarui ${fmtTime(iq.observed_at)}${iq.cached ? " (dari cache)" : ""}`)));
+        ? `No internet: using the last saved IQAir reading (fetched ${fmtTime(iq.fetched_at)}).`
+        : `Updated ${fmtTime(iq.observed_at)}${iq.cached ? " (cached)" : ""}`)));
   const chip = node("p", { class: "chip", style: { background: iq.category.color, color: iq.category.text_color, marginTop: ".5rem" } },
     iq.category.label);
   el.iq.append(grid, chip);
   if (typeof iq.selisih_kategori === "number") {
     const d = iq.selisih_kategori;
-    const text = d === 0 ? "Kategori perkiraan SAMA dengan IQAir."
-      : `Perkiraan ${Math.abs(d)} kategori ${d > 0 ? "lebih buruk" : "lebih baik"} dari IQAir`
-        + (iq.jarak_ke_rentang ? ` (AQI IQAir berjarak ${iq.jarak_ke_rentang} poin dari rentang perkiraan).` : ".");
+    const text = d === 0 ? "The estimate MATCHES IQAir."
+      : `The estimate is ${Math.abs(d)} level${Math.abs(d) > 1 ? "s" : ""} ${d > 0 ? "worse" : "better"} than IQAir`
+        + (iq.jarak_ke_rentang ? ` (the IQAir AQI is ${iq.jarak_ke_rentang} points outside the estimated range).` : ".");
     el.iq.append(node("p", { class: "iq-diff" }, text));
   } else {
-    el.iq.append(node("p", { class: "iq-diff muted" }, "Selisih tidak dihitung karena hasil belum pasti."));
+    el.iq.append(node("p", { class: "iq-diff muted" }, "No difference shown because the result is uncertain."));
   }
 }
 
@@ -355,15 +355,15 @@ function renderHints(hints) {
     const fill = node("span");
     // Bar = tingkat kabut relatif data latih: persentil dibalik untuk petunjuk yang TURUN saat berkabut (kontras).
     const haze = h.percentile == null ? null : Math.round(h.hazier === "naik" ? h.percentile : 100 - h.percentile);
-    const desc = haze == null ? "tanpa pembanding data latih" : `lebih berkabut dari ${haze}% foto latih`;
+    const desc = haze == null ? "no training-data reference" : `hazier than ${haze}% of training photos`;
     el.hints.append(node("li", { class: "hint-row" },
       node("div", { class: "hint-head" }, node("span", {}, h.label),
         node("span", { class: "pct-text" }, haze == null ? "—" : `${haze}%`)),
       node("div", { class: "bar", role: "img", "aria-label": `${h.label}: ${desc}` }, fill),
-      node("p", { class: "muted small" }, `${desc} · nilai ${h.value.toFixed(3)}`)));
+      node("p", { class: "muted small" }, `${desc}, value ${h.value.toFixed(3)}`)));
     requestAnimationFrame(() => { fill.style.width = `${haze ?? 0}%`; });
   }
-  el.hints.append(node("li", { class: "hint-scale", "aria-hidden": "true" }, node("span", {}, "lebih jernih"), node("span", {}, "lebih berkabut")));
+  el.hints.append(node("li", { class: "hint-scale", "aria-hidden": "true" }, node("span", {}, "clearer"), node("span", {}, "hazier")));
 }
 
 function renderProbs(probs, topKey) {
@@ -389,7 +389,7 @@ function addHistory(label, color, detail) {
 function renderHistory(items) {
   if (!items) { try { items = JSON.parse(sessionStorage.getItem("airlens-history") || "[]"); } catch { items = []; } }
   el.history.replaceChildren();
-  if (!items.length) { el.history.append(node("li", { class: "muted" }, "Belum ada.")); return; }
+  if (!items.length) { el.history.append(node("li", { class: "muted" }, "Nothing yet.")); return; }
   for (const it of items) {
     el.history.append(node("li", {},
       node("span", { class: "swatch", style: { background: it.color }, "aria-hidden": "true" }),

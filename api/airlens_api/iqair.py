@@ -68,13 +68,13 @@ class IQAirClient:
             last_min = s.scalar(select(func.count()).where(IqairRequest.requested_at >= now - timedelta(seconds=60)))
             today = s.scalar(select(func.count()).where(IqairRequest.requested_at >= day_start))
         if today >= self.per_day:
-            raise IQAirUnavailable("kuota_harian", "Kuota harian IQAir habis; pembanding tersedia lagi besok.")
+            raise IQAirUnavailable("kuota_harian", "The daily IQAir quota is used up; the comparison is back tomorrow.")
         if last_min >= self.per_minute:
-            raise IQAirUnavailable("kuota_menit", "Batas panggilan IQAir per menit tercapai; coba lagi sebentar.")
+            raise IQAirUnavailable("kuota_menit", "IQAir per-minute limit reached; try again shortly.")
 
     def _call(self, endpoint: str, params: dict) -> dict:
         if not self.api_key:
-            raise IQAirUnavailable("tanpa_kunci", "Kunci IQAir belum diatur.")
+            raise IQAirUnavailable("tanpa_kunci", "The IQAir key is not set.")
         self._check_quota()
         status_code, ok = None, False
         try:
@@ -83,7 +83,7 @@ class IQAirClient:
             body = r.json()
             ok = r.ok and body.get("status") == "success"
         except (requests.RequestException, ValueError) as exc:
-            raise IQAirUnavailable("jaringan", f"IQAir tidak terjangkau ({type(exc).__name__}).") from None
+            raise IQAirUnavailable("jaringan", f"IQAir is unreachable ({type(exc).__name__}).") from None
         finally:
             with Session(self.engine) as s:
                 s.add(IqairRequest(endpoint=endpoint, ok=ok, status_code=status_code))
@@ -91,10 +91,10 @@ class IQAirClient:
         if not ok:
             msg = str((body.get("data") or {}).get("message", "")) if isinstance(body, dict) else ""
             if status_code == 429 or "limit" in msg:
-                raise IQAirUnavailable("kuota", "Batas panggilan IQAir tercapai.")
+                raise IQAirUnavailable("kuota", "IQAir call limit reached.")
             if "not_found" in msg or "no_nearest" in msg:
-                raise IQAirUnavailable("kota_tidak_dikenal", "Kota tidak ditemukan di IQAir.")
-            raise IQAirUnavailable("galat", f"IQAir membalas galat ({msg or status_code}).")
+                raise IQAirUnavailable("kota_tidak_dikenal", "City not found on IQAir.")
+            raise IQAirUnavailable("galat", f"IQAir returned an error ({msg or status_code}).")
         return body["data"]
 
     def _store(self, data: dict) -> Reading:
@@ -129,7 +129,7 @@ class IQAirClient:
         last = self._last_reading(*place) if place else None
         if last is None:
             raise IQAirUnavailable("jaringan_tanpa_cache",
-                                   "IQAir tidak terjangkau dan belum ada data tersimpan untuk lokasi ini.") from None
+                                   "IQAir is unreachable and there is no saved reading for this location yet.") from None
         return last
 
     @staticmethod

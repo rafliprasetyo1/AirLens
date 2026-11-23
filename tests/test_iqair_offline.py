@@ -51,7 +51,7 @@ def test_offline_uses_last_stored_reading():
 def test_offline_without_stored_reading_gives_clear_message():
     with pytest.raises(IQAirUnavailable) as e:
         offline_client().by_city("Dumai", "Riau", "Indonesia")
-    assert e.value.code == "jaringan_tanpa_cache" and "belum ada data" in e.value.message
+    assert e.value.code == "jaringan_tanpa_cache" and "no saved reading" in e.value.message
 
 
 def test_offline_coords_without_known_city():

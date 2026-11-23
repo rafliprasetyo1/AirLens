@@ -27,25 +27,25 @@ class UploadRejected(Exception):
 def validate_and_strip(data: bytes, max_bytes: int) -> tuple[Image.Image, str]:
     """Kembalikan (gambar RGB tanpa metadata, format asli) atau lempar UploadRejected."""
     if not data:
-        raise UploadRejected("file_kosong", "File kosong.")
+        raise UploadRejected("file_kosong", "The file is empty.")
     if len(data) > max_bytes:
-        raise UploadRejected("terlalu_besar", f"Ukuran file melebihi {max_bytes // 2**20} MB.")
+        raise UploadRejected("terlalu_besar", f"The file is larger than {max_bytes // 2**20} MB.")
     try:
         with Image.open(io.BytesIO(data)) as probe:
             fmt = probe.format
             width, height = probe.size
             probe.verify()
     except (UnidentifiedImageError, OSError, SyntaxError, ValueError, Image.DecompressionBombError):
-        raise UploadRejected("bukan_gambar", "File bukan gambar yang valid atau rusak.") from None
+        raise UploadRejected("bukan_gambar", "The file is not a valid image or is damaged.") from None
     if fmt not in ALLOWED_FORMATS:
-        raise UploadRejected("tipe_tidak_didukung", f"Format harus JPG/JPEG, PNG, WebP, atau HEIF/HEIC (terdeteksi: {fmt}).")
+        raise UploadRejected("tipe_tidak_didukung", f"Use a JPG/JPEG, PNG, WebP or HEIF/HEIC photo (detected: {fmt}).")
     if width * height > MAX_PIXELS:
-        raise UploadRejected("terlalu_besar", "Resolusi gambar terlalu besar.")
+        raise UploadRejected("terlalu_besar", "The image resolution is too large.")
     try:
         with Image.open(io.BytesIO(data)) as img:
             rgb = ImageOps.exif_transpose(img).convert("RGB")
     except (OSError, ValueError, Image.DecompressionBombError):
-        raise UploadRejected("bukan_gambar", "Gambar tidak bisa dibaca.") from None
+        raise UploadRejected("bukan_gambar", "The image could not be read.") from None
     clean = Image.new("RGB", rgb.size)
     clean.paste(rgb)  # salin piksel saja: tidak membawa EXIF/ICC/XMP
     return clean, fmt
