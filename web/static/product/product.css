@@ -7,10 +7,10 @@
 /* panggung: latar studio terang (sapuan abu kebiruan), bayangan model jatuh ke "meja" */
 /* lebar: panggung selebar layar di belakang teks (overlay). Model digeser ke kanan oleh kamera (beta-scene.js), dan bagian
    yang melebar ke kiri memudar di bawah scrim gelap, jadi tidak ada garis potong. --stage-w = lebar bagian 3D yang bebas teks. */
-.stage { position: fixed; z-index: 1; top: var(--bar-h); left: 0; right: 0; bottom: 0;
-  background: radial-gradient(45% 55% at 68% 48%, #16233c 0%, var(--haze) 100%); }
+.stage { position: fixed; z-index: 1; top: 0; left: 0; right: 0; bottom: 0;
+  background: transparent; }   /* berkas cahaya dan debu (atmosphere.js) terlihat di belakang model */
 .stage::after { content: ""; position: absolute; inset: 0; pointer-events: none;
-  background: linear-gradient(90deg, var(--haze) 0%, rgb(11 20 36 / .92) 30%, rgb(11 20 36 / .55) 40%, rgb(11 20 36 / 0) 52%); }
+  background: linear-gradient(90deg, rgb(7 10 20 / .78) 0%, rgb(7 10 20 / .6) 30%, rgb(7 10 20 / .3) 42%, rgb(7 10 20 / 0) 54%); }
 .stage canvas { display: block; width: 100%; height: 100%; }
 .callouts { position: fixed; inset: 0; z-index: 2; pointer-events: none; }
 
@@ -87,8 +87,8 @@ main { position: relative; z-index: 3; width: max(calc(100vw - var(--stage-w)), 
 /* layar sempit atau tegak (HP): overlay juga. Panggung memenuhi layar, model di ±45 % atas (kamera digeser ke atas di
    beta-scene.js), scrim gelap dari bawah. Teks menggulir di atas model dalam panel gelap semi-transparan yang buram. */
 @media (max-width: 899px), (orientation: portrait) {
-  .stage { background: radial-gradient(80% 45% at 50% 32%, #16233c 0%, var(--haze) 100%); }
-  .stage::after { background: linear-gradient(0deg, var(--haze) 0%, rgb(11 20 36 / .9) 30%, rgb(11 20 36 / .4) 48%, rgb(11 20 36 / 0) 60%); }
+  .stage { background: transparent; }
+  .stage::after { background: linear-gradient(0deg, rgb(7 10 20 / .9) 0%, rgb(7 10 20 / .75) 30%, rgb(7 10 20 / .3) 48%, rgb(7 10 20 / 0) 60%); }
   main, .product .foot { width: auto; }
   /* jarak bawah besar: panel lama sudah keluar layar sebelum adegan berikutnya mulai, jadi model terlihat bersih */
   .sec { min-height: 90svh; padding: 40svh var(--gutter) 34svh; align-items: flex-start; }

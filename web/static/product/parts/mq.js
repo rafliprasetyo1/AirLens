@@ -3,7 +3,7 @@
 // (VCC GND DO AO) dengan konektor dupont betina. LM393 dan pasif ada di sisi bawah, seperti papan aslinya.
 // Titik asal: pusat papan, sisi bawah PCB (y = 0). Sensor di ujung +X, header di ujung -X.
 import * as THREE from "three";
-import { sheet, texture, text, grain, pcb, box, cyl, chip, smd, led, lathe, instances, M, mat } from "./kit.js?v=20261123";
+import { sheet, texture, text, grain, pcb, box, cyl, chip, smd, led, lathe, instances, M, mat } from "./kit.js?v=20261123b";
 
 export const MQ = { L: 32, W: 22, T: 1.6, sensorX: 5.8, headerX: -14.2, hole: [-13.9, 8.6], pinZ: [-3.81, -1.27, 1.27, 3.81] };
 const BLUE = "#1d4fa6", INK = "#f2f3ef", PAD = "#d9b45c";

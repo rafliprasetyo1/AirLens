@@ -577,3 +577,12 @@ Lingkup ditegaskan pemilik: **proyek utama** = foto pengguna → tingkat kualita
 | Garis skala AQI (hijau/oranye/ungu) 2 px di tepi bawah kepala halaman sebagai satu-satunya hiasan | Ciri khas yang isinya data (skala yang dilaporkan AirLens), bukan dekorasi |
 | Panel info/peringatan berbingkai tipis di semua sisi (bukan garis kiri tebal); status Beta memakai lampu kecil | Garis kiri tebal berwarna adalah pola komponen generik |
 | Kontras terukur: tinta 16,5:1, tinta kedua 8,45:1, tombol utama 16,5:1 (teks nonaktif 4,38:1, dikecualikan WCAG) | `make ui-test` 39/39 |
+
+## Tema "debu di dalam berkas cahaya" (2026-11-23, sore)
+
+| Keputusan | Alasan |
+|---|---|
+| Suasana mengikuti referensi pemilik (Dribbble, Outcrowd "Incident Management Platform"): latar malam `#070A14`, berkas cahaya indigo dari kiri atas, partikel halus, permukaan kaca, kepala halaman berbentuk pil kaca, tombol pil indigo berpendar | Pemilik ingin website terasa hidup. Gaya diadaptasi, tidak disalin: tidak ada tata letak, teks, atau aset dari karya itu |
+| Partikel = debu yang menyala saat masuk berkas cahaya (efek Tyndall), `shared/atmosphere.js` di semua halaman | Polusi terlihat karena menghamburkan cahaya; itulah yang diukur AirLens. Ringan: <= 110 partikel, 30 fps, berkas digambar sekali per ukuran layar, berhenti saat tab tersembunyi, diam bila reduced motion |
+| Dipertahankan: kontainer tengah, garis skala AQI di kepala, warna data resmi (AQI, sensor, peringatan), panel berbingkai tipis, huruf Archivo | Hal yang sudah benar dari revisi sebelumnya |
+| Tombol utama gradien `#6461F5` ke `#4F4CE0` (bukan `#6E6BFF` polos) | Teks putih di `#6E6BFF` hanya 4,0:1; dengan gradien ini >= 4,6:1. `make ui-test` 39/39 |

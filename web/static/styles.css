@@ -20,18 +20,19 @@
   font-stretch: 100%; font-variant-numeric: tabular-nums; }
 
 .dropzone { position: relative; display: grid; place-items: center; min-height: 230px; overflow: hidden; cursor: pointer; text-align: center;
-  border: 1px dashed var(--rule-strong); border-radius: var(--r-media); background: var(--paper); transition: border-color .2s, background-color .2s; }
-.dropzone:hover { border-color: var(--ink-2); }
-.dropzone.drag { border-color: var(--ink); border-style: solid; background: var(--petrol-soft); }
+  border: 1px dashed rgb(180 178 255 / .35); border-radius: var(--r-media); background: rgb(17 21 40 / .5);
+  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); transition: border-color .2s, background-color .2s; }
+.dropzone:hover { border-color: var(--lavender); background: rgb(110 107 255 / .08); }
+.dropzone.drag { border-color: var(--lavender); border-style: solid; background: rgb(110 107 255 / .16); }
 .dz-empty { padding: 1.75rem 1.25rem; display: grid; gap: .4rem; justify-items: center; }
-.dz-icon { width: 44px; height: 44px; color: var(--ink-2); margin-bottom: .25rem; }
+.dz-icon { width: 44px; height: 44px; color: var(--lavender); margin-bottom: .25rem; }
 .preview { margin: 0; width: 100%; position: relative; }
 .preview img { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; }
 .preview figcaption { padding: .55rem .8rem .7rem; font-size: var(--t-sm); text-align: left; overflow-wrap: anywhere; }
-.preview .change { display: block; color: var(--ink); font-weight: 600; text-decoration: underline; text-decoration-color: rgb(236 241 246 / .45); text-underline-offset: .22em; }
+.preview .change { display: block; color: var(--lavender); font-weight: 600; }
 .preview-missing { display: grid; place-items: center; aspect-ratio: 4 / 3; background: var(--rule-soft); color: var(--ink-2); padding: 1rem; }
 /* garis pemindai: hanya saat foto diperiksa/dianalisis */
-.scanner { position: absolute; left: 0; right: 0; top: 0; height: 2px; opacity: 0; pointer-events: none; background: var(--ink);
+.scanner { position: absolute; left: 0; right: 0; top: 0; height: 2px; opacity: 0; pointer-events: none; background: var(--lavender); box-shadow: 0 0 16px 3px rgb(110 107 255 / .7);
 }
 .scanning .scanner { opacity: 1; animation: scan 1.6s ease-in-out infinite alternate; }
 @keyframes scan { from { top: 0; } to { top: calc(100% - 3rem); } }
@@ -43,7 +44,8 @@
 #analyze { width: 100%; min-height: 52px; font-size: var(--t-md); }
 
 /* ---------------------------------------------------------------- lembar hasil */
-.sheet { align-self: start; background: var(--sheet); border: 1px solid var(--rule); border-radius: var(--r-media);
+.sheet { align-self: start; background: var(--sheet); border: 1px solid var(--glass-line); border-radius: var(--r-media);
+  box-shadow: inset 0 1px 0 var(--glass-hi), 0 30px 80px -40px rgb(110 107 255 / .35); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
   padding: clamp(1.1rem, 3vw, 1.75rem); min-width: 0; }
 @media (min-width: 921px) { .sheet { position: sticky; top: 80px; } }
 .sheet:focus { outline: none; }
@@ -54,15 +56,15 @@
   transition: border-color .3s, color .3s; }
 .stages .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--rule); }
 .stages .state { grid-column: 2; font-weight: 640; min-height: 1.2em; }
-.stages li.mulai { border-top-color: var(--ink); color: var(--ink); }
-.stages li.mulai .dot { background: var(--ink); animation: pulse 1s ease-in-out infinite; }
+.stages li.mulai { border-top-color: var(--lavender); color: var(--ink); }
+.stages li.mulai .dot { background: var(--lavender); animation: pulse 1s ease-in-out infinite; }
 .stages li.selesai { border-top-color: var(--ok); color: var(--ink); }
 .stages li.selesai .dot { background: var(--ok); }
 .stages li.selesai .state { color: var(--ok); }
 .stages li.gagal { border-top-color: var(--alert); color: var(--ink); }
 .stages li.gagal .dot { background: var(--alert); }
 .stages li.gagal .state { color: var(--alert); }
-@keyframes pulse { 50% { box-shadow: 0 0 0 5px rgb(236 241 246 / .16); } }
+@keyframes pulse { 50% { box-shadow: 0 0 0 6px rgb(110 107 255 / .28); } }
 @media (max-width: 480px) {
   .stages { grid-template-columns: minmax(0, 1fr); gap: .35rem; }
   .stages li { grid-template-columns: 10px minmax(0, 1fr) auto; border-top: 0; border-left: 3px solid var(--rule-soft); padding: .2rem 0 .2rem .6rem; }

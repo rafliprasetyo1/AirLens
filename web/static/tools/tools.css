@@ -13,7 +13,7 @@
 .tools section > * + * { margin-top: 1rem; }
 .tools code { color: var(--ink); }
 .bar-link { margin-left: auto; font-size: var(--t-sm); font-weight: 600; text-decoration: none; }
-.notice-box { padding: .9rem 1.1rem; border: 1px solid var(--rule); border-radius: var(--r-media); background: var(--paper); }
+.notice-box { padding: 1rem 1.2rem; border: 1px solid var(--glass-line); border-radius: var(--r-media); background: var(--paper); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); }
 .notice-box.warn { border-color: rgb(255 142 132 / .55); background: var(--alert-soft); }
 .notice-box p { color: var(--ink) !important; }
 .row { display: flex; flex-wrap: wrap; gap: .75rem 1rem; align-items: center; }
